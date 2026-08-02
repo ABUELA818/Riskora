@@ -1,0 +1,17 @@
+# Backend (Python)
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+*.egg-info/
+
+# Frontend (Node)
+node_modules/
+dist/
+build/
+.env.local
+
+# Editor/OS
+.vscode/
+.DS_Store

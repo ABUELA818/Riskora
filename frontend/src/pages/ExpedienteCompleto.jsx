@@ -1,0 +1,188 @@
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { Brain, Calendar, FileText, Activity, AlertTriangle, Book, FileCheck, CheckCircle } from 'lucide-react';
+import SimulationBadge from '../components/SimulationBadge';
+
+export default function ExpedienteCompleto() {
+  const { id } = useParams();
+  const { token, user } = useAuth(); // Asumiendo que useAuth te devuelve el usuario actual
+  
+  const [expediente, setExpediente] = useState(null);
+  const [activeTab, setActiveTab] = useState('academico');
+  const [loading, setLoading] = useState(true);
+
+  // Validación estricta de Rol (HU-07)
+  const isPsico = user?.rol === 'Psicopedagogia' || user?.rol === 'Administrador';
+
+  useEffect(() => {
+    if (!token || !id) return;
+    
+    // Si es psicopedagogía, agregamos el parámetro para que el backend inyecte el JSON de IA
+    const url = isPsico 
+      ? `http://localhost:8000/api/v1/estudiantes/${id}/expediente-completo?vista=psicopedagogia`
+      : `http://localhost:8000/api/v1/estudiantes/${id}/expediente-completo`;
+
+    fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(res => res.json())
+      .then(data => {
+        setExpediente(data);
+        setLoading(false);
+      })
+      .catch(err => console.error(err));
+  }, [id, token, isPsico]);
+
+  if (loading || !expediente) return <div className="p-8 text-gray-500">Cargando expediente...</div>;
+
+  return (
+    <div className="p-8 bg-gray-50/50 min-h-full">
+      {/* HEADER / PERFIL DEL ALUMNO */}
+      <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm mb-6 flex flex-col lg:flex-row gap-6">
+        <div className="flex-1 flex items-start">
+          <img 
+            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${expediente.nombre_completo}`} 
+            alt="avatar" 
+            className="w-24 h-24 rounded-full bg-gray-100 border-4 border-gray-50 mr-6" 
+          />
+          <div>
+            <div className="flex items-center mb-1">
+              <h2 className="text-3xl font-bold text-gray-900 mr-3">{expediente.nombre_completo}</h2>
+              <span className="px-3 py-1 bg-orange-100 text-orange-800 text-xs font-bold rounded-full border border-orange-200">
+                ID: {expediente.matricula}
+              </span>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">{expediente.carrera} • Estudiante Activo</p>
+            <div className="flex space-x-3">
+              <button className="px-4 py-2 bg-indigo-50 text-eduPurple rounded-lg text-sm font-bold hover:bg-indigo-100 transition-colors flex items-center">
+                <FileCheck className="w-4 h-4 mr-2" /> Log Observation
+              </button>
+              <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-50 transition-colors">
+                Contact Guardians
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* KPIs Laterales */}
+        <div className="flex flex-col gap-3 w-full lg:w-64 shrink-0">
+          <div className="bg-orange-50 border border-orange-100 p-3 rounded-xl flex items-center">
+            <AlertTriangle className="w-6 h-6 text-orange-500 mr-3 shrink-0" />
+            <div>
+              <p className="text-[10px] font-bold text-gray-500 uppercase">Intervention Priority</p>
+              <p className="text-sm font-bold text-gray-900">{expediente.nivel_riesgo_actual} Risk</p>
+            </div>
+          </div>
+          <div className="bg-gray-50 border border-gray-100 p-3 rounded-xl flex items-center">
+            <Book className="w-6 h-6 text-indigo-400 mr-3 shrink-0" />
+            <div>
+              <p className="text-[10px] font-bold text-gray-500 uppercase">Current GPA</p>
+              <p className="text-sm font-bold text-gray-900">{expediente.score_riesgo * 100}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* PESTAÑAS DE NAVEGACIÓN */}
+      <div className="border-b border-gray-200 mb-6 flex space-x-6 overflow-x-auto">
+        <button onClick={() => setActiveTab('academico')} className={`pb-3 text-sm font-bold flex items-center border-b-2 transition-colors whitespace-nowrap ${activeTab === 'academico' ? 'border-eduPurple text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
+          <Book className="w-4 h-4 mr-2" /> Historial Académico
+        </button>
+        <button onClick={() => setActiveTab('asistencia')} className={`pb-3 text-sm font-bold flex items-center border-b-2 transition-colors whitespace-nowrap ${activeTab === 'asistencia' ? 'border-eduPurple text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
+          <Calendar className="w-4 h-4 mr-2" /> Asistencia
+        </button>
+        <button onClick={() => setActiveTab('observaciones')} className={`pb-3 text-sm font-bold flex items-center border-b-2 transition-colors whitespace-nowrap ${activeTab === 'observaciones' ? 'border-eduPurple text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
+          <FileText className="w-4 h-4 mr-2" /> Observaciones y Conducta
+        </button>
+        
+        {/* PESTAÑA PROTEGIDA (Solo Psicopedagogía) */}
+        {isPsico && (
+          <button onClick={() => setActiveTab('ia')} className={`pb-3 text-sm font-bold flex items-center border-b-2 transition-colors whitespace-nowrap ${activeTab === 'ia' ? 'border-eduPurple text-eduPurple' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
+            <Brain className="w-4 h-4 mr-2" /> Análisis IA
+          </button>
+        )}
+      </div>
+
+      {/* CONTENIDO DE PESTAÑAS */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* CONTENIDO TAB IA (Protegido) */}
+        {activeTab === 'ia' && isPsico && (
+          <>
+            <div className="lg:col-span-2 space-y-6">
+              <SimulationBadge />
+              
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                <h3 className="text-base font-bold text-gray-900 flex items-center mb-4">
+                  <Brain className="w-5 h-5 text-eduPurple mr-2" /> Predictive Synthesis
+                </h3>
+                <p className="text-sm text-gray-700 leading-relaxed mb-4">
+                  El modelo detecta una caída reciente en el rendimiento académico altamente correlacionada con un bloque de inasistencias los días lunes. El patrón es similar a casos previos de "Burnout extracurricular". Mientras el rendimiento en ciencias exactas es estable, las observaciones cualitativas indican una baja participación en los periodos matutinos.
+                </p>
+                <div className="flex gap-2">
+                  <span className="px-2.5 py-1 bg-yellow-50 text-yellow-700 text-xs font-bold rounded-full border border-yellow-200 flex items-center">
+                    <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full mr-1.5"></span> Patrón de Asistencia Detectado
+                  </span>
+                  <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full border border-indigo-200 flex items-center">
+                    <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full mr-1.5"></span> Resiliencia STEM
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm min-h-[300px] flex flex-col justify-center items-center text-gray-400 border-dashed">
+                <Activity className="w-8 h-8 mb-2 opacity-50" />
+                <p className="text-sm font-medium">Multi-Variable Trajectory Chart Rendered Here</p>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {/* Recomendaciones */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                <h3 className="text-sm font-bold text-gray-900 mb-4">Intervenciones Recomendadas</h3>
+                <div className="space-y-4">
+                  <div className="p-3 border border-gray-100 rounded-lg hover:border-eduPurple transition-colors cursor-pointer">
+                    <h4 className="text-sm font-bold text-gray-800 mb-1 flex justify-between">
+                      Agendar Check-in Matutino <span className="text-eduPurple">+</span>
+                    </h4>
+                    <p className="text-xs text-gray-500">Establecer una breve reunión de 5 min los lunes por la mañana para evaluar disposición.</p>
+                  </div>
+                  <div className="p-3 border border-gray-100 rounded-lg hover:border-eduPurple transition-colors cursor-pointer">
+                    <h4 className="text-sm font-bold text-gray-800 mb-1 flex justify-between">
+                      Revisar Carga de Lectura <span className="text-eduPurple">+</span>
+                    </h4>
+                    <p className="text-xs text-gray-500">Analizar tareas actuales por posible saturación de fin de semana.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Factores de Riesgo (Desglose real del Endpoint) */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                <h3 className="text-sm font-bold text-gray-900 mb-4">Análisis de Factores (Mock)</h3>
+                <table className="w-full text-left text-sm">
+                  <thead className="text-xs text-gray-400 border-b border-gray-100">
+                    <tr><th className="pb-2">Factor</th><th className="pb-2 text-right">Impacto</th></tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {expediente.analisis_ia_completo?.factores?.map((f, i) => (
+                      <tr key={i}>
+                        <td className="py-2.5 text-gray-700 capitalize">{f.variable.replace('_', ' ')}</td>
+                        <td className="py-2.5 text-right font-bold text-gray-900">{f.valor}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* CONTENIDO TABS BÁSICAS */}
+        {activeTab !== 'ia' && (
+          <div className="lg:col-span-3 bg-white p-8 rounded-2xl border border-gray-200 shadow-sm text-center text-gray-500 min-h-[300px] flex items-center justify-center">
+            El contenido de la pestaña "{activeTab.toUpperCase()}" se renderiza aquí.
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
