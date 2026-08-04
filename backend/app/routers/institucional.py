@@ -10,7 +10,7 @@ from app.routers.riesgo import calcular_metricas_estudiante
 router = APIRouter(prefix="/api/v1", tags=["Módulo Director / Institucional"])
 
 # Permisos generales para el módulo (Tutor y Administrador)
-permitir_acceso = RoleChecker(["Administrador", "Tutor", "Director"])
+permitir_acceso = RoleChecker(["Administrador", "Tutor", "Director", "Psicopedagogia"])
 
 def calcular_kpis(estudiantes, db: Session):
     # Criterio de aceptación: Evitar error 500 si no hay estudiantes
