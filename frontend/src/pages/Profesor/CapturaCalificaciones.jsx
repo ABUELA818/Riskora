@@ -14,11 +14,11 @@ export default function CapturaCalificaciones() {
   
   // Filtros
   const [grupoSeleccionado, setGrupoSeleccionado] = useState('');
-  const [materiaSeleccionada, setMateriaSeleccionada] = useState('1'); // Mock materia ID
+  const [materiasDisponibles, setMateriasDisponibles] = useState([]);
+  const [materiaSeleccionada, setMateriaSeleccionada] = useState('');
   const [parcialSeleccionado, setParcialSeleccionado] = useState('1');
   
   // Estado principal de la tabla (memoria de captura)
-  // Estructura: { id_estudiante: { p1: '', p2: '', p3: '', final: '' } }
   const [calificaciones, setCalificaciones] = useState({});
   
   // Estados de Modal y Feedback
@@ -67,6 +67,20 @@ export default function CapturaCalificaciones() {
         }
       });
   }, [grupoSeleccionado, token]);
+
+  useEffect(() => {
+  if (!grupoSeleccionado || !token) return;
+  fetch(`http://localhost:8000/api/v1/grupos/${grupoSeleccionado}/mis-materias`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (Array.isArray(data)) {
+        setMateriasDisponibles(data);
+        setMateriaSeleccionada(data.length > 0 ? data[0].id_materia.toString() : '');
+      }
+    });
+}, [grupoSeleccionado, token]);
 
   // Manejador de inputs con validación visual en vivo
   const handleCalificacionChange = (id, campo, valor) => {
@@ -120,19 +134,18 @@ export default function CapturaCalificaciones() {
         const payload = {
           id_materia: parseInt(materiaSeleccionada),
           grupo_id: parseInt(grupoSeleccionado),
-          periodo_id: 1, // Mock
+          id_periodo: 1, // Mock
           parcial: parseInt(parcialSeleccionado),
           valor: parseFloat(valor),
-          fecha_captura: new Date().toISOString().split('T')[0]
         };
 
         return fetch(`http://localhost:8000/api/v1/estudiantes/${est.id_estudiante}/calificaciones`, {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify(payload)
+        }).then(res => {
+          if (!res.ok) throw new Error(`Error en estudiante ${est.id_estudiante}`);
+          return res;
         });
       });
 
@@ -162,7 +175,7 @@ export default function CapturaCalificaciones() {
         },
         body: JSON.stringify({
           etiqueta: obsForm.tipo,
-          descripcion: obsForm.nota,
+          nota: obsForm.nota,
         })
       });
       
@@ -244,6 +257,18 @@ export default function CapturaCalificaciones() {
               className="border border-gray-300 rounded-lg text-sm px-3 py-2 bg-gray-50 focus:ring-eduPurple"
             >
               {grupos.map(g => <option key={g.id_grupo} value={g.id_grupo}>{g.nombre_grupo}</option>)}
+            </select>
+
+            <select 
+              value={materiaSeleccionada}
+              onChange={(e) => setMateriaSeleccionada(e.target.value)}
+              className="border border-gray-300 rounded-lg text-sm px-3 py-2 bg-gray-50 focus:ring-eduPurple"
+            >
+              {materiasDisponibles.length === 0 ? (
+                <option value="">Sin materias asignadas</option>
+              ) : (
+                materiasDisponibles.map(m => <option key={m.id_materia} value={m.id_materia}>{m.nombre_materia}</option>)
+              )}
             </select>
             
             <div className="flex items-center text-sm text-gray-500">

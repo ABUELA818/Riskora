@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.db.session import SessionLocal
-from app.models.models import Estudiante, Grupo, Materia, Periodo
+from app.models.models import Estudiante, Grupo, Materia, Periodo, Horario, Docente
+from app.core.deps import get_db, RoleChecker, get_current_active_user
 from app.schemas.academic import (
     EstudianteCreate, EstudianteOut, GrupoCreate, GrupoOut, 
     MateriaCreate, MateriaOut, PeriodoCreate, PeriodoOut
@@ -13,9 +14,9 @@ router = APIRouter(prefix="/api/v1", tags=["Académico"])
 
 # --- MIDDLEWARES DE ROLES ---
 # Solo administradores (RRHH/Admin) pueden crear o borrar
-solo_admin = RoleChecker(["Administrador"])
+solo_admin = RoleChecker(["Administrador", "Psicopedagogia"])
 # Todos los roles pueden leer listas (con sus respectivos filtros que haremos luego en el front)
-todos_los_roles = RoleChecker(["Administrador", "Tutor", "Docente"])
+todos_los_roles = RoleChecker(["Administrador", "Tutor", "Docente", "Director", "Psicopedagogia"])
 
 
 # ==========================================
@@ -128,6 +129,29 @@ def crear_materia(materia: MateriaCreate, db: Session = Depends(get_db)):
 @router.get("/materias", response_model=List[MateriaOut], dependencies=[Depends(todos_los_roles)])
 def obtener_materias(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return db.query(Materia).filter(Materia.estado == True).offset(skip).limit(limit).all()
+
+@router.get("/grupos/{id_grupo}/mis-materias", response_model=List[MateriaOut])
+def materias_del_docente_en_grupo(
+    id_grupo: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
+    user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
+
+    if user_role == "Administrador":
+        # Admin ve todas las materias asignadas a ese grupo, sin filtrar por docente
+        materia_ids = db.query(Horario.id_materia).filter(Horario.id_grupo == id_grupo).distinct()
+    else:
+        docente = db.query(Docente).filter(Docente.id_usuario == current_user.id_usuario).first()
+        if not docente:
+            return []
+        materia_ids = db.query(Horario.id_materia).filter(
+            Horario.id_grupo == id_grupo,
+            Horario.id_docente == docente.id_docente
+        ).distinct()
+
+    ids = [m[0] for m in materia_ids]
+    return db.query(Materia).filter(Materia.id_materia.in_(ids)).all()
 
 
 # ==========================================
