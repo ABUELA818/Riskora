@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Save, AlertCircle } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export default function AltaEstudiantes() {
   const navigate = useNavigate();
+  const { token } = useAuth(); 
   const [grupos, setGrupos] = useState([]);
   const [formData, setFormData] = useState({
     matricula: '',
@@ -16,12 +18,15 @@ export default function AltaEstudiantes() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Cargamos los grupos para el Select
-  useEffect(() => {
-    fetch('http://localhost:8000/api/v1/grupos')
+   useEffect(() => {
+    if (!token) return;
+    fetch('http://localhost:8000/api/v1/grupos', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then(res => res.json())
       .then(data => setGrupos(data))
       .catch(err => console.error(err));
-  }, []);
+  }, [token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,7 +36,10 @@ export default function AltaEstudiantes() {
     try {
       const response = await fetch('http://localhost:8000/api/v1/estudiantes', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           ...formData,
           id_grupo: parseInt(formData.id_grupo)

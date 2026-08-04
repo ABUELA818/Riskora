@@ -12,7 +12,7 @@ from app.core.deps import get_db, RoleChecker, get_current_active_user
 from app.routers.riesgo import calcular_metricas_estudiante
 
 router = APIRouter(prefix="/api/v1", tags=["Tutorías e Intervenciones"])
-permitir_acceso = RoleChecker(["Tutor", "Administrador"])
+permitir_acceso = RoleChecker(["Tutor", "Administrador", "Director", "Psicopedagogia"])
 
 # ==========================================
 # FUNCIÓN HELPER: VALIDACIÓN DE PERMISOS
@@ -24,7 +24,7 @@ def verificar_permiso_tutor(db: Session, current_user, id_estudiante: int):
 
     user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
     
-    if user_role == "Administrador":
+    if user_role in ("Administrador", "Director", "Psicopedagogia"):
         return estudiante, None
 
     tutor = db.query(Tutor).filter(Tutor.id_usuario == current_user.id_usuario).first()

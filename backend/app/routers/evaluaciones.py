@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from app.db.session import SessionLocal
-from app.models.models import Calificacion, ObservacionConducta, Grupo, Tutor, Docente
+from app.models.models import Calificacion, ObservacionConducta, Grupo, Tutor, Docente, Horario
 from app.schemas.evaluacion import (
     CalificacionCreate, CalificacionOut, ResumenCalificacionesOut, ResumenMateria,
     ObservacionCreate, ObservacionOut
@@ -23,20 +23,30 @@ def registrar_calificacion(
     current_user = Depends(get_current_active_user)
 ):
     user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
-    if user_role != "Administrador":
+
+    if user_role == "Tutor":
         grupo = db.query(Grupo).filter(Grupo.id_grupo == data.grupo_id).first()
         tutor = db.query(Tutor).filter(Tutor.id_usuario == current_user.id_usuario).first()
-        docente = db.query(Docente).filter(Docente.id_usuario == current_user.id_usuario).first()
-        
-        id_responsable = tutor.id_tutor if tutor else (docente.id_docente if docente else None)
-        
-        if not grupo or not id_responsable or grupo.id_tutor != id_responsable:
+        if not grupo or not tutor or grupo.id_tutor != tutor.id_tutor:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="No puedes capturar calificaciones de un grupo/materia que no impartes."
+                detail="No puedes capturar calificaciones de un grupo que no tutoras."
             )
 
-    # Creamos el objeto solo con los campos que tiene tu modelo
+    elif user_role == "Docente":
+        docente = db.query(Docente).filter(Docente.id_usuario == current_user.id_usuario).first()
+        tiene_horario = db.query(Horario).filter(
+            Horario.id_grupo == data.grupo_id,
+            Horario.id_materia == data.id_materia,   # ← restaurado
+            Horario.id_docente == (docente.id_docente if docente else None)
+        ).first()
+        if not docente or not tiene_horario:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No impartes esta materia en este grupo."
+            )
+    # Administrador pasa sin validación adicional
+
     nueva_calificacion = Calificacion(
         id_estudiante=id_estudiante,
         id_materia=data.id_materia,

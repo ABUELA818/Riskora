@@ -153,8 +153,8 @@ class Calificacion(Base):
     id_materia = Column(Integer, ForeignKey('materias.id_materia'))
     id_periodo = Column(Integer, ForeignKey('periodos.id_periodo'))
     parcial = Column(Integer)
-    valor = Column(DECIMAL(4,2))
-    promedio_calculado = Column(DECIMAL(4,2))
+    valor = Column(DECIMAL(5,2))             
+    promedio_calculado = Column(DECIMAL(5,2)) 
 
 class ObservacionConducta(Base):
     __tablename__ = 'observaciones_conducta'

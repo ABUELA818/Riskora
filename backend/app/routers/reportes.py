@@ -20,7 +20,7 @@ from app.routers.riesgo import calcular_metricas_estudiante
 from app.core.audit import registrar_auditoria
 
 router = APIRouter(prefix="/api/v1", tags=["Reportes y Notificaciones"])
-permitir_acceso = RoleChecker(["Administrador", "Director", "Tutor", "Psicopedagogia"])
+permitir_acceso = RoleChecker(["Administrador", "Director", "Tutor", "Psicopedagogia", "RRHH"])
 
 # ==========================================
 # HELPER: OBTENER DATOS DEL REPORTE

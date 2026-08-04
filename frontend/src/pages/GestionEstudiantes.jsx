@@ -1,25 +1,30 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Search, Edit, Trash2, Eye, Plus } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function GestionEstudiantes() {
   const { state } = useLocation();
+  const { token } = useAuth();
   const [estudiantes, setEstudiantes] = useState([]);
   const [filtros, setFiltros] = useState({ carrera: '', grupo: '', nivel_riesgo: '' });
 
   const fetchEstudiantes = () => {
+    if (!token) return;  
     const query = new URLSearchParams(
       Object.entries(filtros).filter(([_, v]) => v !== '')
     ).toString();
 
-    fetch(`http://localhost:8000/api/v1/estudiantes?${query}`)
+    fetch(`http://localhost:8000/api/v1/estudiantes?${query}`, {
+      headers: { 'Authorization': `Bearer ${token}` } 
+    })
       .then(res => res.json())
       .then(data => setEstudiantes(data));
   };
 
   useEffect(() => {
     fetchEstudiantes();
-  }, [filtros]);
+  }, [filtros, token]); 
 
   const handleSoftDelete = async (id) => {
     if (!window.confirm('¿Estás seguro de dar de baja a este estudiante?')) return;
