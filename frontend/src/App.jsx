@@ -43,6 +43,23 @@ const Dashboard = () => <div className="p-6"><h1 className="text-2xl font-bold m
 const Asistencias = () => <div className="p-6"><h1 className="text-2xl font-bold">Módulo de Asistencias</h1></div>;
 const Unauthorized = () => <div className="p-10 text-center text-red-600"><h1>403 - Acceso Denegado</h1></div>;
 
+const DashboardRouter = () => {
+  const { role } = useAuth();
+  switch (role) {
+    case 'Tutor':
+      return <DashboardTutor />;
+    case 'Director':
+      return <Navigate to="/carreras/1/dashboard" replace />;
+    case 'Psicopedagogia':
+      return <Navigate to="/psicopedagogia/dashboard" replace />;
+    case 'RRHH':
+    case 'Administrador':
+      return <Navigate to="/rrhh/dashboard" replace />;
+    default:
+      return <Dashboard />;
+  }
+};
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -57,39 +74,33 @@ export default function App() {
           {/* Rutas Protegidas */}
           <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="dashboard" element={<DashboardRouter />} />
             <Route path="estudiantes" element={<GestionEstudiantes />} />
             <Route path="estudiantes/nuevo" element={<AltaEstudiantes />} />
             <Route path="grupos" element={<GestionGrupos />} />
             <Route path="docentes" element={<DocentesCarrera />} />
-            <Route path="dashboard" element={<DashboardTutor />} />
             <Route path="panel-riesgo" element={<PanelRiesgo />} />
             <Route path="estudiantes/:id/analisis" element={<AnalisisPrediccion />} />
             <Route path="carreras/:id/dashboard" element={<RoleRoute allowedRoles={['Administrador', 'Director']}><DashboardDirector /></RoleRoute>} />
             <Route path="carreras/:id/riesgo-agregado" element={<RoleRoute allowedRoles={['Administrador', 'Director']}><RiesgoAgregado /></RoleRoute>} />
-            <Route path="casos-escalados" element={<RoleRoute allowedRoles={['Administrador', 'Tutor', 'Director']}><CasosEscalados /></RoleRoute>} />
+            <Route path="casos-escalados" element={<RoleRoute allowedRoles={['Administrador', 'Tutor', 'Director', 'Psicopedagogia']}><CasosEscalados /></RoleRoute>} />
             <Route path="institucional/dashboard" element={<RoleRoute allowedRoles={['Administrador', 'Director']}><DashboardInstitucional /></RoleRoute>} />
             <Route path="rrhh/dashboard" element={<RoleRoute allowedRoles={['Administrador', 'RRHH']}><DashboardRRHH /></RoleRoute>} />
             <Route path="rrhh/directorio" element={<RoleRoute allowedRoles={['Administrador', 'RRHH']}><DirectorioPersonal /></RoleRoute>} />
             <Route path="rrhh/accesos" element={<RoleRoute allowedRoles={['Administrador', 'RRHH']}><GestionAccesos /></RoleRoute>} />
             <Route path="estudiantes/:id/intervenciones" element={
-              <RoleRoute allowedRoles={['Tutor', 'Administrador']}>
+              <RoleRoute allowedRoles={['Tutor', 'Administrador', 'Director', 'Psicopedagogia']}>
                 <BitacoraIntervenciones />
               </RoleRoute>
             } />
             <Route path="calificaciones" element={
-              <RoleRoute allowedRoles={['Docente', 'Administrador']}>
+              <RoleRoute allowedRoles={['Docente', 'Administrador',]}>
                 <CapturaCalificaciones />
               </RoleRoute>
             } />
             <Route path="asistencias" element={
               <RoleRoute allowedRoles={['Docente', 'Administrador']}>
                 <RegistroAsistencia />
-              </RoleRoute>
-            } />
-            <Route path="asistencias" element={
-              <RoleRoute allowedRoles={['Docente']}>
-                <Asistencias />
               </RoleRoute>
             } />
             <Route 
@@ -108,14 +119,11 @@ export default function App() {
                 </RoleRoute>
               } 
             />
-            <Route 
-              path="reportes" 
-              element={
-                <RoleRoute allowedRoles={['Administrador', 'Director', 'RRHH']}>
-                  <ReportesInstitucionales />
-                </RoleRoute>
-              } 
-            />
+            <Route path="reportes" element={
+              <RoleRoute allowedRoles={['Administrador', 'Director', 'RRHH', 'Psicopedagogia']}>
+                <ReportesInstitucionales />
+              </RoleRoute>
+            } />
           </Route>
         </Routes>
       </AuthProvider>

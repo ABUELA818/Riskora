@@ -1,25 +1,30 @@
 import { useState, useEffect } from 'react';
 import { UserPlus, X } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export default function GestionGrupos() {
+  const { token } = useAuth();
   const [grupos, setGrupos] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [grupoSeleccionado, setGrupoSeleccionado] = useState(null);
   const [nuevoDocenteId, setNuevoDocenteId] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/v1/grupos')
+    if (!token) return;
+    fetch('http://localhost:8000/api/v1/grupos', {
+      headers: { 'Authorization': `Bearer ${token}` } 
+    })
       .then(res => res.json())
       .then(data => setGrupos(data));
-  }, []);
+  }, [token]); 
 
   const handleAsignarDocente = async (e) => {
     e.preventDefault();
     await fetch(`http://localhost:8000/api/v1/grupos/${grupoSeleccionado.id_grupo}/asignar-docente?id_docente=${nuevoDocenteId}`, {
-      method: 'POST'
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
     });
 
-    // Actualizamos estado local (Criterio de Aceptación)
     setGrupos(grupos.map(g => 
       g.id_grupo === grupoSeleccionado.id_grupo ? { ...g, id_tutor: parseInt(nuevoDocenteId) } : g
     ));
