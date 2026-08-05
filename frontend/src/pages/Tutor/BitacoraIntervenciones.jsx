@@ -11,23 +11,18 @@ export default function BitacoraIntervenciones() {
   const { id } = useParams();
   const { token } = useAuth();
   
-  // Estados de datos
   const [estudiante, setEstudiante] = useState(null);
   const [intervenciones, setIntervenciones] = useState([]);
   
-  // Estados de interfaz
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('bitacora'); // 'bitacora' | 'contexto'
+  const [activeTab, setActiveTab] = useState('bitacora');
   
-  // Estado del formulario
-  // Adaptado a tu esquema de DB: acuerdos y nivel_resolucion
   const [formulario, setFormulario] = useState({
-    nivel_resolucion: 'Llamada Telefónica', // Lo usaremos como "Tipo"
-    acuerdos: '' // Lo usaremos para el detalle completo
+    nivel_resolucion: 'Llamada Telefónica',
+    acuerdos: ''
   });
 
-  // 1. Cargar el Resumen Completo (BFF)
   useEffect(() => {
     if (!token || !id) return;
     
@@ -46,7 +41,6 @@ export default function BitacoraIntervenciones() {
       .catch(err => console.error(err));
   }, [id, token]);
 
-  // 2. Guardar Nueva Intervención
   const guardarIntervencion = async (e) => {
     e.preventDefault();
     if (!formulario.acuerdos.trim()) return;
@@ -68,12 +62,10 @@ export default function BitacoraIntervenciones() {
       if (!response.ok) throw new Error("Error al guardar");
       const nuevaData = await response.json();
 
-      // Agregamos la nueva intervención al inicio del arreglo (Timeline en vivo) sin recargar
       setIntervenciones(prev => [nuevaData, ...prev]);
       
-      // Limpiamos el formulario
       setFormulario({ nivel_resolucion: 'Llamada Telefónica', acuerdos: '' });
-      setActiveTab('bitacora'); // Forzamos ir a la bitácora para ver el cambio
+      setActiveTab('bitacora');
     } catch (error) {
       alert("No se pudo registrar la intervención.");
     } finally {
@@ -81,7 +73,6 @@ export default function BitacoraIntervenciones() {
     }
   };
 
-  // Función auxiliar para iconos del timeline
   const getIconForType = (tipo) => {
     if (tipo.includes('Llamada')) return <Phone className="w-4 h-4 text-blue-600" />;
     if (tipo.includes('Canalización') || tipo.includes('Psicopedagogía')) return <Activity className="w-4 h-4 text-green-600" />;
@@ -99,7 +90,6 @@ export default function BitacoraIntervenciones() {
     <div className="p-8 bg-gray-50/50 min-h-full">
       <SimulationBadge />
 
-      {/* HEADER / BANNER DEL ESTUDIANTE */}
       <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="flex items-center">
           <img 
@@ -123,15 +113,12 @@ export default function BitacoraIntervenciones() {
         </div>
       </div>
 
-      {/* GRID PRINCIPAL */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* COLUMNA IZQUIERDA: Pestañas + Timeline / Contexto */}
         <div className="lg:col-span-2 space-y-6">
           
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-full">
             
-            {/* Cabecera y Pestañas */}
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <div className="flex space-x-6">
                 <button 
@@ -152,7 +139,6 @@ export default function BitacoraIntervenciones() {
               </button>
             </div>
 
-            {/* CONTENIDO: TIMELINE DE BITÁCORA */}
             {activeTab === 'bitacora' && (
               <div className="p-8 flex-1">
                 {intervenciones.length === 0 ? (
@@ -161,7 +147,6 @@ export default function BitacoraIntervenciones() {
                   <div className="relative border-l border-gray-200 ml-4 space-y-10">
                     {intervenciones.map((intv) => (
                       <div key={intv.id_intervencion} className="relative pl-8">
-                        {/* Círculo del icono */}
                         <div className="absolute -left-4 top-0 w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-sm">
                           {getIconForType(intv.nivel_resolucion)}
                         </div>
@@ -192,7 +177,6 @@ export default function BitacoraIntervenciones() {
               </div>
             )}
 
-            {/* CONTENIDO: CONTEXTO (Observaciones) */}
             {activeTab === 'contexto' && (
               <div className="p-8 flex-1 bg-gray-50/30">
                 <h3 className="text-sm font-bold text-gray-800 mb-4 flex items-center">
@@ -218,10 +202,8 @@ export default function BitacoraIntervenciones() {
           </div>
         </div>
 
-        {/* COLUMNA DERECHA: Métricas y Formulario */}
         <div className="lg:col-span-1 space-y-6">
           
-          {/* Card de Métricas Predictivas */}
           <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm bg-gradient-to-br from-white to-indigo-50/30">
             <h3 className="text-xs font-bold text-gray-500 tracking-wider uppercase mb-4">Métricas Predictivas</h3>
             <div className="flex justify-between">
@@ -244,7 +226,6 @@ export default function BitacoraIntervenciones() {
             </div>
           </div>
 
-          {/* Formulario de Registro */}
           <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
             <h3 className="text-base font-bold text-gray-900 mb-5 flex items-center">
               <Plus className="w-5 h-5 mr-2 text-eduPurple" /> Registrar Intervención

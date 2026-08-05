@@ -13,7 +13,6 @@ export default function DashboardPsicopedagogia() {
   useEffect(() => {
     if (!token) return;
     
-    // Llamada principal al endpoint priorizado (RF-06, RF-07)
     fetch(`http://localhost:8000/api/v1/psicopedagogia/casos-pendientes`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -39,7 +38,6 @@ export default function DashboardPsicopedagogia() {
         </button>
       </div>
 
-      {/* SECCIÓN PRIORITARIA: Casos Escalados (Arriba y prominente) */}
       <div className="mb-10">
         <div className="flex items-center mb-4">
           <AlertCircle className="w-6 h-6 text-red-500 mr-2" />
@@ -90,7 +88,6 @@ export default function DashboardPsicopedagogia() {
             ))
           )}
 
-          {/* Tarjetas de KPIs Generales al lado de los casos (Figma layout) */}
           <div className="min-w-[160px] bg-white border border-gray-200 rounded-2xl p-5 shadow-sm flex flex-col items-center justify-center text-center">
             <AlertTriangle className="w-8 h-8 text-yellow-500 mb-2" />
             <h3 className="text-4xl font-black text-gray-900">142</h3>
@@ -105,7 +102,6 @@ export default function DashboardPsicopedagogia() {
         </div>
       </div>
 
-      {/* SECCIÓN SECUNDARIA: Indicadores por Carrera */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-100 flex justify-between items-center">
           <h3 className="text-lg font-bold text-gray-900">Indicadores por Carrera</h3>

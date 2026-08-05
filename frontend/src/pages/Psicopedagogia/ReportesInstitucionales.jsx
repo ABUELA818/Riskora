@@ -6,19 +6,16 @@ import SimulationBadge from '../../components/SimulationBadge';
 export default function ReportesInstitucionales() {
   const { token } = useAuth();
   
-  // Estados de filtros
   const [filtros, setFiltros] = useState({
     carrera: '',
     nivel_riesgo: '',
     periodo: 'Semestre 2024-1'
   });
 
-  // Estados de datos y UI
   const [previewData, setPreviewData] = useState([]);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
-  const [exportingFormat, setExportingFormat] = useState(null); // 'pdf' | 'excel' | null
+  const [exportingFormat, setExportingFormat] = useState(null);
 
-  // Cargar vista previa al montar y al hacer clic en "Filtrar"
   const fetchPreview = async () => {
     setIsLoadingPreview(true);
     try {
@@ -40,13 +37,10 @@ export default function ReportesInstitucionales() {
     }
   };
 
-  // Carga inicial
   useEffect(() => {
     if (token) fetchPreview();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  // Lógica de Exportación (Descarga de Blob)
   const handleExport = async (formato) => {
     setExportingFormat(formato);
     try {
@@ -60,7 +54,6 @@ export default function ReportesInstitucionales() {
 
       if (!res.ok) throw new Error("Error al generar el reporte");
 
-      // Descargamos el archivo binario
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -85,7 +78,6 @@ export default function ReportesInstitucionales() {
         <h2 className="text-3xl font-bold text-gray-900">Reportes Institucionales</h2>
       </div>
 
-      {/* BARRA DE FILTROS Y EXPORTACIÓN (Fiel a Figma) */}
       <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm mb-6 flex flex-wrap gap-4 justify-between items-end">
         <div className="flex flex-wrap gap-4 items-end">
           <div>
@@ -164,7 +156,6 @@ export default function ReportesInstitucionales() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* KPI: RIESGO ALTO (Visual Figma) */}
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative">
           <AlertTriangle className="absolute top-6 right-6 w-6 h-6 text-red-500" />
           <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Estudiantes en Riesgo Alto</p>
@@ -175,7 +166,6 @@ export default function ReportesInstitucionales() {
           <p className="text-sm text-gray-500">Requieren intervención inmediata</p>
         </div>
 
-        {/* KPI: ASISTENCIA (Visual Figma) */}
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative">
           <CheckCircle className="absolute top-6 right-6 w-6 h-6 text-green-500" />
           <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Asistencia Promedio</p>
@@ -186,7 +176,6 @@ export default function ReportesInstitucionales() {
           <p className="text-sm text-gray-500">Por debajo de la meta institucional (92%)</p>
         </div>
         
-        {/* INFO ADICIONAL */}
         <div className="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 shadow-sm flex flex-col justify-center">
           <h3 className="text-sm font-bold text-indigo-900 mb-2 flex items-center">
             <Info className="w-4 h-4 mr-2 text-indigo-600" /> Acerca de este reporte
@@ -197,7 +186,6 @@ export default function ReportesInstitucionales() {
         </div>
       </div>
 
-      {/* VISTA PREVIA TABULAR (Requisito estricto RF-08) */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
         <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
           <h3 className="font-bold text-gray-900">Vista Previa de Datos a Exportar</h3>
@@ -237,7 +225,6 @@ export default function ReportesInstitucionales() {
                     <td className="p-4 text-center text-sm text-gray-700">{est.porcentaje_asistencia}%</td>
                     <td className="p-4 text-center text-sm font-bold text-gray-700">{est.promedio_general}</td>
                     <td className="p-4">
-                      {/* Badge de Datos Simulados en Riesgo */}
                       <span className={`inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-md border ${
                         est.nivel_riesgo === 'Alto' ? 'bg-red-50 text-red-700 border-red-200' :
                         est.nivel_riesgo === 'Medio' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :

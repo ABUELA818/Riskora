@@ -18,7 +18,6 @@ export default function DashboardRRHH() {
     ])
     .then(([metData, persData]) => {
       setMetricas(metData);
-      // Tomamos solo los últimos 4 para la previsualización del dashboard
       setPersonalReciente(persData.slice(-4).reverse());
       setLoading(false);
     })
@@ -41,7 +40,6 @@ export default function DashboardRRHH() {
         </Link>
       </div>
 
-      {/* KPIs SUPERIORES */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden">
           <Users className="absolute -right-4 -bottom-4 w-24 h-24 text-gray-50 opacity-50" />
@@ -77,7 +75,6 @@ export default function DashboardRRHH() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* LISTA DE PERSONAL RECIENTE */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-gray-100 flex justify-between items-center">
             <h3 className="text-lg font-bold text-gray-900">Personal Reciente</h3>
@@ -119,7 +116,6 @@ export default function DashboardRRHH() {
           </table>
         </div>
 
-        {/* MENÚ DERECHO: Gestión de Roles */}
         <div className="space-y-6">
           <div className="bg-white p-2 rounded-2xl border border-gray-200 shadow-sm">
             <h3 className="text-base font-bold text-gray-900 p-4 pb-2 flex items-center">

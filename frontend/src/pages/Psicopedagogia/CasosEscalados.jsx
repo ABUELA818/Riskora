@@ -37,7 +37,6 @@ export default function CasosEscalados() {
 
       <div className="flex-1 flex gap-6 min-h-0">
         
-        {/* LISTA DE CASOS (Izquierda) */}
         <div className="w-2/3 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
           <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
             <h3 className="font-bold text-gray-700 flex items-center">Casos Activos</h3>
@@ -78,7 +77,6 @@ export default function CasosEscalados() {
           </div>
         </div>
 
-        {/* DETALLE DEL CASO (Derecha) */}
         {seleccionado && (
           <div className="w-1/3 flex flex-col gap-6 overflow-y-auto">
             <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">

@@ -14,9 +14,6 @@ from app.routers.riesgo import calcular_metricas_estudiante
 router = APIRouter(prefix="/api/v1", tags=["Tutorías e Intervenciones"])
 permitir_acceso = RoleChecker(["Tutor", "Administrador", "Director", "Psicopedagogia"])
 
-# ==========================================
-# FUNCIÓN HELPER: VALIDACIÓN DE PERMISOS
-# ==========================================
 def verificar_permiso_tutor(db: Session, current_user, id_estudiante: int):
     estudiante = db.query(Estudiante).filter(Estudiante.id_estudiante == id_estudiante).first()
     if not estudiante:
@@ -37,9 +34,6 @@ def verificar_permiso_tutor(db: Session, current_user, id_estudiante: int):
         )
     return estudiante, tutor
 
-# ==========================================
-# ENDPOINTS DE INTERVENCIONES
-# ==========================================
 @router.post("/estudiantes/{id_estudiante}/intervenciones", response_model=IntervencionOut, dependencies=[Depends(permitir_acceso)])
 def registrar_intervencion(
     id_estudiante: int,
@@ -57,7 +51,7 @@ def registrar_intervencion(
     nueva_intervencion = Intervencion(
         id_estudiante=id_estudiante,
         id_tutor=tutor.id_tutor,
-        fecha=date.today(), # Se asigna automáticamente la fecha actual
+        fecha=date.today(),
         acuerdos=data.acuerdos,
         nivel_resolucion=data.nivel_resolucion
     )
@@ -99,9 +93,6 @@ def historial_intervenciones(id_estudiante: int, db: Session = Depends(get_db), 
         ))
     return lista_salida
 
-# ==========================================
-# ENDPOINT AGREGADOR (BFF): RESUMEN COMPLETO
-# ==========================================
 @router.get("/estudiantes/{id_estudiante}/resumen-completo", response_model=ResumenCompletoOut, dependencies=[Depends(permitir_acceso)])
 def resumen_completo_estudiante(id_estudiante: int, db: Session = Depends(get_db), current_user = Depends(get_current_active_user)):
     estudiante, _ = verificar_permiso_tutor(db, current_user, id_estudiante)

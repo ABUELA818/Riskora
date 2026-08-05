@@ -10,9 +10,7 @@ from app.core.deps import get_db, RoleChecker
 router = APIRouter(prefix="/api/v1", tags=["IA - Riesgo (Mock)"])
 permitir_acceso = RoleChecker(["Docente", "Tutor", "Administrador"])
 
-# TODO: reemplazar por llamada real al modelo de IA (doc 4.5) cuando se implemente RF-13 — mantener el mismo contrato de respuesta
 def calcular_metricas_estudiante(db: Session, id_estudiante: int):
-    # 1. Calcular Asistencia Real
     registros_asis = db.query(Asistencia).filter(Asistencia.id_estudiante == id_estudiante).all()
     total_clases = len(registros_asis)
     
@@ -20,15 +18,13 @@ def calcular_metricas_estudiante(db: Session, id_estudiante: int):
         validas = sum(1 for r in registros_asis if r.estatus in [EstatusAsistenciaEnum.PRESENTE, EstatusAsistenciaEnum.RETARDO])
         porcentaje_asistencia = (validas / total_clases) * 100
     else:
-        porcentaje_asistencia = 100.0  # Default si no hay registros
+        porcentaje_asistencia = 100.0 
 
-    # 2. Calcular Promedio General y Tendencia Real
     calificaciones = db.query(Calificacion).filter(Calificacion.id_estudiante == id_estudiante).all()
     if calificaciones:
         vals = [float(c.valor) for c in calificaciones]
         promedio_general = sum(vals) / len(vals)
         
-        # Tendencia sencilla basada en parciales
         parciales = sorted(list(set([c.parcial for c in calificaciones])))
         tendencia = "Estable"
         if len(parciales) >= 2:
@@ -39,7 +35,7 @@ def calcular_metricas_estudiante(db: Session, id_estudiante: int):
             if p_ult - p_penult >= 3.0: tendencia = "Sube"
             elif p_ult - p_penult <= -3.0: tendencia = "Baja"
     else:
-        promedio_general = 85.0  # Default base
+        promedio_general = 85.0 
         tendencia = "Estable"
 
     return porcentaje_asistencia, promedio_general, tendencia
@@ -52,8 +48,6 @@ def obtener_riesgo_estudiante(id: int, db: Session = Depends(get_db)):
 
     porcentaje_asistencia, promedio_general, tendencia = calcular_metricas_estudiante(db, id)
 
-    # Lógica determinista del Mock solicitada
-    # Asumiendo escala 0-100 (donde 6.0 equivale a 60.0 y 7.5 a 75.0)
     if porcentaje_asistencia < 70.0 or promedio_general < 60.0:
         nivel_riesgo = "Alto"
         score = 0.85
@@ -76,7 +70,7 @@ def obtener_riesgo_estudiante(id: int, db: Session = Depends(get_db)):
         score=score,
         factores=factores,
         fecha_calculo=date.today().isoformat(),
-        es_prediccion_simulada=True  # Flag obligatorio del Mock
+        es_prediccion_simulada=True
     )
 
 @router.get("/riesgo/resumen", response_model=RiesgoResumenOut, dependencies=[Depends(permitir_acceso)])

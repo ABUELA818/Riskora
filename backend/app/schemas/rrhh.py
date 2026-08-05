@@ -3,14 +3,14 @@ from typing import List, Optional
 
 class PersonalCreate(BaseModel):
     nombre_completo: str
-    correo: EmailStr # El frontend envía "correo"
+    correo: EmailStr
     rol: str
-    carrera_asignada: Optional[str] = None
+    id_carrera: Optional[int] = None 
 
 class PersonalOut(BaseModel):
     id_usuario: int
     nombre_completo: str
-    correo: str # El frontend espera "correo"
+    correo: str
     rol: str
     estado: bool
     

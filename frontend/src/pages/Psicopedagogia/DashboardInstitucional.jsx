@@ -30,12 +30,10 @@ export default function DashboardInstitucional() {
         </div>
       </div>
 
-      {/* KPIs SUPERIORES */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative">
           <TrendingUp className="absolute top-6 right-6 w-5 h-5 text-green-500" />
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Retención Institucional / Deserción</p>
-          {/* Criterio de aceptación: Mostrar Próximamente si no hay histórico real de bajas */}
           <h3 className="text-3xl font-black text-gray-400 mb-2 italic">Próximamente</h3>
           <p className="text-xs text-green-600 font-medium">Requiere histórico de bajas (V2)</p>
         </div>
@@ -57,7 +55,6 @@ export default function DashboardInstitucional() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* TABLA: Riesgo por Carrera (Simulado visualmente para el prototipo general) */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-gray-100 flex justify-between items-center">
             <h3 className="text-lg font-bold text-gray-900">Métricas Institucionales (Consolidado)</h3>
@@ -90,7 +87,6 @@ export default function DashboardInstitucional() {
           </table>
         </div>
 
-        {/* COLUMNA DERECHA */}
         <div className="space-y-6">
           <div className="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-2xl border border-indigo-100 shadow-sm text-center">
             <h3 className="text-lg font-bold text-gray-900 mb-2">Generar Reporte Mensual</h3>

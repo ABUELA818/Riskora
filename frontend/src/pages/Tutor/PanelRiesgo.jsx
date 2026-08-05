@@ -14,7 +14,6 @@ export default function PanelRiesgo() {
   useEffect(() => {
     if (!token) return;
 
-    // 1. Cargamos estudiantes
     fetch('http://localhost:8000/api/v1/estudiantes', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -23,7 +22,6 @@ export default function PanelRiesgo() {
         if (!Array.isArray(data)) return;
         setEstudiantes(data);
 
-        // 2. Cargamos el riesgo de cada uno en paralelo para la tabla
         const mapa = {};
         await Promise.all(data.map(async est => {
           try {
@@ -56,7 +54,6 @@ export default function PanelRiesgo() {
           <p className="text-sm text-gray-500">Análisis predictivo impulsado por IA para cohortes activas.</p>
         </div>
 
-        {/* Filtros */}
         <div className="flex space-x-2 bg-white border border-gray-200 rounded-lg p-1">
           {['Todos', 'Alto', 'Medio', 'Bajo'].map(nivel => (
             <button

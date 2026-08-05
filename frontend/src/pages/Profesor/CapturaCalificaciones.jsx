@@ -8,26 +8,21 @@ import {
 export default function CapturaCalificaciones() {
   const { token } = useAuth();
   
-  // Datos del servidor
   const [grupos, setGrupos] = useState([]);
   const [estudiantes, setEstudiantes] = useState([]);
   
-  // Filtros
   const [grupoSeleccionado, setGrupoSeleccionado] = useState('');
   const [materiasDisponibles, setMateriasDisponibles] = useState([]);
   const [materiaSeleccionada, setMateriaSeleccionada] = useState('');
   const [parcialSeleccionado, setParcialSeleccionado] = useState('1');
   
-  // Estado principal de la tabla (memoria de captura)
   const [calificaciones, setCalificaciones] = useState({});
   
-  // Estados de Modal y Feedback
   const [modalObs, setModalObs] = useState({ isOpen: false, estudiante: null });
   const [obsForm, setObsForm] = useState({ tipo: '', nota: '' });
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState(null);
 
-  // 1. Cargar grupos y estudiantes (Optimizado)
   useEffect(() => {
     if (!token) return;
     fetch('http://localhost:8000/api/v1/grupos', {
@@ -54,7 +49,6 @@ export default function CapturaCalificaciones() {
           const filtrados = data.filter(e => e.id_grupo === parseInt(grupoSeleccionado));
           setEstudiantes(filtrados);
           
-          // Inicializar estado de calificaciones sin borrar si ya hay datos capturados
           setCalificaciones(prev => {
             const nuevoEstado = { ...prev };
             filtrados.forEach(est => {
@@ -82,9 +76,7 @@ export default function CapturaCalificaciones() {
     });
 }, [grupoSeleccionado, token]);
 
-  // Manejador de inputs con validación visual en vivo
   const handleCalificacionChange = (id, campo, valor) => {
-    // Permitir solo números y vacío
     if (valor !== '' && (isNaN(valor) || valor < 0 || valor > 150)) return; 
     
     setCalificaciones(prev => ({
@@ -96,14 +88,12 @@ export default function CapturaCalificaciones() {
     }));
   };
 
-  // Cálculos en vivo para los Cards Superiores
   const calcularEstadisticas = () => {
     let sumaTotal = 0;
     let totalCapturadas = 0;
     let enRiesgo = 0;
 
     Object.values(calificaciones).forEach(calif => {
-      // Promedio personal del estudiante
       const notas = [calif.p1, calif.p2, calif.p3, calif.final].filter(n => n !== '' && n <= 100);
       if (notas.length > 0) {
         const promPersonal = notas.reduce((a, b) => parseFloat(a) + parseFloat(b), 0) / notas.length;
@@ -121,20 +111,18 @@ export default function CapturaCalificaciones() {
 
   const stats = calcularEstadisticas();
 
-  // Enviar Lote de Calificaciones
   const guardarCalificacionesLote = async () => {
     setIsSaving(true);
     try {
-      // Como el backend pide POST por estudiante, hacemos un Promise.all
       const promesas = estudiantes.map(est => {
         const valor = calificaciones[est.id_estudiante][`p${parcialSeleccionado}`] || calificaciones[est.id_estudiante].final;
         
-        if (valor === '' || valor > 100) return Promise.resolve(); // Omitir vacíos e inválidos
+        if (valor === '' || valor > 100) return Promise.resolve();
 
         const payload = {
           id_materia: parseInt(materiaSeleccionada),
           grupo_id: parseInt(grupoSeleccionado),
-          id_periodo: 1, // Mock
+          id_periodo: 1,
           parcial: parseInt(parcialSeleccionado),
           valor: parseFloat(valor),
         };
@@ -159,11 +147,9 @@ export default function CapturaCalificaciones() {
     }
   };
 
-  // Enviar Observación Modal
   const guardarObservacion = async () => {
     if (!obsForm.tipo) return alert('Selecciona una categoría');
     
-    // Mapear severidad según el tipo (regla de negocio simple)
     const severidad = obsForm.tipo === 'Indisciplina' ? 'Alta' : (obsForm.tipo === 'Dificultad de aprendizaje' ? 'Media' : 'Baja');
 
     try {
@@ -191,7 +177,6 @@ export default function CapturaCalificaciones() {
   return (
     <div className="bg-gray-50/50 min-h-full">
       
-      {/* HEADER */}
       <div className="p-8 pb-4">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Captura de calificaciones</h2>
         <div className="flex justify-between items-center">
@@ -212,7 +197,6 @@ export default function CapturaCalificaciones() {
         </div>
       </div>
 
-      {/* CARDS DE ESTADÍSTICAS (Actualización en vivo) */}
       <div className="px-8 mb-6 grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm border-l-4 border-l-green-500">
           <p className="text-xs font-bold text-gray-500 tracking-wider flex items-center mb-2">
@@ -245,11 +229,9 @@ export default function CapturaCalificaciones() {
         </div>
       </div>
 
-      {/* TABLA PRINCIPAL */}
       <div className="px-8 pb-8">
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           
-          {/* Controles de tabla */}
           <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-white">
             <select 
               value={grupoSeleccionado}
@@ -292,10 +274,8 @@ export default function CapturaCalificaciones() {
               {estudiantes.map(est => {
                 const notas = calificaciones[est.id_estudiante] || { p1: '', p2: '', p3: '', final: '' };
                 
-                // Validación visual de error (>100)
                 const isInvalid = (val) => val !== '' && parseFloat(val) > 100;
                 
-                // Cálculo simple de fila
                 const p1 = parseFloat(notas.p1) || 0;
                 const p2 = parseFloat(notas.p2) || 0;
                 const p3 = parseFloat(notas.p3) || 0;
@@ -324,7 +304,6 @@ export default function CapturaCalificaciones() {
                     </td>
                     <td className="p-4 text-sm text-gray-600">{est.matricula}</td>
                     
-                    {/* Inputs de Calificaciones */}
                     {['p1', 'p2', 'p3', 'final'].map((campo) => (
                       <td key={campo} className="p-4 text-center">
                         <input 
@@ -348,7 +327,6 @@ export default function CapturaCalificaciones() {
         </div>
       </div>
 
-      {/* TOAST NOTIFICATION */}
       {toast && (
         <div className="fixed bottom-6 right-6 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg flex items-center z-50">
           <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
@@ -356,12 +334,10 @@ export default function CapturaCalificaciones() {
         </div>
       )}
 
-      {/* MODAL DE OBSERVACIÓN DE CONDUCTA (RF-14) */}
       {modalObs.isOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl w-[500px] shadow-2xl overflow-hidden">
             
-            {/* Modal Header */}
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Registrar Observación</h3>
@@ -372,7 +348,6 @@ export default function CapturaCalificaciones() {
               </button>
             </div>
 
-            {/* Modal Body */}
             <div className="p-6 space-y-6">
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Categoría de comportamiento</label>
@@ -415,7 +390,6 @@ export default function CapturaCalificaciones() {
               </div>
             </div>
 
-            {/* Modal Footer */}
             <div className="px-6 py-4 border-t border-gray-100 flex justify-end space-x-3">
               <button 
                 onClick={() => setModalObs({ isOpen: false, estudiante: null })}

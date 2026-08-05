@@ -18,12 +18,10 @@ def registrar_asistencia_masiva(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_active_user)
 ):
-    # 1. Validar que el grupo exista
     grupo = db.query(Grupo).filter(Grupo.id_grupo == data.grupo_id).first()
     if not grupo:
         raise HTTPException(status_code=404, detail="Grupo no encontrado")
 
-    # 2. Validar propiedad del grupo (RBAC - 403)
     user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
     
     if user_role == "Tutor":
@@ -35,7 +33,6 @@ def registrar_asistencia_masiva(
             )
 
     elif user_role == "Docente":
-        # Un docente puede tomar asistencia si imparte al menos una materia en ese grupo
         docente = db.query(Docente).filter(Docente.id_usuario == current_user.id_usuario).first()
         tiene_horario_en_grupo = (
             db.query(Horario)
@@ -47,9 +44,7 @@ def registrar_asistencia_masiva(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No tienes permiso para tomar asistencia de un grupo en el que no impartes clase."
             )
-    # Administrador pasa sin validación adicional
 
-    # 3. Regla de no-duplicidad (409)
     asistencia_existente = db.query(Asistencia).filter(
         Asistencia.fecha == data.fecha,
         Asistencia.id_horario == data.id_horario
@@ -61,7 +56,6 @@ def registrar_asistencia_masiva(
             detail="Ya existe un registro de asistencia para este grupo en este horario y fecha."
         )
 
-    # 4. Inserción de registros
     nuevas_asistencias = []
     for ast in data.asistencias:
         nueva = Asistencia(
@@ -82,12 +76,10 @@ def actualizar_asistencia_masiva(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_active_user)
 ):
-    # 1. Validar que el grupo exista
     grupo = db.query(Grupo).filter(Grupo.id_grupo == data.grupo_id).first()
     if not grupo:
         raise HTTPException(status_code=404, detail="Grupo no encontrado")
 
-    # 2. Misma validación de permisos que en el POST
     user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
 
     if user_role == "Tutor":
@@ -102,7 +94,6 @@ def actualizar_asistencia_masiva(
         if not docente or not tiene_horario:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No impartes clase en este grupo.")
 
-    # 3. Upsert: actualiza si ya existe el registro (mismo estudiante+horario+fecha), si no, lo crea
     actualizados = 0
     creados = 0
     for ast in data.asistencias:
@@ -129,7 +120,6 @@ def actualizar_asistencia_masiva(
 
 @router.get("/asistencia", response_model=List[AsistenciaOut], dependencies=[Depends(permitir_acceso)])
 def consultar_asistencia(grupo_id: int, fecha: date, db: Session = Depends(get_db)):
-    # Extraemos los IDs de los horarios que pertenecen a este grupo
     horarios_grupo = db.query(Horario.id_horario).filter(Horario.id_grupo == grupo_id).subquery()
     
     asistencias = db.query(Asistencia).filter(
@@ -144,7 +134,6 @@ def resumen_asistencia(id: int, db: Session = Depends(get_db)):
     registros = db.query(Asistencia).filter(Asistencia.id_estudiante == id).all()
     total_clases = len(registros)
 
-    # Si no hay registros, devolvemos 0 para evitar divisiones por cero
     if total_clases == 0:
         return {
             "id_estudiante": id,
@@ -154,7 +143,6 @@ def resumen_asistencia(id: int, db: Session = Depends(get_db)):
             "porcentaje_asistencia": 0.0
         }
 
-    # Contamos Presentes y Retardos como asistencias válidas
     asistencias_validas = sum(1 for r in registros if r.estatus in [EstatusAsistenciaEnum.PRESENTE, EstatusAsistenciaEnum.RETARDO])
     ausencias = sum(1 for r in registros if r.estatus == EstatusAsistenciaEnum.AUSENTE)
 

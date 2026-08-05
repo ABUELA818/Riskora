@@ -6,19 +6,17 @@ import SimulationBadge from '../components/SimulationBadge';
 
 export default function ExpedienteCompleto() {
   const { id } = useParams();
-  const { token, user } = useAuth(); // Asumiendo que useAuth te devuelve el usuario actual
+  const { token, user } = useAuth();
   
   const [expediente, setExpediente] = useState(null);
   const [activeTab, setActiveTab] = useState('academico');
   const [loading, setLoading] = useState(true);
 
-  // Validación estricta de Rol (HU-07)
   const isPsico = user?.rol === 'Psicopedagogia' || user?.rol === 'Administrador';
 
   useEffect(() => {
     if (!token || !id) return;
     
-    // Si es psicopedagogía, agregamos el parámetro para que el backend inyecte el JSON de IA
     const url = isPsico 
       ? `http://localhost:8000/api/v1/estudiantes/${id}/expediente-completo?vista=psicopedagogia`
       : `http://localhost:8000/api/v1/estudiantes/${id}/expediente-completo`;
@@ -36,7 +34,6 @@ export default function ExpedienteCompleto() {
 
   return (
     <div className="p-8 bg-gray-50/50 min-h-full">
-      {/* HEADER / PERFIL DEL ALUMNO */}
       <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm mb-6 flex flex-col lg:flex-row gap-6">
         <div className="flex-1 flex items-start">
           <img 
@@ -63,7 +60,6 @@ export default function ExpedienteCompleto() {
           </div>
         </div>
 
-        {/* KPIs Laterales */}
         <div className="flex flex-col gap-3 w-full lg:w-64 shrink-0">
           <div className="bg-orange-50 border border-orange-100 p-3 rounded-xl flex items-center">
             <AlertTriangle className="w-6 h-6 text-orange-500 mr-3 shrink-0" />
@@ -82,7 +78,6 @@ export default function ExpedienteCompleto() {
         </div>
       </div>
 
-      {/* PESTAÑAS DE NAVEGACIÓN */}
       <div className="border-b border-gray-200 mb-6 flex space-x-6 overflow-x-auto">
         <button onClick={() => setActiveTab('academico')} className={`pb-3 text-sm font-bold flex items-center border-b-2 transition-colors whitespace-nowrap ${activeTab === 'academico' ? 'border-eduPurple text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
           <Book className="w-4 h-4 mr-2" /> Historial Académico
@@ -94,7 +89,6 @@ export default function ExpedienteCompleto() {
           <FileText className="w-4 h-4 mr-2" /> Observaciones y Conducta
         </button>
         
-        {/* PESTAÑA PROTEGIDA (Solo Psicopedagogía) */}
         {isPsico && (
           <button onClick={() => setActiveTab('ia')} className={`pb-3 text-sm font-bold flex items-center border-b-2 transition-colors whitespace-nowrap ${activeTab === 'ia' ? 'border-eduPurple text-eduPurple' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
             <Brain className="w-4 h-4 mr-2" /> Análisis IA
@@ -102,10 +96,8 @@ export default function ExpedienteCompleto() {
         )}
       </div>
 
-      {/* CONTENIDO DE PESTAÑAS */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* CONTENIDO TAB IA (Protegido) */}
         {activeTab === 'ia' && isPsico && (
           <>
             <div className="lg:col-span-2 space-y-6">
@@ -135,7 +127,6 @@ export default function ExpedienteCompleto() {
             </div>
 
             <div className="space-y-6">
-              {/* Recomendaciones */}
               <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <h3 className="text-sm font-bold text-gray-900 mb-4">Intervenciones Recomendadas</h3>
                 <div className="space-y-4">
@@ -154,7 +145,6 @@ export default function ExpedienteCompleto() {
                 </div>
               </div>
 
-              {/* Factores de Riesgo (Desglose real del Endpoint) */}
               <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
                 <h3 className="text-sm font-bold text-gray-900 mb-4">Análisis de Factores (Mock)</h3>
                 <table className="w-full text-left text-sm">
@@ -175,7 +165,6 @@ export default function ExpedienteCompleto() {
           </>
         )}
 
-        {/* CONTENIDO TABS BÁSICAS */}
         {activeTab !== 'ia' && (
           <div className="lg:col-span-3 bg-white p-8 rounded-2xl border border-gray-200 shadow-sm text-center text-gray-500 min-h-[300px] flex items-center justify-center">
             El contenido de la pestaña "{activeTab.toUpperCase()}" se renderiza aquí.
