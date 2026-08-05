@@ -12,7 +12,6 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Validación rápida para habilitar el botón
   const isFormValid = email.includes('@') && email.includes('.') && password.length >= 6;
 
   const handleSubmit = async (e) => {
