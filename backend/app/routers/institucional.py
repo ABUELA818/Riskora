@@ -2,18 +2,32 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from app.db.session import SessionLocal
-from app.models.models import Estudiante, Grupo, Intervencion, Tutor, Usuario
+from app.models.models import Estudiante, Grupo, Intervencion, Tutor, Usuario, DirectorCarrera, Carrera 
 from app.schemas.institucional import IndicadoresOut, GrupoRiesgoOut, CasoEscaladoOut
 from app.core.deps import get_db, RoleChecker, get_current_active_user
 from app.routers.riesgo import calcular_metricas_estudiante
 
 router = APIRouter(prefix="/api/v1", tags=["Módulo Director / Institucional"])
 
-# Permisos generales para el módulo (Tutor y Administrador)
 permitir_acceso = RoleChecker(["Administrador", "Tutor", "Director", "Psicopedagogia"])
 
+def verificar_carrera_director(db: Session, current_user, id_carrera: int):
+    user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
+    if user_role != "Director":
+        return
+
+    asignacion = db.query(DirectorCarrera).filter(
+        DirectorCarrera.id_usuario == current_user.id_usuario,
+        DirectorCarrera.id_carrera == id_carrera
+    ).first()
+    if not asignacion:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permiso sobre esta carrera."
+        )
+
+
 def calcular_kpis(estudiantes, db: Session):
-    # Criterio de aceptación: Evitar error 500 si no hay estudiantes
     if not estudiantes:
         return {
             "total_estudiantes": 0,
@@ -33,11 +47,9 @@ def calcular_kpis(estudiantes, db: Session):
         p_asis, prom, _ = calcular_metricas_estudiante(db, est.id_estudiante)
         suma_promedios += prom
 
-        # Criterio: Reprobación es promedio < 60.0 (en escala 0-100)
         if prom < 60.0:
             reprobados += 1
 
-        # Criterio: Clasificación de riesgo coherente con el mock
         if p_asis < 70.0 or prom < 60.0:
             r_alto += 1
         elif p_asis < 85.0 or prom < 75.0:
@@ -57,21 +69,50 @@ def calcular_kpis(estudiantes, db: Session):
         "riesgo_alto": r_alto
     }
 
+def verificar_carrera_director(db: Session, current_user, id_carrera: int):
+    user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
+    if user_role != "Director":
+        return
+
+    asignacion = db.query(DirectorCarrera).filter(
+        DirectorCarrera.id_usuario == current_user.id_usuario,
+        DirectorCarrera.id_carrera == id_carrera
+    ).first()
+    if not asignacion:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permiso sobre esta carrera."
+        )
+
+@router.get("/director/mi-carrera")
+def obtener_mi_carrera(db: Session = Depends(get_db), current_user = Depends(get_current_active_user)):
+    user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
+    if user_role != "Director":
+        raise HTTPException(status_code=403, detail="Solo Directores tienen carrera asignada.")
+
+    asignacion = db.query(DirectorCarrera).filter(
+        DirectorCarrera.id_usuario == current_user.id_usuario
+    ).first()
+    if not asignacion:
+        raise HTTPException(status_code=404, detail="No tienes una carrera asignada. Contacta a RRHH.")
+
+    carrera = db.query(Carrera).filter(Carrera.id_carrera == asignacion.id_carrera).first()
+    return {"id_carrera": carrera.id_carrera, "nombre": carrera.nombre}
+
 @router.get("/carreras/{id}/indicadores", response_model=IndicadoresOut, dependencies=[Depends(permitir_acceso)])
-def indicadores_carrera(id: str, db: Session = Depends(get_db)):
-    # Asumimos que id mapea al campo "carrera" en la tabla Grupo
-    estudiantes = db.query(Estudiante).join(Grupo).filter(Grupo.carrera == id).all()
+def indicadores_carrera(id: int, db: Session = Depends(get_db), current_user = Depends(get_current_active_user)):
+    verificar_carrera_director(db, current_user, id)
+    estudiantes = db.query(Estudiante).join(Grupo).filter(Grupo.id_carrera == id).all()
     return calcular_kpis(estudiantes, db)
 
 @router.get("/carreras/{id}/riesgo-agregado-por-grupo", response_model=List[GrupoRiesgoOut], dependencies=[Depends(permitir_acceso)])
-def riesgo_por_grupo(id: str, db: Session = Depends(get_db)):
-    grupos = db.query(Grupo).filter(Grupo.carrera == id).all()
+def riesgo_por_grupo(id: int, db: Session = Depends(get_db), current_user = Depends(get_current_active_user)):
+    verificar_carrera_director(db, current_user, id)
+    grupos = db.query(Grupo).filter(Grupo.id_carrera == id).all()
     resultados = []
-
     for grupo in grupos:
         estudiantes = db.query(Estudiante).filter(Estudiante.id_grupo == grupo.id_grupo).all()
         kpis = calcular_kpis(estudiantes, db)
-        
         resultados.append(GrupoRiesgoOut(
             id_grupo=grupo.id_grupo,
             nombre_grupo=grupo.nombre_grupo,
@@ -80,12 +121,10 @@ def riesgo_por_grupo(id: str, db: Session = Depends(get_db)):
             riesgo_medio=kpis["riesgo_medio"],
             riesgo_alto=kpis["riesgo_alto"]
         ))
-        
     return resultados
 
 @router.get("/institucional/indicadores", response_model=IndicadoresOut)
 def indicadores_institucionales(db: Session = Depends(get_db), current_user = Depends(get_current_active_user)):
-    # Criterio de aceptación: Bloqueo estricto a Docentes (403)
     user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
     if user_role == "Docente":
         raise HTTPException(
@@ -98,7 +137,6 @@ def indicadores_institucionales(db: Session = Depends(get_db), current_user = De
 
 @router.get("/casos-escalados", response_model=List[CasoEscaladoOut], dependencies=[Depends(permitir_acceso)])
 def casos_escalados(db: Session = Depends(get_db)):
-    # Buscamos intervenciones marcadas como escaladas
     intervenciones = db.query(Intervencion, Usuario.nombre_completo)\
         .join(Tutor, Intervencion.id_tutor == Tutor.id_tutor)\
         .join(Usuario, Tutor.id_usuario == Usuario.id_usuario)\
@@ -113,7 +151,6 @@ def casos_escalados(db: Session = Depends(get_db)):
         if inter.id_estudiante in vistos:
             continue
         
-        # Validamos si actualmente está en riesgo Alto
         p_asis, prom, _ = calcular_metricas_estudiante(db, inter.id_estudiante)
         if p_asis < 70.0 or prom < 60.0:
             estudiante = db.query(Estudiante).filter(Estudiante.id_estudiante == inter.id_estudiante).first()
@@ -122,7 +159,7 @@ def casos_escalados(db: Session = Depends(get_db)):
                     id_estudiante=estudiante.id_estudiante,
                     nombre_completo=estudiante.nombre_completo,
                     matricula=estudiante.matricula,
-                    riesgo_score=0.85, # Score fijo de riesgo Alto según el mock
+                    riesgo_score=0.85,
                     ultimo_acuerdo=inter.acuerdos,
                     tutor_nombre=nombre_tutor
                 ))

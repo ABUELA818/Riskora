@@ -2,29 +2,24 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.db.session import SessionLocal
-from app.models.models import Estudiante, Grupo, Materia, Periodo, Horario, Docente
+from app.models.models import Estudiante, Grupo, Materia, Periodo, Horario, Docente, Carrera
 from app.core.deps import get_db, RoleChecker, get_current_active_user
 from app.schemas.academic import (
     EstudianteCreate, EstudianteOut, GrupoCreate, GrupoOut, 
     MateriaCreate, MateriaOut, PeriodoCreate, PeriodoOut
 )
 from app.core.deps import get_db, RoleChecker
+from app.schemas.carrera import CarreraOut
 
 router = APIRouter(prefix="/api/v1", tags=["Académico"])
 
-# --- MIDDLEWARES DE ROLES ---
-# Solo administradores (RRHH/Admin) pueden crear o borrar
 solo_admin = RoleChecker(["Administrador", "Psicopedagogia"])
-# Todos los roles pueden leer listas (con sus respectivos filtros que haremos luego en el front)
-todos_los_roles = RoleChecker(["Administrador", "Tutor", "Docente", "Director", "Psicopedagogia"])
+todos_los_roles = RoleChecker(["Administrador", "Tutor", "Docente", "Director", "Psicopedagogia", "RRHH"])
 
 
-# ==========================================
 # 1. ESTUDIANTES
-# ==========================================
 @router.post("/estudiantes", response_model=EstudianteOut, dependencies=[Depends(solo_admin)])
 def crear_estudiante(estudiante: EstudianteCreate, db: Session = Depends(get_db)):
-    # Validación de matrícula única (RF-02)
     existe = db.query(Estudiante).filter(Estudiante.matricula == estudiante.matricula).first()
     if existe:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="La matrícula ya existe")
@@ -43,10 +38,9 @@ def obtener_estudiantes(
     skip: int = 0, limit: int = 100,
     db: Session = Depends(get_db)
 ):
-    # Solo traemos los activos por el soft delete
+
     query = db.query(Estudiante).filter(Estudiante.estado == True)
     
-    # Filtro transversal (RF-15)
     if carrera or grupo:
         query = query.join(Grupo)
         if carrera:
@@ -55,6 +49,10 @@ def obtener_estudiantes(
             query = query.filter(Grupo.nombre_grupo.ilike(f"%{grupo}%"))
             
     return query.offset(skip).limit(limit).all()
+
+@router.get("/carreras", response_model=List[CarreraOut], dependencies=[Depends(todos_los_roles)])
+def obtener_carreras(db: Session = Depends(get_db)):
+    return db.query(Carrera).all()
 
 @router.get("/estudiantes/{id}", response_model=EstudianteOut, dependencies=[Depends(todos_los_roles)])
 def obtener_estudiante_por_id(id: int, db: Session = Depends(get_db)):
@@ -78,7 +76,6 @@ def actualizar_estudiante(id: int, est_in: EstudianteCreate, db: Session = Depen
 
 @router.delete("/estudiantes/{id}", dependencies=[Depends(solo_admin)])
 def eliminar_estudiante_soft(id: int, db: Session = Depends(get_db)):
-    # Soft delete: no borramos el registro, solo cambiamos el estado
     estudiante = db.query(Estudiante).filter(Estudiante.id_estudiante == id).first()
     if not estudiante:
         raise HTTPException(status_code=404, detail="Estudiante no encontrado")
@@ -88,9 +85,8 @@ def eliminar_estudiante_soft(id: int, db: Session = Depends(get_db)):
     return {"message": "Estudiante dado de baja correctamente (Soft delete)"}
 
 
-# ==========================================
+
 # 2. GRUPOS
-# ==========================================
 @router.post("/grupos", response_model=GrupoOut, dependencies=[Depends(solo_admin)])
 def crear_grupo(grupo: GrupoCreate, db: Session = Depends(get_db)):
     nuevo_grupo = Grupo(**grupo.model_dump())
@@ -101,7 +97,20 @@ def crear_grupo(grupo: GrupoCreate, db: Session = Depends(get_db)):
 
 @router.get("/grupos", response_model=List[GrupoOut], dependencies=[Depends(todos_los_roles)])
 def obtener_grupos(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return db.query(Grupo).offset(skip).limit(limit).all()
+    grupos = db.query(Grupo).offset(skip).limit(limit).all()
+    resultado = []
+    for g in grupos:
+        carrera = db.query(Carrera).filter(Carrera.id_carrera == g.id_carrera).first()
+        resultado.append(GrupoOut(
+            id_grupo=g.id_grupo,
+            nombre_grupo=g.nombre_grupo,
+            id_carrera=g.id_carrera,
+            nombre_carrera=carrera.nombre if carrera else None,
+            cuatrimestre=g.cuatrimestre,
+            id_plan_estudio=g.id_plan_estudio,
+            id_tutor=g.id_tutor
+        ))
+    return resultado
 
 @router.post("/grupos/{id}/asignar-docente", dependencies=[Depends(solo_admin)])
 def asignar_docente_a_grupo(id: int, id_docente: int, db: Session = Depends(get_db)):
@@ -109,15 +118,11 @@ def asignar_docente_a_grupo(id: int, id_docente: int, db: Session = Depends(get_
     if not grupo:
         raise HTTPException(status_code=404, detail="Grupo no encontrado")
     
-    # En nuestro esquema, el responsable principal es el id_tutor
     grupo.id_tutor = id_docente 
     db.commit()
     return {"message": f"Docente/Tutor {id_docente} asignado al grupo {id}"}
 
-
-# ==========================================
 # 3. MATERIAS
-# ==========================================
 @router.post("/materias", response_model=MateriaOut, dependencies=[Depends(solo_admin)])
 def crear_materia(materia: MateriaCreate, db: Session = Depends(get_db)):
     nueva_materia = Materia(**materia.model_dump())
@@ -139,7 +144,6 @@ def materias_del_docente_en_grupo(
     user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
 
     if user_role == "Administrador":
-        # Admin ve todas las materias asignadas a ese grupo, sin filtrar por docente
         materia_ids = db.query(Horario.id_materia).filter(Horario.id_grupo == id_grupo).distinct()
     else:
         docente = db.query(Docente).filter(Docente.id_usuario == current_user.id_usuario).first()
@@ -153,10 +157,7 @@ def materias_del_docente_en_grupo(
     ids = [m[0] for m in materia_ids]
     return db.query(Materia).filter(Materia.id_materia.in_(ids)).all()
 
-
-# ==========================================
 # 4. PERIODOS ACADÉMICOS
-# ==========================================
 @router.post("/periodos", response_model=PeriodoOut, dependencies=[Depends(solo_admin)])
 def crear_periodo(periodo: PeriodoCreate, db: Session = Depends(get_db)):
     nuevo_periodo = Periodo(**periodo.model_dump())
