@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { 
   LayoutDashboard, ClipboardList, BarChart2, Users, 
   Settings, Bell, Search, HelpCircle, ShieldAlert, 
-  UserPlus, FileText, Lock, Folder, LogOut // <-- Agregamos LogOut aquí
+  UserPlus, FileText, Lock, Folder, LogOut
 } from 'lucide-react';
 
 const MENU_ITEMS = {
@@ -18,7 +18,7 @@ const MENU_ITEMS = {
     { name: 'Casos Escalados', path: '/casos-escalados', icon: FileText },
   ],
   Director: [
-    { name: 'Dashboard Institucional', path: '/carreras/1/dashboard', icon: LayoutDashboard },
+    { name: 'Dashboard Institucional', path: '/carreras/dashboard', icon: LayoutDashboard },
     { name: 'Gestión de Grupos', path: '/grupos', icon: Folder },
     { name: 'Docentes', path: '/docentes', icon: Users },
     { name: 'Casos Escalados', path: '/casos-escalados', icon: ShieldAlert },
@@ -46,7 +46,6 @@ const MENU_ITEMS = {
 
 export default function MainLayout() {
   const location = useLocation();
-  // Extraemos también la función logout de tu contexto
   const { role, logout } = useAuth(); 
   
   const menuOptions = MENU_ITEMS[role] || [];
@@ -68,7 +67,6 @@ export default function MainLayout() {
             </div>
           </div>
 
-          {/* Nav Items Dinámicos por Rol */}
           <nav className="p-4 space-y-1">
             {menuOptions.length === 0 && (
               <p className="text-xs text-red-500 px-4 py-2">Rol "{role}" no configurado en menús.</p>
@@ -94,7 +92,6 @@ export default function MainLayout() {
           </nav>
         </div>
 
-        {/* Footer Sidebar */}
         <div className="p-4 border-t border-gray-100 flex flex-col gap-1">
            <div className="flex items-center px-4 py-3 mb-2 bg-gray-50 rounded-xl border border-gray-100">
               <ShieldAlert className="w-4 h-4 mr-2 text-gray-400" />
@@ -106,7 +103,6 @@ export default function MainLayout() {
               Soporte
            </Link>
 
-           {/* BOTÓN DE CERRAR SESIÓN */}
            <button 
              onClick={logout}
              className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg font-medium transition-colors"
@@ -117,15 +113,12 @@ export default function MainLayout() {
         </div>
       </aside>
 
-      {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col min-w-0">
         
-        {/* TOPBAR */}
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-0">
           <div className="flex items-center flex-1">
             <h2 className="text-lg font-bold text-gray-800 mr-8 hidden md:block">Portal Institucional</h2>
             
-            {/* Buscador */}
             <div className="max-w-md w-full relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-gray-400" />
@@ -138,7 +131,6 @@ export default function MainLayout() {
             </div>
           </div>
 
-          {/* Notificaciones y Perfil */}
           <div className="flex items-center space-x-5">
             <button className="relative p-2 text-gray-400 hover:text-[#4F46E5] transition-colors rounded-full hover:bg-indigo-50">
               <Bell className="h-5 w-5" />
@@ -150,7 +142,6 @@ export default function MainLayout() {
           </div>
         </header>
 
-        {/* PANTALLAS HIJAS SE RENDERIZAN AQUÍ */}
         <main className="flex-1 overflow-auto">
           <Outlet />
         </main>

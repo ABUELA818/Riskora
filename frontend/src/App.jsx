@@ -25,14 +25,13 @@ import DirectorioPersonal from './pages/RRHH/DirectorioPersonal';
 import GestionAccesos from './pages/RRHH/GestionAccesos';
 import ReportesInstitucionales from './pages/Psicopedagogia/ReportesInstitucionales';
 
-// Protege rutas si no hay JWT en memoria
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoadingSession } = useAuth();
+  if (isLoadingSession) return <div className="p-10 text-center text-gray-400">Cargando sesión...</div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return children;
 };
 
-// Protege por rol (RBAC)
 const RoleRoute = ({ children, allowedRoles }) => {
   const { role } = useAuth();
   if (!allowedRoles.includes(role)) return <Navigate to="/unauthorized" replace />;
@@ -49,7 +48,7 @@ const DashboardRouter = () => {
     case 'Tutor':
       return <DashboardTutor />;
     case 'Director':
-      return <Navigate to="/carreras/1/dashboard" replace />;
+      return <Navigate to="/carreras/dashboard" replace />;
     case 'Psicopedagogia':
       return <Navigate to="/psicopedagogia/dashboard" replace />;
     case 'RRHH':
@@ -65,13 +64,11 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          {/* Rutas Públicas */}
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
 
-          {/* Rutas Protegidas */}
           <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<DashboardRouter />} />
@@ -81,8 +78,8 @@ export default function App() {
             <Route path="docentes" element={<DocentesCarrera />} />
             <Route path="panel-riesgo" element={<PanelRiesgo />} />
             <Route path="estudiantes/:id/analisis" element={<AnalisisPrediccion />} />
-            <Route path="carreras/:id/dashboard" element={<RoleRoute allowedRoles={['Administrador', 'Director']}><DashboardDirector /></RoleRoute>} />
-            <Route path="carreras/:id/riesgo-agregado" element={<RoleRoute allowedRoles={['Administrador', 'Director']}><RiesgoAgregado /></RoleRoute>} />
+            <Route path="carreras/dashboard" element={<RoleRoute allowedRoles={['Administrador', 'Director']}><DashboardDirector /></RoleRoute>} />
+            <Route path="carreras/riesgo-agregado" element={<RoleRoute allowedRoles={['Administrador', 'Director']}><RiesgoAgregado /></RoleRoute>} />
             <Route path="casos-escalados" element={<RoleRoute allowedRoles={['Administrador', 'Tutor', 'Director', 'Psicopedagogia']}><CasosEscalados /></RoleRoute>} />
             <Route path="institucional/dashboard" element={<RoleRoute allowedRoles={['Administrador', 'Director']}><DashboardInstitucional /></RoleRoute>} />
             <Route path="rrhh/dashboard" element={<RoleRoute allowedRoles={['Administrador', 'RRHH']}><DashboardRRHH /></RoleRoute>} />
