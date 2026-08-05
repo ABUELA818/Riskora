@@ -17,3 +17,5 @@ build/
 .DS_Store
 backend/backup_antes_de_carreras.sql
 backend/*.sql
+backend/backup_antes_de_carreras.sql
+backend/*.sql
