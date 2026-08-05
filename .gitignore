@@ -15,3 +15,5 @@ build/
 # Editor/OS
 .vscode/
 .DS_Store
+backend/backup_antes_de_carreras.sql
+backend/*.sql
