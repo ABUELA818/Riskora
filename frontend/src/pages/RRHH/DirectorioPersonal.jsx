@@ -5,17 +5,17 @@ import { Search, UserPlus, Edit2, UserMinus, X } from 'lucide-react';
 export default function DirectorioPersonal() {
   const { token } = useAuth();
   const [personal, setPersonal] = useState([]);
+  const [carreras, setCarreras] = useState([]); 
   const [filtroRol, setFiltroRol] = useState('Todos los Roles');
   const [search, setSearch] = useState('');
   
-  // Estado Modal Alta
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     nombre_completo: '',
     correo: '',
     rol: 'Docente',
-    carrera_asignada: ''
+    id_carrera: ''
   });
 
   useEffect(() => {
@@ -25,6 +25,13 @@ export default function DirectorioPersonal() {
     })
       .then(res => res.json())
       .then(data => setPersonal(data))
+      .catch(err => console.error(err));
+
+    fetch('http://localhost:8000/api/v1/carreras', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setCarreras(data); })
       .catch(err => console.error(err));
   }, [token]);
 
@@ -38,7 +45,10 @@ export default function DirectorioPersonal() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}` 
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          id_carrera: formData.id_carrera ? parseInt(formData.id_carrera) : null
+        })
       });
       
       if (!response.ok) {
@@ -47,10 +57,9 @@ export default function DirectorioPersonal() {
       }
       
       const nuevoUsuario = await response.json();
-      // Agregamos al usuario a la tabla inmediatamente (Criterio de aceptación)
       setPersonal(prev => [nuevoUsuario, ...prev]);
       setIsModalOpen(false);
-      setFormData({ nombre_completo: '', correo: '', rol: 'Docente', carrera_asignada: '' });
+      setFormData({ nombre_completo: '', correo: '', rol: 'Docente', id_carrera: '' });
       alert('Personal dado de alta correctamente. Revisa la consola del backend para ver la contraseña temporal generada.');
     } catch (error) {
       alert(error.message);
@@ -82,7 +91,6 @@ export default function DirectorioPersonal() {
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         
-        {/* Controles y Filtros */}
         <div className="p-4 border-b border-gray-100 flex flex-wrap gap-4 justify-between bg-gray-50/50">
           <div className="flex space-x-3">
             <select 
@@ -116,7 +124,6 @@ export default function DirectorioPersonal() {
           </div>
         </div>
 
-        {/* Tabla */}
         <table className="w-full text-left">
           <thead>
             <tr className="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
@@ -162,7 +169,6 @@ export default function DirectorioPersonal() {
         </div>
       </div>
 
-      {/* MODAL DE ALTA (RF-17) */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
@@ -206,6 +212,23 @@ export default function DirectorioPersonal() {
                   <option value="RRHH">Recursos Humanos</option>
                 </select>
               </div>
+
+              {['Docente', 'Tutor', 'Director'].includes(formData.rol) && (
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">Carrera</label>
+                  <select 
+                    required
+                    value={formData.id_carrera}
+                    onChange={e => setFormData({...formData, id_carrera: e.target.value})}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-eduPurple outline-none bg-white"
+                  >
+                    <option value="">Selecciona una carrera...</option>
+                    {carreras.map(c => (
+                      <option key={c.id_carrera} value={c.id_carrera}>{c.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               
               <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 mb-2">
                 <p className="text-xs text-blue-800 font-medium">Se generará una contraseña temporal segura que deberá ser entregada al empleado.</p>
@@ -221,7 +244,6 @@ export default function DirectorioPersonal() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
