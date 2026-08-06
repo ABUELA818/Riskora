@@ -76,7 +76,7 @@ def obtener_riesgo_estudiante(id: int, db: Session = Depends(get_db)):
 @router.get("/riesgo/resumen", response_model=RiesgoResumenOut, dependencies=[Depends(permitir_acceso)])
 def obtener_resumen_riesgo(
     grupo_id: Optional[int] = Query(None),
-    carrera: Optional[str] = Query(None),
+    carrera: Optional[int] = Query(None),
     db: Session = Depends(get_db)
 ):
     query = db.query(Estudiante).filter(Estudiante.estado == True)
@@ -86,7 +86,7 @@ def obtener_resumen_riesgo(
         if grupo_id:
             query = query.filter(Grupo.id_grupo == grupo_id)
         if carrera:
-            query = query.filter(Grupo.carrera.ilike(f"%{carrera}%"))
+            query = query.filter(Grupo.id_carrera == carrera)
 
     estudiantes = query.all()
     conteo = {"Bajo": 0, "Medio": 0, "Alto": 0}
