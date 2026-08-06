@@ -7,19 +7,29 @@ export default function GestionEstudiantes() {
   const { state } = useLocation();
   const { token } = useAuth();
   const [estudiantes, setEstudiantes] = useState([]);
+  const [carreras, setCarreras] = useState([]);
   const [filtros, setFiltros] = useState({ carrera: '', grupo: '', nivel_riesgo: '' });
 
+  useEffect(() => {
+    if (!token) return;
+    fetch('http://localhost:8000/api/v1/carreras', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setCarreras(data); });
+  }, [token]);
+
   const fetchEstudiantes = () => {
-    if (!token) return;  
+    if (!token) return;
     const query = new URLSearchParams(
       Object.entries(filtros).filter(([_, v]) => v !== '')
     ).toString();
 
     fetch(`http://localhost:8000/api/v1/estudiantes?${query}`, {
-      headers: { 'Authorization': `Bearer ${token}` } 
+      headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
-      .then(data => setEstudiantes(data));
+      .then(data => { if (Array.isArray(data)) setEstudiantes(data); });
   };
 
   useEffect(() => {
@@ -46,14 +56,14 @@ export default function GestionEstudiantes() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
-          <input 
-            type="text" placeholder="Buscar por carrera..." 
-            className="pl-9 w-full border border-gray-300 rounded-md p-2 text-sm"
-            onChange={e => setFiltros({ ...filtros, carrera: e.target.value })}
-          />
-        </div>
+        <select 
+          className="border border-gray-300 rounded-md p-2 text-sm"
+          value={filtros.carrera}
+          onChange={e => setFiltros({ ...filtros, carrera: e.target.value })}
+        >
+          <option value="">Todas las carreras</option>
+          {carreras.map(c => <option key={c.id_carrera} value={c.id_carrera}>{c.nombre}</option>)}
+        </select>
         <input 
           type="text" placeholder="Filtrar por grupo..." 
           className="border border-gray-300 rounded-md p-2 text-sm"

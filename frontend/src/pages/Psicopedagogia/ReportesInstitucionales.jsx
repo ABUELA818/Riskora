@@ -11,10 +11,23 @@ export default function ReportesInstitucionales() {
     nivel_riesgo: '',
     periodo: 'Semestre 2024-1'
   });
+  const [carreras, setCarreras] = useState([]);
 
   const [previewData, setPreviewData] = useState([]);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [exportingFormat, setExportingFormat] = useState(null);
+
+  useEffect(() => {
+    if (!token) return;
+    fetch('http://localhost:8000/api/v1/carreras', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => { 
+        if (Array.isArray(data)) setCarreras(data); 
+      })
+      .catch(err => console.error("Error al cargar carreras:", err));
+  }, [token]);
 
   const fetchPreview = async () => {
     setIsLoadingPreview(true);
@@ -99,9 +112,11 @@ export default function ReportesInstitucionales() {
               className="border border-gray-300 rounded-lg text-sm px-3 py-2 w-48 outline-none focus:border-eduPurple"
             >
               <option value="">Todas las Carreras</option>
-              <option value="Ingeniería">Ingeniería</option>
-              <option value="Psicología">Psicología</option>
-              <option value="Medicina">Medicina</option>
+              {carreras.map(c => (
+                <option key={c.id_carrera} value={c.id_carrera}>
+                  {c.nombre}
+                </option>
+              ))}
             </select>
           </div>
           <div>
