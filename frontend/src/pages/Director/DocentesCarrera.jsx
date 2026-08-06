@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Eye } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export default function DocentesCarrera() {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [docentes, setDocentes] = useState([]);
 
@@ -23,7 +25,7 @@ export default function DocentesCarrera() {
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="mb-6 border-b border-gray-200 pb-4">
         <h2 className="text-2xl font-bold text-gray-800">Personal Académico</h2>
-        <p className="text-sm text-gray-500">Directorio de docentes adscritos a la institución (Solo lectura).</p>
+        <p className="text-sm text-gray-500">Directorio de docentes adscritos a la institución.</p>
       </div>
 
       <div className="mb-6 w-full md:w-1/3 relative">
@@ -45,11 +47,12 @@ export default function DocentesCarrera() {
               <th className="p-3">Nombre del Docente</th>
               <th className="p-3">Correo</th>
               <th className="p-3">Estado</th>
+              <th className="p-3 text-center">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {filtrados.length === 0 ? (
-              <tr><td colSpan="4" className="p-4 text-center text-gray-500">No se encontraron docentes.</td></tr>
+              <tr><td colSpan="5" className="p-4 text-center text-gray-500">No se encontraron docentes.</td></tr>
             ) : (
               filtrados.map(docente => (
                 <tr key={docente.id_usuario} className="hover:bg-gray-50">
@@ -62,6 +65,14 @@ export default function DocentesCarrera() {
                     ) : (
                       <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">Inactivo</span>
                     )}
+                  </td>
+                  <td className="p-3 text-center">
+                    <button
+                      onClick={() => navigate(`/personal/${docente.id_usuario}`)}
+                      className="p-1.5 text-gray-400 hover:text-eduPurple rounded transition-colors"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
                   </td>
                 </tr>
               ))
