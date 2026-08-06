@@ -1,25 +1,22 @@
-// frontend/src/pages/Profesor/RegistroAsistencia.jsx
 import { useState, useEffect } from 'react';
 import { Calendar, Users, CheckCircle, XCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export default function RegistroAsistencia() {
   const { token } = useAuth();
-
+  
   const [grupos, setGrupos] = useState([]);
   const [estudiantes, setEstudiantes] = useState([]);
-
+  const [riesgosMap, setRiesgosMap] = useState({});
+  
   const [grupoSeleccionado, setGrupoSeleccionado] = useState('');
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
-
+  
   const [asistencia, setAsistencia] = useState({});
   const [isEditing, setIsEditing] = useState(false);
-
+  
   const [isLoading, setIsLoading] = useState(false);
   const [mensaje, setMensaje] = useState({ text: '', type: '' });
-
-  // NUEVO (D2): mapa de niveles de riesgo por id_estudiante
-  const [riesgosMap, setRiesgosMap] = useState({});
 
   useEffect(() => {
     if (!token) return;
@@ -42,9 +39,10 @@ export default function RegistroAsistencia() {
 
   useEffect(() => {
     if (!grupoSeleccionado || !fecha || !token) return;
-
+    
     setIsLoading(true);
     setMensaje({ text: '', type: '' });
+    setRiesgosMap({});
 
     Promise.all([
       fetch(`http://localhost:8000/api/v1/estudiantes`, {
@@ -60,8 +58,22 @@ export default function RegistroAsistencia() {
       const estudiantesGrupo = estudiantesData.filter(e => e.id_grupo === parseInt(grupoSeleccionado));
       setEstudiantes(estudiantesGrupo);
 
-      const nuevoEstadoAsistencia = {};
+      Promise.all(estudiantesGrupo.map(async est => {
+        try {
+          const r = await fetch(`http://localhost:8000/api/v1/estudiantes/${est.id_estudiante}/riesgo`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await r.json();
+          return [est.id_estudiante, data];
+        } catch (e) {
+          return [est.id_estudiante, null];
+        }
+      })).then(entries => {
+        setRiesgosMap(Object.fromEntries(entries));
+      });
 
+      const nuevoEstadoAsistencia = {};
+      
       if (Array.isArray(asistenciaData) && asistenciaData.length > 0) {
         setIsEditing(true);
         asistenciaData.forEach(reg => {
@@ -70,7 +82,7 @@ export default function RegistroAsistencia() {
       } else {
         setIsEditing(false);
         estudiantesGrupo.forEach(est => {
-          nuevoEstadoAsistencia[est.id_estudiante] = 'Presente';
+          nuevoEstadoAsistencia[est.id_estudiante] = 'Presente'; 
         });
       }
       setAsistencia(nuevoEstadoAsistencia);
@@ -79,37 +91,6 @@ export default function RegistroAsistencia() {
     .finally(() => setIsLoading(false));
 
   }, [grupoSeleccionado, fecha, token]);
-
-  // NUEVO (D2): carga de niveles de riesgo en paralelo para el grupo actual
-  useEffect(() => {
-    if (!token || estudiantes.length === 0) {
-      setRiesgosMap({});
-      return;
-    }
-
-    let cancelado = false;
-
-    const cargarRiesgos = async () => {
-      const mapa = {};
-      await Promise.all(estudiantes.map(async est => {
-        try {
-          const r = await fetch(`http://localhost:8000/api/v1/estudiantes/${est.id_estudiante}/riesgo`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (r.ok) {
-            const data = await r.json();
-            mapa[est.id_estudiante] = data;
-          }
-        } catch (e) {
-          console.error(e);
-        }
-      }));
-      if (!cancelado) setRiesgosMap(mapa);
-    };
-
-    cargarRiesgos();
-    return () => { cancelado = true; };
-  }, [estudiantes, token]);
 
   const handleStatusChange = (id_estudiante, estatus) => {
     setAsistencia(prev => ({ ...prev, [id_estudiante]: estatus }));
@@ -129,7 +110,7 @@ export default function RegistroAsistencia() {
 
     const payload = {
       grupo_id: parseInt(grupoSeleccionado),
-      id_horario: 1,
+      id_horario: 1, 
       fecha: fecha,
       asistencias: Object.entries(asistencia).map(([id, estatus]) => ({
         id_estudiante: parseInt(id),
@@ -138,11 +119,11 @@ export default function RegistroAsistencia() {
     };
 
     try {
-      const method = isEditing ? 'PUT' : 'POST';
-
+      const method = isEditing ? 'PUT' : 'POST'; 
+      
       const response = await fetch('http://localhost:8000/api/v1/asistencia', {
         method: method,
-        headers: {
+        headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -155,7 +136,7 @@ export default function RegistroAsistencia() {
       if (!response.ok) throw new Error('Error al guardar la asistencia.');
 
       setMensaje({ text: '¡Asistencia guardada correctamente!', type: 'success' });
-      setIsEditing(true);
+      setIsEditing(true); 
     } catch (error) {
       setMensaje({ text: error.message, type: 'error' });
     } finally {
@@ -165,6 +146,12 @@ export default function RegistroAsistencia() {
   };
 
   const conteoPresentes = Object.values(asistencia).filter(s => s === 'Presente').length;
+
+  const estilosRiesgo = {
+    Alto: 'bg-red-100 text-red-800 border-red-200',
+    Medio: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    Bajo: 'bg-green-100 text-green-800 border-green-200'
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col h-full relative">
@@ -177,8 +164,8 @@ export default function RegistroAsistencia() {
         <div className="flex items-center space-x-2 bg-white border border-gray-300 rounded-lg p-1 shadow-sm">
           <div className="flex items-center px-3 border-r border-gray-200">
             <Calendar className="w-4 h-4 text-gray-500 mr-2" />
-            <input
-              type="date"
+            <input 
+              type="date" 
               value={fecha}
               onChange={e => setFecha(e.target.value)}
               className="border-none text-sm focus:ring-0 text-gray-700 bg-transparent"
@@ -186,7 +173,7 @@ export default function RegistroAsistencia() {
           </div>
           <div className="flex items-center px-3">
             <Users className="w-4 h-4 text-gray-500 mr-2" />
-            <select
+            <select 
               value={grupoSeleccionado}
               onChange={e => setGrupoSeleccionado(e.target.value)}
               className="border-none text-sm focus:ring-0 text-gray-700 bg-transparent pr-8"
@@ -218,44 +205,33 @@ export default function RegistroAsistencia() {
                 <th className="pb-3 font-semibold">Foto</th>
                 <th className="pb-3 font-semibold">Alumno</th>
                 <th className="pb-3 font-semibold">Matrícula</th>
-                <th className="pb-3 font-semibold">Nivel de Riesgo</th>
-                <th className="pb-3 font-semibold w-1/4">Rendimiento Histórico</th>
+                <th className="pb-3 font-semibold w-1/4">Nivel de Riesgo</th>
                 <th className="pb-3 font-semibold text-right">Asistencia</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {estudiantes.map(est => {
                 const estatus = asistencia[est.id_estudiante] || 'Presente';
-
-                // NUEVO (D2): nivel de riesgo real del estudiante
-                const riesgoEst = riesgosMap[est.id_estudiante];
-                const nivelRiesgo = riesgoEst?.nivel_riesgo || 'Calculando...';
-
-                let badgeRiesgo = 'bg-green-100 text-green-800 border-green-200';
-                if (nivelRiesgo === 'Alto') badgeRiesgo = 'bg-red-100 text-red-800 border-red-200';
-                if (nivelRiesgo === 'Medio') badgeRiesgo = 'bg-yellow-100 text-yellow-800 border-yellow-200';
-                if (nivelRiesgo === 'Calculando...') badgeRiesgo = 'bg-gray-100 text-gray-500 border-gray-200';
-
+                const riesgo = riesgosMap[est.id_estudiante];
                 return (
                   <tr key={est.id_estudiante} className="hover:bg-gray-50 transition-colors">
                     <td className="py-3">
-                      <img
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${est.nombre_completo}`}
-                        alt="avatar"
-                        className="w-10 h-10 rounded-full bg-gray-200 border border-gray-300"
+                      <img 
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${est.nombre_completo}`} 
+                        alt="avatar" 
+                        className="w-10 h-10 rounded-full bg-gray-200 border border-gray-300" 
                       />
                     </td>
                     <td className="py-3 font-medium text-gray-900">{est.nombre_completo}</td>
                     <td className="py-3 text-sm text-gray-500">{est.matricula}</td>
                     <td className="py-3">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${badgeRiesgo}`}>
-                        {nivelRiesgo}
-                      </span>
-                    </td>
-                    <td className="py-3">
-                      <div className="w-3/4 bg-gray-200 rounded-full h-2.5">
-                        <div className={`h-2.5 rounded-full ${estatus === 'Ausente' ? 'bg-yellow-400 w-1/2' : 'bg-green-600 w-4/5'}`}></div>
-                      </div>
+                      {!riesgo ? (
+                        <span className="text-xs text-gray-400">Calculando...</span>
+                      ) : (
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${estilosRiesgo[riesgo.nivel_riesgo] || estilosRiesgo.Bajo}`}>
+                          Riesgo {riesgo.nivel_riesgo}
+                        </span>
+                      )}
                     </td>
                     <td className="py-3 flex justify-end">
                       <div className="flex bg-gray-100 rounded-lg p-1 border border-gray-200">
@@ -291,15 +267,15 @@ export default function RegistroAsistencia() {
         <span className="text-sm text-gray-600 font-medium mb-3 md:mb-0">
           {conteoPresentes} de {estudiantes.length} estudiantes presentes
         </span>
-
+        
         <div className="flex space-x-3">
-          <button
+          <button 
             onClick={marcarTodosPresentes}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
             Marcar todos presentes
           </button>
-          <button
+          <button 
             onClick={guardarAsistencia}
             disabled={isLoading || estudiantes.length === 0}
             className="px-6 py-2 text-sm font-medium text-white bg-eduPurple border border-transparent rounded-lg hover:bg-opacity-90 disabled:bg-gray-400 transition-colors shadow-sm"
