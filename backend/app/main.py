@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, academicos
-from app.routers import auth, academicos, asistencias, evaluaciones, riesgo, tutorias, institucional, psicopedagogia, rrhh, reportes
+from app.routers import auth, academicos, asistencias, evaluaciones, riesgo, tutorias, institucional, psicopedagogia, rrhh, reportes, personal
 import app.models.models 
 
 app = FastAPI(title="EduPredict AI API")
@@ -29,6 +29,7 @@ app.include_router(institucional.router)
 app.include_router(psicopedagogia.router)
 app.include_router(rrhh.router)
 app.include_router(reportes.router)
+app.include_router(personal.router)
 
 @app.get("/health")
 def health_check():

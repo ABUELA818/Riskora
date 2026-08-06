@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Search, UserPlus, Edit2, UserMinus, X } from 'lucide-react';
+import { Search, UserPlus, Edit2, X } from 'lucide-react';
 
 export default function DirectorioPersonal() {
   const { token } = useAuth();
@@ -8,6 +9,7 @@ export default function DirectorioPersonal() {
   const [carreras, setCarreras] = useState([]); 
   const [filtroRol, setFiltroRol] = useState('Todos los Roles');
   const [search, setSearch] = useState('');
+  const navigate = useNavigate();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -156,8 +158,12 @@ export default function DirectorioPersonal() {
                     )}
                   </td>
                   <td className="p-4 text-right pr-6 space-x-2">
-                    <button className="p-1.5 text-gray-400 hover:text-eduPurple rounded transition-colors"><Edit2 className="w-4 h-4" /></button>
-                    <button className="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors"><UserMinus className="w-4 h-4" /></button>
+                    <button
+                      onClick={() => navigate(`/personal/${persona.id_usuario}`)}
+                      className="p-1.5 text-gray-400 hover:text-eduPurple rounded transition-colors"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
                   </td>
                 </tr>
               ))
