@@ -11,6 +11,7 @@ from app.schemas.academic import (
 )
 from app.core.deps import get_db, RoleChecker
 from app.schemas.carrera import CarreraOut
+from app.routers.riesgo import calcular_metricas_estudiante
 
 router = APIRouter(prefix="/api/v1", tags=["Académico"])
 
@@ -49,8 +50,24 @@ def obtener_estudiantes(
             query = query.filter(Grupo.id_carrera == carrera)
         if grupo:
             query = query.filter(Grupo.nombre_grupo.ilike(f"%{grupo}%"))
-            
-    return query.offset(skip).limit(limit).all()
+
+    resultado = query.offset(skip).limit(limit).all()
+
+    if nivel_riesgo and nivel_riesgo != "":
+        filtrados = []
+        for est in resultado:
+            p_asis, prom, _ = calcular_metricas_estudiante(db, est.id_estudiante)
+            if p_asis < 70.0 or prom < 60.0:
+                nivel = "Alto"
+            elif p_asis < 85.0 or prom < 75.0:
+                nivel = "Medio"
+            else:
+                nivel = "Bajo"
+            if nivel == nivel_riesgo:
+                filtrados.append(est)
+        return filtrados
+
+    return resultado
 
 @router.get("/carreras", response_model=List[CarreraOut], dependencies=[Depends(todos_los_roles)])
 def obtener_carreras(db: Session = Depends(get_db)):
