@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { 
   LayoutDashboard, ClipboardList, BarChart2, Users, 
   Settings, Bell, Search, HelpCircle, ShieldAlert, 
-  UserPlus, FileText, Lock, Folder, LogOut
+  UserPlus, FileText, Lock, Folder, LogOut, BookOpen
 } from 'lucide-react';
 
 const MENU_ITEMS = {
@@ -19,17 +19,19 @@ const MENU_ITEMS = {
     { name: 'Casos Escalados', path: '/casos-escalados', icon: FileText },
   ],
   Director: [
-    { name: 'Dashboard Institucional', path: '/carreras/dashboard', icon: LayoutDashboard },
-    { name: 'Gestión de Grupos', path: '/grupos', icon: Folder },
-    { name: 'Docentes', path: '/docentes', icon: Users },
-    { name: 'Casos Escalados', path: '/casos-escalados', icon: ShieldAlert },
-    { name: 'Reportes', path: '/reportes', icon: FileText },
+  { name: 'Dashboard Institucional', path: '/carreras/dashboard', icon: LayoutDashboard },
+  { name: 'Gestión de Grupos', path: '/grupos', icon: Folder },
+  { name: 'Materias', path: '/materias', icon: BookOpen },
+  { name: 'Docentes', path: '/docentes', icon: Users },
+  { name: 'Casos Escalados', path: '/casos-escalados', icon: ShieldAlert },
+  { name: 'Reportes', path: '/reportes', icon: FileText },
   ],
   Psicopedagogia: [
-    { name: 'Dashboard', path: '/psicopedagogia/dashboard', icon: LayoutDashboard },
-    { name: 'Casos Urgentes', path: '/casos-escalados', icon: ShieldAlert },
-    { name: 'Alta Estudiantes', path: '/estudiantes/nuevo', icon: UserPlus },
-    { name: 'Reportes', path: '/reportes', icon: FileText },
+  { name: 'Dashboard', path: '/psicopedagogia/dashboard', icon: LayoutDashboard },
+  { name: 'Casos Urgentes', path: '/casos-escalados', icon: ShieldAlert },
+  { name: 'Materias', path: '/materias', icon: BookOpen },
+  { name: 'Alta Estudiantes', path: '/estudiantes/nuevo', icon: UserPlus },
+  { name: 'Reportes', path: '/reportes', icon: FileText },
   ],
   RRHH: [
     { name: 'Dashboard', path: '/rrhh/dashboard', icon: LayoutDashboard },

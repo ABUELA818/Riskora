@@ -25,6 +25,9 @@ import DirectorioPersonal from './pages/RRHH/DirectorioPersonal';
 import GestionAccesos from './pages/RRHH/GestionAccesos';
 import ReportesInstitucionales from './pages/Psicopedagogia/ReportesInstitucionales';
 import AuditoriaAccesos from './pages/RRHH/AuditoriaAccesos';
+import GestionMaterias from './pages/Director/GestionMaterias';
+import ExpedienteLaboral from './pages/ExpedienteLaboral';
+import DashboardDocente from './pages/Profesor/DashboardDocente';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoadingSession } = useAuth();
@@ -46,6 +49,8 @@ const Unauthorized = () => <div className="p-10 text-center text-red-600"><h1>40
 const DashboardRouter = () => {
   const { role } = useAuth();
   switch (role) {
+    case 'Docente':
+      return <DashboardDocente />;
     case 'Tutor':
       return <DashboardTutor />;
     case 'Director':
@@ -121,6 +126,16 @@ export default function App() {
             <Route path="reportes" element={
               <RoleRoute allowedRoles={['Administrador', 'Director', 'RRHH', 'Psicopedagogia']}>
                 <ReportesInstitucionales />
+              </RoleRoute>
+            } />
+            <Route path="materias" element={
+              <RoleRoute allowedRoles={['Administrador', 'Director', 'Psicopedagogia']}>
+                <GestionMaterias />
+              </RoleRoute>
+            } />
+            <Route path="personal/:id" element={
+              <RoleRoute allowedRoles={['Administrador', 'Director', 'RRHH']}>
+                <ExpedienteLaboral />
               </RoleRoute>
             } />
           </Route>

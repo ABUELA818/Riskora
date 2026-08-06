@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
   Search, Download, Save, AlertCircle, X, 
@@ -7,6 +8,7 @@ import {
 
 export default function CapturaCalificaciones() {
   const { token } = useAuth();
+  const location = useLocation();
   
   const [grupos, setGrupos] = useState([]);
   const [estudiantes, setEstudiantes] = useState([]);
@@ -32,7 +34,11 @@ export default function CapturaCalificaciones() {
       .then(data => {
         if (Array.isArray(data)) {
           setGrupos(data);
-          if (data.length > 0) setGrupoSeleccionado(data[0].id_grupo.toString());
+          const grupoInicial = location.state?.grupoPreseleccionado &&
+            data.some(g => g.id_grupo === location.state.grupoPreseleccionado)
+            ? location.state.grupoPreseleccionado
+            : data[0]?.id_grupo;
+          if (grupoInicial) setGrupoSeleccionado(grupoInicial.toString());
         }
       });
   }, [token]);
@@ -71,7 +77,11 @@ export default function CapturaCalificaciones() {
     .then(data => {
       if (Array.isArray(data)) {
         setMateriasDisponibles(data);
-        setMateriaSeleccionada(data.length > 0 ? data[0].id_materia.toString() : '');
+        const materiaInicial = location.state?.materiaPreseleccionada &&
+          data.some(m => m.id_materia === location.state.materiaPreseleccionada)
+          ? location.state.materiaPreseleccionada
+          : (data.length > 0 ? data[0].id_materia : '');
+        setMateriaSeleccionada(materiaInicial ? materiaInicial.toString() : '');
       }
     });
 }, [grupoSeleccionado, token]);

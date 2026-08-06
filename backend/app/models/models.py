@@ -44,6 +44,9 @@ class Usuario(Base):
     token_recuperacion = Column(String(255), nullable=True)
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
     token_version = Column(Integer, default=1)
+    telefono = Column(String(20), nullable=True)
+    telefono_familiar = Column(String(20), nullable=True)
+    imagen_url = Column(String(255), nullable=True)
 
 class Docente(Base):
     __tablename__ = 'docentes'
@@ -110,6 +113,7 @@ class Materia(Base):
     nombre_materia = Column(String(120))
     clave_materia = Column(String(20), unique=True)
     creditos = Column(Integer)
+    horas_semana = Column(Integer, nullable=True)
     estado = Column(Boolean, default=True)
 
 class PlanMateria(Base):
@@ -233,3 +237,9 @@ class DirectorCarrera(Base):
     id_director_carrera = Column(Integer, primary_key=True, index=True)
     id_usuario = Column(Integer, ForeignKey('usuarios.id_usuario'), nullable=False)
     id_carrera = Column(Integer, ForeignKey('carreras.id_carrera'), nullable=False)
+
+class DocenteMateria(Base):
+    __tablename__ = 'docente_materia'
+    id_docente_materia = Column(Integer, primary_key=True, index=True)
+    id_docente = Column(Integer, ForeignKey('docentes.id_docente'), nullable=False)
+    id_materia = Column(Integer, ForeignKey('materias.id_materia'), nullable=False)
