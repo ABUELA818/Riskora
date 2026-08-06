@@ -90,7 +90,7 @@ class Grupo(Base):
     nombre_grupo = Column(String(50))
     id_tutor = Column(Integer, ForeignKey('tutores.id_tutor'))
     id_plan_estudio = Column(Integer, ForeignKey('planes_estudio.id_plan_estudio'))
-    carrera = Column(String(100))
+    id_carrera = Column(Integer, ForeignKey('carreras.id_carrera'))
     cuatrimestre = Column(Integer)
 
 class Estudiante(Base):
@@ -216,3 +216,19 @@ class LogAuditoria(Base):
     endpoint = Column(String(255))
     timestamp = Column(DateTime, default=datetime.utcnow)
 
+class Carrera(Base):
+    __tablename__ = 'carreras'
+    id_carrera = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(100), unique=True, nullable=False)
+
+class DocenteCarrera(Base):
+    __tablename__ = 'docente_carrera'
+    id_docente_carrera = Column(Integer, primary_key=True, index=True)
+    id_docente = Column(Integer, ForeignKey('docentes.id_docente'), nullable=False)
+    id_carrera = Column(Integer, ForeignKey('carreras.id_carrera'), nullable=False)
+
+class DirectorCarrera(Base):
+    __tablename__ = 'director_carrera'
+    id_director_carrera = Column(Integer, primary_key=True, index=True)
+    id_usuario = Column(Integer, ForeignKey('usuarios.id_usuario'), nullable=False)
+    id_carrera = Column(Integer, ForeignKey('carreras.id_carrera'), nullable=False)

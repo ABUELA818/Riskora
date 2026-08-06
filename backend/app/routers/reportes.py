@@ -22,9 +22,6 @@ from app.core.audit import registrar_auditoria
 router = APIRouter(prefix="/api/v1", tags=["Reportes y Notificaciones"])
 permitir_acceso = RoleChecker(["Administrador", "Director", "Tutor", "Psicopedagogia", "RRHH"])
 
-# ==========================================
-# HELPER: OBTENER DATOS DEL REPORTE
-# ==========================================
 def obtener_datos_reporte(db: Session, grupo_id: Optional[int], carrera: Optional[str], nivel_riesgo: Optional[str]):
     query = db.query(Estudiante).join(Grupo)
     
@@ -38,8 +35,7 @@ def obtener_datos_reporte(db: Session, grupo_id: Optional[int], carrera: Optiona
     
     for est in estudiantes:
         p_asis, prom, _ = calcular_metricas_estudiante(db, est.id_estudiante)
-        
-        # Mock de riesgo
+
         if p_asis < 70.0 or prom < 60.0:
             riesgo = "Alto"
         elif p_asis < 85.0 or prom < 75.0:
@@ -61,9 +57,6 @@ def obtener_datos_reporte(db: Session, grupo_id: Optional[int], carrera: Optiona
         
     return resultados
 
-# ==========================================
-# ENDPOINTS DE REPORTES (JSON, EXCEL, PDF)
-# ==========================================
 @router.get("/reportes/academico", response_model=List[ReporteEstudianteOut], dependencies=[Depends(permitir_acceso)])
 def reporte_json(
     grupo_id: Optional[int] = Query(None),
@@ -84,8 +77,7 @@ def exportar_reporte(
     current_user = Depends(get_current_active_user)
 ):
     datos = obtener_datos_reporte(db, grupo_id, carrera, nivel_riesgo)
-    
-    # Registrar auditoría de esta acción sensible
+
     registrar_auditoria(db, current_user.id_usuario, f"Exportación de reporte a {formato.upper()}", request.url.path)
 
     if formato == "excel":
@@ -93,7 +85,6 @@ def exportar_reporte(
         ws = wb.active
         ws.title = "Reporte Académico"
         
-        # Encabezados
         ws.append(["Matrícula", "Nombre Completo", "Asistencia (%)", "Promedio", "Nivel de Riesgo"])
         
         for d in datos:
@@ -115,12 +106,10 @@ def exportar_reporte(
         elementos = []
         estilos = getSampleStyleSheet()
         
-        # Encabezado Institucional
         elementos.append(Paragraph("EduPredict AI - Reporte Académico Institucional", estilos['Title']))
         elementos.append(Paragraph(f"Fecha de generación: {datetime.now().strftime('%Y-%m-%d %H:%M')}", estilos['Normal']))
         elementos.append(Spacer(1, 12))
         
-        # Datos de la tabla
         datos_tabla = [["Matrícula", "Nombre Completo", "Asistencia", "Promedio", "Riesgo"]]
         for d in datos:
             datos_tabla.append([d.matricula, d.nombre_completo, f"{d.porcentaje_asistencia}%", str(d.promedio_general), d.nivel_riesgo])
@@ -146,15 +135,11 @@ def exportar_reporte(
             headers={"Content-Disposition": f"attachment; filename=Reporte_{datetime.now().strftime('%Y%m%d')}.pdf"}
         )
 
-# ==========================================
-# ENDPOINTS DE NOTIFICACIONES (HU-06)
-# ==========================================
 @router.post("/notificaciones", response_model=dict, dependencies=[Depends(permitir_acceso)])
 def disparar_notificacion_riesgo(
     data: NotificacionCreate,
     db: Session = Depends(get_db)
 ):
-    # Simulamos el trigger: Se detecta riesgo alto, notificamos al tutor
     estudiante = db.query(Estudiante).filter(Estudiante.id_estudiante == data.id_estudiante).first()
     if not estudiante:
         raise HTTPException(status_code=404, detail="Estudiante no encontrado")

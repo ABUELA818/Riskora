@@ -30,7 +30,7 @@ class MateriaOut(MateriaBase):
 # --- GRUPOS ---
 class GrupoBase(BaseModel):
     nombre_grupo: str
-    carrera: str
+    id_carrera: int
     cuatrimestre: int
     id_plan_estudio: Optional[int] = None
     id_tutor: Optional[int] = None
@@ -38,6 +38,7 @@ class GrupoBase(BaseModel):
 class GrupoCreate(GrupoBase): pass
 class GrupoOut(GrupoBase):
     id_grupo: int
+    nombre_carrera: Optional[str] = None
     class Config: 
         from_attributes = True
 

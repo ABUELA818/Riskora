@@ -17,7 +17,6 @@ export default function ForgotPassword() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ correo_institucional: email })
       });
-      // Siempre mostramos éxito por seguridad
       setStatus({ type: 'success', message: 'Si el correo existe en nuestro sistema, te enviaremos un enlace de recuperación.' });
     } catch (error) {
       setStatus({ type: 'error', message: 'Hubo un error al conectar con el servidor.' });

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Users, CheckCircle, XCircle } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext'; // <-- Importamos nuestro contexto
+import { useAuth } from '../../context/AuthContext';
 
 export default function RegistroAsistencia() {
-  const { token } = useAuth(); // <-- Sacamos el token de la memoria
+  const { token } = useAuth();
   
   const [grupos, setGrupos] = useState([]);
   const [estudiantes, setEstudiantes] = useState([]);
@@ -17,20 +17,17 @@ export default function RegistroAsistencia() {
   const [isLoading, setIsLoading] = useState(false);
   const [mensaje, setMensaje] = useState({ text: '', type: '' });
 
-  // 1. Cargar grupos al montar el componente
   useEffect(() => {
-    // Si no hay token, ni intentamos hacer la petición
     if (!token) return;
 
     fetch('http://localhost:8000/api/v1/grupos', {
-      headers: { 'Authorization': `Bearer ${token}` } // <-- Mandamos el token
+      headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => {
         if (!res.ok) throw new Error("No autorizado");
         return res.json();
       })
       .then(data => {
-        // Validamos que sí sea un arreglo para que no truene el .map()
         if (Array.isArray(data)) {
           setGrupos(data);
           if (data.length > 0) setGrupoSeleccionado(data[0].id_grupo);
@@ -39,14 +36,12 @@ export default function RegistroAsistencia() {
       .catch(err => console.error("Error cargando grupos:", err));
   }, [token]);
 
-  // 2. Cargar estudiantes y asistencia existente cuando cambia grupo o fecha
   useEffect(() => {
     if (!grupoSeleccionado || !fecha || !token) return;
     
     setIsLoading(true);
     setMensaje({ text: '', type: '' });
 
-    // Mandamos el token en ambas peticiones concurrentes
     Promise.all([
       fetch(`http://localhost:8000/api/v1/estudiantes`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -56,7 +51,6 @@ export default function RegistroAsistencia() {
       }).then(r => r.json())
     ])
     .then(([estudiantesData, asistenciaData]) => {
-      // Validación extra por si el token expiró y nos devuelve un objeto de error
       if (!Array.isArray(estudiantesData)) return;
 
       const estudiantesGrupo = estudiantesData.filter(e => e.id_grupo === parseInt(grupoSeleccionado));
@@ -82,7 +76,6 @@ export default function RegistroAsistencia() {
 
   }, [grupoSeleccionado, fecha, token]);
 
-  // Funciones de control
   const handleStatusChange = (id_estudiante, estatus) => {
     setAsistencia(prev => ({ ...prev, [id_estudiante]: estatus }));
   };
@@ -116,7 +109,7 @@ export default function RegistroAsistencia() {
         method: method,
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // <-- Token al guardar
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       });

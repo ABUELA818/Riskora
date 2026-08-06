@@ -44,10 +44,8 @@ export default function DashboardTutor() {
         </Link>
       </div>
 
-      {/* BENTO GRID DE KPIS */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         
-        {/* Gráfica de Distribución */}
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-base font-bold text-gray-800">Distribución de Riesgo Estudiantil</h3>
@@ -87,7 +85,6 @@ export default function DashboardTutor() {
           </div>
         </div>
 
-        {/* Métricas Clave */}
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
           <h3 className="text-base font-bold text-gray-800 mb-4">Métricas Clave</h3>
           <div className="space-y-4">
@@ -115,7 +112,6 @@ export default function DashboardTutor() {
 
       </div>
 
-      {/* TABLA DE ALUMNOS QUE REQUIEREN ATENCIÓN */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <h3 className="text-base font-bold text-gray-800">Alumnos que requieren atención</h3>

@@ -5,24 +5,65 @@ from sqlalchemy import func
 from typing import List, Optional
 
 from app.db.session import SessionLocal
-from app.models.models import Usuario, Docente, Tutor, Grupo, RolEnum
+from app.models.models import Usuario, Docente, Tutor, Grupo, RolEnum, DirectorCarrera, DocenteCarrera, Carrera
 from app.schemas.rrhh import PersonalCreate, PersonalOut, CambioRolIn, MetricasRRHHOut, MetricaCarrera
-from app.core.deps import get_db, RoleChecker
+from app.core.deps import get_db, RoleChecker, get_current_active_user
 from app.core.security import get_password_hash 
 
 router = APIRouter(prefix="/api/v1", tags=["Recursos Humanos"])
-permitir_rrhh = RoleChecker(["RRHH", "Administrador"])
+permitir_rrhh = RoleChecker(["RRHH", "Administrador", "Director"])
+
+
+def usuario_pertenece_a_carrera_director(db: Session, id_usuario_objetivo: int, current_user) -> bool:
+    mis_carreras = [c.id_carrera for c in db.query(DirectorCarrera).filter(
+        DirectorCarrera.id_usuario == current_user.id_usuario
+    ).all()]
+    if not mis_carreras:
+        return False
+
+    docente = db.query(Docente).filter(Docente.id_usuario == id_usuario_objetivo).first()
+    if docente:
+        asignado = db.query(DocenteCarrera).filter(
+            DocenteCarrera.id_docente == docente.id_docente,
+            DocenteCarrera.id_carrera.in_(mis_carreras)
+        ).first()
+        if asignado:
+            return True
+
+    tutor = db.query(Tutor).filter(Tutor.id_usuario == id_usuario_objetivo).first()
+    if tutor:
+        grupo = db.query(Grupo).filter(
+            Grupo.id_tutor == tutor.id_tutor,
+            Grupo.id_carrera.in_(mis_carreras)
+        ).first()
+        if grupo:
+            return True
+
+    return False
+
 
 @router.get("/personal", response_model=List[PersonalOut], dependencies=[Depends(permitir_rrhh)])
 def obtener_directorio_personal(
     rol: Optional[str] = Query(None),
     carrera: Optional[str] = Query(None),
     nombre: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
 ):
-    # Uso correcto del ENUM
+    user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
     roles_permitidos = [RolEnum.DOCENTE, RolEnum.TUTOR, RolEnum.PSICOPEDAGOGIA, RolEnum.DIRECTOR, RolEnum.RRHH]
     query = db.query(Usuario).filter(Usuario.rol.in_(roles_permitidos))
+
+    if user_role == "Director":
+        mis_carreras = db.query(DirectorCarrera.id_carrera).filter(
+            DirectorCarrera.id_usuario == current_user.id_usuario
+        ).subquery()
+        docentes_de_mi_carrera = db.query(DocenteCarrera.id_docente).filter(
+            DocenteCarrera.id_carrera.in_(mis_carreras)
+        ).subquery()
+        query = query.join(Docente, Usuario.id_usuario == Docente.id_usuario).filter(
+            Docente.id_docente.in_(docentes_de_mi_carrera)
+        )
 
     if rol and rol != "Todos los Roles":
         rol_enum = getattr(RolEnum, rol.upper().replace(" ", "_"), None)
@@ -35,11 +76,10 @@ def obtener_directorio_personal(
     if carrera:
         query = query.join(Tutor, Usuario.id_usuario == Tutor.id_usuario)\
                      .join(Grupo, Tutor.id_tutor == Grupo.id_tutor)\
-                     .filter(Grupo.carrera.ilike(f"%{carrera}%"))
+                     .filter(Grupo.id_carrera == carrera)
                      
     usuarios = query.all()
     
-    # Mapeo manual para asegurar que "correo_institucional" se envíe como "correo" al frontend
     return [
         PersonalOut(
             id_usuario=u.id_usuario,
@@ -51,7 +91,33 @@ def obtener_directorio_personal(
     ]
 
 @router.post("/personal", response_model=PersonalOut, dependencies=[Depends(permitir_rrhh)])
-def registrar_personal(data: PersonalCreate, db: Session = Depends(get_db)):
+def registrar_personal(
+    data: PersonalCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
+    user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
+
+    if user_role == "Director" and data.rol not in ("Docente", "Tutor"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Como Director solo puedes dar de alta Docentes o Tutores."
+        )
+
+    if data.rol in ("Docente", "Tutor") and not data.id_carrera:
+        raise HTTPException(status_code=400, detail="Debes indicar la carrera para este rol.")
+
+    if data.rol == "Director":
+        if not data.id_carrera:
+            raise HTTPException(status_code=400, detail="Debes indicar la carrera para el nuevo Director.")
+
+    if user_role == "Director":
+        mis_carreras = [c.id_carrera for c in db.query(DirectorCarrera).filter(
+            DirectorCarrera.id_usuario == current_user.id_usuario
+        ).all()]
+        if data.id_carrera not in mis_carreras:
+            raise HTTPException(status_code=403, detail="No puedes asignar personal a una carrera que no diriges.")
+
     usuario_existente = db.query(Usuario).filter(Usuario.correo_institucional == data.correo).first()
     if usuario_existente:
         raise HTTPException(status_code=400, detail="El correo ya está registrado en el sistema.")
@@ -72,6 +138,29 @@ def registrar_personal(data: PersonalCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(nuevo_usuario)
 
+    if nuevo_rol == RolEnum.DOCENTE:
+        nuevo_docente = Docente(
+            id_usuario=nuevo_usuario.id_usuario,
+            numero_empleado=f"DOC-{nuevo_usuario.id_usuario}"
+        )
+        db.add(nuevo_docente)
+        db.commit()
+        db.refresh(nuevo_docente)
+        db.add(DocenteCarrera(id_docente=nuevo_docente.id_docente, id_carrera=data.id_carrera))
+        db.commit()
+
+    elif nuevo_rol == RolEnum.TUTOR:
+        nuevo_tutor = Tutor(
+            id_usuario=nuevo_usuario.id_usuario,
+            numero_empleado=f"TUT-{nuevo_usuario.id_usuario}"
+        )
+        db.add(nuevo_tutor)
+        db.commit()
+
+    elif nuevo_rol == RolEnum.DIRECTOR:
+        db.add(DirectorCarrera(id_usuario=nuevo_usuario.id_usuario, id_carrera=data.id_carrera))
+        db.commit()
+
     print(f"ALERTA TEMP: Contraseña generada para {data.correo}: {password_temporal}")
 
     return PersonalOut(
@@ -83,20 +172,33 @@ def registrar_personal(data: PersonalCreate, db: Session = Depends(get_db)):
     )
 
 @router.put("/usuarios/{id_usuario}/rol", dependencies=[Depends(permitir_rrhh)])
-def cambiar_rol_usuario(id_usuario: int, data: CambioRolIn, db: Session = Depends(get_db)):
+def cambiar_rol_usuario(
+    id_usuario: int,
+    data: CambioRolIn,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
     usuario = db.query(Usuario).filter(Usuario.id_usuario == id_usuario).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
 
+    user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
+
+    if user_role == "Director":
+        if data.nuevo_rol not in ("Docente", "Tutor"):
+            raise HTTPException(status_code=403, detail="Como Director solo puedes asignar los roles Docente o Tutor.")
+        if not usuario_pertenece_a_carrera_director(db, id_usuario, current_user):
+            raise HTTPException(status_code=403, detail="No tienes permiso para modificar a este usuario.")
+
     nuevo_rol_enum = getattr(RolEnum, data.nuevo_rol.upper().replace(" ", "_"), None)
     if not nuevo_rol_enum:
-         raise HTTPException(status_code=400, detail="Rol inválido")
+        raise HTTPException(status_code=400, detail="Rol inválido")
 
     usuario.rol = nuevo_rol_enum
-    usuario.token_version += 1 
-    
+    usuario.token_version += 1
     db.commit()
     return {"message": "Rol actualizado con éxito"}
+
 
 @router.get("/personal/metricas", response_model=MetricasRRHHOut, dependencies=[Depends(permitir_rrhh)])
 def metricas_rrhh(db: Session = Depends(get_db)):
@@ -104,9 +206,10 @@ def metricas_rrhh(db: Session = Depends(get_db)):
     total_tut = db.query(Usuario).filter(Usuario.rol == RolEnum.TUTOR, Usuario.estado == True).count()
     total_psi = db.query(Usuario).filter(Usuario.rol == RolEnum.PSICOPEDAGOGIA, Usuario.estado == True).count()
 
-    distribucion = db.query(Grupo.carrera, func.count(Tutor.id_tutor))\
+    distribucion = db.query(Carrera.nombre, func.count(Tutor.id_tutor))\
+        .join(Grupo, Grupo.id_carrera == Carrera.id_carrera)\
         .join(Tutor, Grupo.id_tutor == Tutor.id_tutor)\
-        .group_by(Grupo.carrera).all()
+        .group_by(Carrera.nombre).all()
 
     dist_formateada = [MetricaCarrera(carrera=c, cantidad=q) for c, q in distribucion if c]
 

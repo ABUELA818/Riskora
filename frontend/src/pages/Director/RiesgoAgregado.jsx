@@ -5,11 +5,10 @@ import { AlertTriangle, Info, Users } from 'lucide-react';
 import SimulationBadge from '../../components/SimulationBadge';
 
 export default function RiesgoAgregado() {
-  const { id = 'ISC' } = useParams();
+  const { id: idFromUrl } = useParams();
   const { token } = useAuth();
-  
-  const [indicadores, setIndicadores] = useState(null);
-  const [grupos, setGrupos] = useState([]);
+  const [idCarrera, setIdCarrera] = useState(idFromUrl || null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!token) return;
@@ -31,7 +30,6 @@ export default function RiesgoAgregado() {
       <h2 className="text-3xl font-bold text-gray-900 mb-1">Ingeniería de Software</h2>
       <p className="text-sm text-gray-500 mb-8">Panel de Riesgo Agregado • Semestre 2024-1</p>
 
-      {/* KPIS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-2xl border border-red-200 border-l-4 border-l-red-600 shadow-sm relative">
           <AlertTriangle className="absolute top-6 right-6 w-5 h-5 text-red-500" />
@@ -51,12 +49,10 @@ export default function RiesgoAgregado() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* GRÁFICO DE COLUMNAS APILADAS */}
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
           <h3 className="text-base font-bold text-gray-900 mb-6">Distribución de Riesgo por Grupo</h3>
           
           <div className="flex items-end h-64 space-x-4 border-b border-gray-200 pb-2 relative">
-            {/* Eje Y Mock */}
             <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2 pb-2">
               <span>100%</span><span>50%</span><span>0%</span>
             </div>
@@ -89,7 +85,6 @@ export default function RiesgoAgregado() {
           </div>
         </div>
 
-        {/* ÁREAS DE ATENCIÓN */}
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col">
           <h3 className="text-base font-bold text-gray-900 mb-4">Áreas de Atención</h3>
           <div className="space-y-4 flex-1">

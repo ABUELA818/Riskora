@@ -12,9 +12,7 @@ from app.core.deps import get_db, RoleChecker, get_current_active_user
 router = APIRouter(prefix="/api/v1", tags=["Evaluaciones"])
 permitir_acceso = RoleChecker(["Docente", "Tutor", "Administrador"])
 
-# ==========================================
 # 1. CALIFICACIONES
-# ==========================================
 @router.post("/estudiantes/{id_estudiante}/calificaciones", response_model=CalificacionOut, dependencies=[Depends(permitir_acceso)])
 def registrar_calificacion(
     id_estudiante: int,
@@ -37,7 +35,7 @@ def registrar_calificacion(
         docente = db.query(Docente).filter(Docente.id_usuario == current_user.id_usuario).first()
         tiene_horario = db.query(Horario).filter(
             Horario.id_grupo == data.grupo_id,
-            Horario.id_materia == data.id_materia,   # ← restaurado
+            Horario.id_materia == data.id_materia,
             Horario.id_docente == (docente.id_docente if docente else None)
         ).first()
         if not docente or not tiene_horario:
@@ -45,7 +43,6 @@ def registrar_calificacion(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No impartes esta materia en este grupo."
             )
-    # Administrador pasa sin validación adicional
 
     nueva_calificacion = Calificacion(
         id_estudiante=id_estudiante,
@@ -70,7 +67,6 @@ def obtener_resumen_calificaciones(id_estudiante: int, db: Session = Depends(get
     suma_total = 0
     
     for c in calificaciones:
-        # Aseguramos que el valor sea numérico
         val = float(c.valor)
         suma_total += val
         if c.id_materia not in materias_dict:
@@ -110,9 +106,7 @@ def obtener_resumen_calificaciones(id_estudiante: int, db: Session = Depends(get
         detalle_materias=detalle_materias
     )
 
-# ==========================================
 # 2. OBSERVACIONES DE CONDUCTA (RF-14)
-# ==========================================
 @router.post("/estudiantes/{id_estudiante}/observaciones", response_model=ObservacionOut, dependencies=[Depends(permitir_acceso)])
 def registrar_observacion(
     id_estudiante: int,
@@ -120,7 +114,6 @@ def registrar_observacion(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_active_user)
 ):
-    # Necesitamos sacar el id_docente desde el usuario autenticado
     docente = db.query(Docente).filter(Docente.id_usuario == current_user.id_usuario).first()
     if not docente:
         raise HTTPException(status_code=403, detail="Solo los docentes pueden registrar observaciones.")

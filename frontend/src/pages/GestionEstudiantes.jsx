@@ -30,7 +30,6 @@ export default function GestionEstudiantes() {
     if (!window.confirm('¿Estás seguro de dar de baja a este estudiante?')) return;
     
     await fetch(`http://localhost:8000/api/v1/estudiantes/${id}`, { method: 'DELETE' });
-    // Actualizamos el estado local para reflejar el cambio inmediato
     setEstudiantes(estudiantes.filter(e => e.id_estudiante !== id));
   };
 
@@ -46,7 +45,6 @@ export default function GestionEstudiantes() {
         </Link>
       </div>
 
-      {/* Filtros */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="relative">
           <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
@@ -66,7 +64,6 @@ export default function GestionEstudiantes() {
         </select>
       </div>
 
-      {/* Tabla */}
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>

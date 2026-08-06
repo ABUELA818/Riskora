@@ -17,7 +17,6 @@ export default function AltaEstudiantes() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Cargamos los grupos para el Select
    useEffect(() => {
     if (!token) return;
     fetch('http://localhost:8000/api/v1/grupos', {
@@ -53,7 +52,6 @@ export default function AltaEstudiantes() {
         throw new Error('Ocurrió un error al registrar al estudiante.');
       }
 
-      // Redirección con mensaje de éxito (RF-02)
       navigate('/estudiantes', { state: { message: 'Estudiante dado de alta exitosamente' } });
     } catch (err) {
       setError(err.message);

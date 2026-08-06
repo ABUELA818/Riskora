@@ -40,7 +40,6 @@ export default function AnalisisPrediccion() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Score General */}
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex justify-between items-center mb-4">
@@ -66,7 +65,6 @@ export default function AnalisisPrediccion() {
           </div>
         </div>
 
-        {/* Desglose de Factores (Componente agnóstico a los datos) */}
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
           <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center">
             <Activity className="w-5 h-5 mr-2 text-eduPurple" /> Variable Weight Breakdown

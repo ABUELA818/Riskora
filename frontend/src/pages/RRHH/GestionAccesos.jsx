@@ -6,11 +6,9 @@ export default function GestionAccesos() {
   const { token } = useAuth();
   const [usuarios, setUsuarios] = useState([]);
   
-  // Estado para la confirmación de cambio de rol
   const [confirmModal, setConfirmModal] = useState({ open: false, user: null, newRole: '' });
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Estados visuales de la matriz de RBAC simulada a la izquierda
   const [selectedPreviewRole, setSelectedPreviewRole] = useState('Docente');
 
   useEffect(() => {
@@ -39,7 +37,6 @@ export default function GestionAccesos() {
 
       if (!response.ok) throw new Error("Error al actualizar el rol");
 
-      // Actualizamos UI localmente
       setUsuarios(prev => prev.map(u => 
         u.id_usuario === confirmModal.user.id_usuario ? { ...u, rol: confirmModal.newRole } : u
       ));
@@ -55,7 +52,6 @@ export default function GestionAccesos() {
   };
 
   const openConfirmation = (user, currentRole) => {
-    // Evitamos actualizar al mismo rol
     const roles = ['Docente', 'Tutor', 'Director', 'Psicopedagogia', 'RRHH', 'Administrador'];
     const nextRole = roles.find(r => r !== currentRole) || 'Docente';
     setConfirmModal({ open: true, user, newRole: nextRole });
@@ -70,7 +66,6 @@ export default function GestionAccesos() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* COLUMNA IZQUIERDA: Matriz de Vista Previa (RBAC Visual) */}
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col">
           <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center">
             <ShieldAlert className="w-5 h-5 mr-2 text-eduPurple" /> Matriz de Permisos (RBAC)
@@ -124,7 +119,6 @@ export default function GestionAccesos() {
           </div>
         </div>
 
-        {/* COLUMNA DERECHA: Tabla de Usuarios Activos */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
           <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
             <h3 className="font-bold text-gray-900">Usuarios Activos y Roles</h3>
@@ -180,7 +174,6 @@ export default function GestionAccesos() {
 
       </div>
 
-      {/* MODAL DE CONFIRMACIÓN CRÍTICA (RNF-06) */}
       {confirmModal.open && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center">
