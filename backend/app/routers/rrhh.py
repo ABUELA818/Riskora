@@ -1,12 +1,12 @@
 import secrets
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, desc
 from typing import List, Optional
 
 from app.db.session import SessionLocal
-from app.models.models import Usuario, Docente, Tutor, Grupo, RolEnum, DirectorCarrera, DocenteCarrera, Carrera
-from app.schemas.rrhh import PersonalCreate, PersonalOut, CambioRolIn, MetricasRRHHOut, MetricaCarrera
+from app.models.models import Usuario, Docente, Tutor, Grupo, RolEnum, DirectorCarrera, DocenteCarrera, Carrera, LogAuditoria
+from app.schemas.rrhh import PersonalCreate, PersonalOut, CambioRolIn, MetricasRRHHOut, MetricaCarrera, LogAuditoriaOut 
 from app.core.deps import get_db, RoleChecker, get_current_active_user
 from app.core.security import get_password_hash 
 
@@ -88,6 +88,34 @@ def obtener_directorio_personal(
             rol=u.rol.value if hasattr(u.rol, 'value') else str(u.rol),
             estado=u.estado
         ) for u in usuarios
+    ]
+
+permitir_auditoria = RoleChecker(["RRHH", "Administrador"])
+
+@router.get("/logs-auditoria", response_model=List[LogAuditoriaOut], dependencies=[Depends(permitir_auditoria)])
+def obtener_logs_auditoria(
+    id_usuario: Optional[int] = Query(None),
+    limit: int = Query(100, le=500),
+    db: Session = Depends(get_db)
+):
+    query = db.query(LogAuditoria, Usuario.nombre_completo)\
+        .outerjoin(Usuario, LogAuditoria.id_usuario == Usuario.id_usuario)\
+        .order_by(desc(LogAuditoria.timestamp))
+
+    if id_usuario:
+        query = query.filter(LogAuditoria.id_usuario == id_usuario)
+
+    resultados = query.limit(limit).all()
+
+    return [
+        LogAuditoriaOut(
+            id_log=log.id_log,
+            id_usuario=log.id_usuario,
+            nombre_usuario=nombre or "Usuario eliminado",
+            accion=log.accion,
+            endpoint=log.endpoint,
+            timestamp=log.timestamp
+        ) for log, nombre in resultados
     ]
 
 @router.post("/personal", response_model=PersonalOut, dependencies=[Depends(permitir_rrhh)])

@@ -1,11 +1,12 @@
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
+from datetime import datetime
 
 class PersonalCreate(BaseModel):
     nombre_completo: str
     correo: EmailStr
     rol: str
-    id_carrera: Optional[int] = None 
+    id_carrera: Optional[int] = None
 
 class PersonalOut(BaseModel):
     id_usuario: int
@@ -29,3 +30,18 @@ class MetricasRRHHOut(BaseModel):
     total_tutores: int
     total_psicopedagogia: int
     distribucion_carreras: List[MetricaCarrera]
+
+class LogAuditoriaOut(BaseModel):
+    id_log: int
+    id_usuario: Optional[int] = None
+    nombre_usuario: Optional[str] = None
+    accion: Optional[str] = None
+    endpoint: Optional[str] = None
+    timestamp: datetime
+
+    class Config:
+        from_attributes = True
+
+class CasoManualCreate(BaseModel):
+    id_estudiante: int
+    motivo: str
