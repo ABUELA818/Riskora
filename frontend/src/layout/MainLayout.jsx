@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; 
 import { 
@@ -40,14 +41,27 @@ const MENU_ITEMS = {
     { name: 'Dashboard RRHH', path: '/rrhh/dashboard', icon: LayoutDashboard },
     { name: 'Directorio Global', path: '/rrhh/directorio', icon: Users },
     { name: 'Control Accesos', path: '/rrhh/accesos', icon: Lock },
-    { name: 'Configuración', path: '/config', icon: Settings },
   ]
 };
 
 export default function MainLayout() {
   const location = useLocation();
-  const { role, logout } = useAuth(); 
-  
+  const { role, logout, token } = useAuth(); 
+
+  const [notificaciones, setNotificaciones] = useState([]);
+  const [mostrarNotis, setMostrarNotis] = useState(false); 
+
+  useEffect(() => {
+    if (!token) return;
+    fetch('http://localhost:8000/api/v1/notificaciones', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setNotificaciones(data); })
+      .catch(err => console.error(err));
+  }, [token]);
+
+  const noLeidas = notificaciones.filter(n => !n.leida).length;
   const menuOptions = MENU_ITEMS[role] || [];
 
   return (
@@ -56,7 +70,6 @@ export default function MainLayout() {
       {/* SIDEBAR */}
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col justify-between shadow-sm z-10">
         <div>
-          {/* Logo Brand */}
           <div className="h-16 flex items-center px-6 border-b border-gray-200">
             <div className="w-8 h-8 bg-[#4F46E5] rounded-md flex items-center justify-center mr-3 shadow-sm">
                <span className="text-white font-bold">E</span>
@@ -132,10 +145,36 @@ export default function MainLayout() {
           </div>
 
           <div className="flex items-center space-x-5">
-            <button className="relative p-2 text-gray-400 hover:text-[#4F46E5] transition-colors rounded-full hover:bg-indigo-50">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => setMostrarNotis(!mostrarNotis)}
+                className="relative p-2 text-gray-400 hover:text-[#4F46E5] transition-colors rounded-full hover:bg-indigo-50"
+              >
+                <Bell className="h-5 w-5" />
+                {noLeidas > 0 && (
+                  <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
+                )}
+              </button>
+
+              {mostrarNotis && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                  <div className="p-3 border-b border-gray-100 font-bold text-sm text-gray-700">
+                    Notificaciones {noLeidas > 0 && `(${noLeidas} nuevas)`}
+                  </div>
+                  {notificaciones.length === 0 ? (
+                    <div className="p-4 text-sm text-gray-400 text-center">Sin notificaciones.</div>
+                  ) : (
+                    notificaciones.map(n => (
+                      <div key={n.id_notificacion} className={`p-3 border-b border-gray-50 text-sm ${!n.leida ? 'bg-indigo-50/40 font-medium text-gray-800' : 'text-gray-500'}`}>
+                        {n.mensaje}
+                        <p className="text-[10px] text-gray-400 mt-1">{new Date(n.fecha).toLocaleString()}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="h-9 w-9 rounded-full bg-indigo-100 border-2 border-white shadow-sm overflow-hidden flex items-center justify-center">
                <span className="font-bold text-[#4F46E5] text-sm">{role ? role.substring(0,2).toUpperCase() : 'U'}</span>
             </div>
@@ -145,7 +184,6 @@ export default function MainLayout() {
         <main className="flex-1 overflow-auto">
           <Outlet />
         </main>
-
       </div>
     </div>
   );

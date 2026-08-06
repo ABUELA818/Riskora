@@ -1,16 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
-import { AlertTriangle, Plus, ExternalLink } from 'lucide-react';
+import { AlertTriangle, Plus, ExternalLink, X } from 'lucide-react';
 import SimulationBadge from '../../components/SimulationBadge';
 
 export default function CasosEscalados() {
   const { token } = useAuth();
+  
+  // Estados originales
   const [casos, setCasos] = useState([]);
   const [seleccionado, setSeleccionado] = useState(null);
 
-  useEffect(() => {
-    if (!token) return;
+  // Nuevos estados para el modal y formulario
+  const [modalOpen, setModalOpen] = useState(false);
+  const [estudiantes, setEstudiantes] = useState([]);
+  const [formData, setFormData] = useState({ id_estudiante: '', motivo: '' });
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Función extraída para poder recargar los casos después de crear uno nuevo
+  const cargarCasos = () => {
     fetch(`http://localhost:8000/api/v1/casos-escalados`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -19,7 +27,53 @@ export default function CasosEscalados() {
         setCasos(data);
         if (data.length > 0) setSeleccionado(data[0]);
       });
+  };
+
+  useEffect(() => {
+    if (!token) return;
+    
+    // Cargar casos iniciales
+    cargarCasos();
+    
+    // Cargar lista de estudiantes para el select del modal
+    fetch('http://localhost:8000/api/v1/estudiantes', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => { 
+        if (Array.isArray(data)) setEstudiantes(data); 
+      });
   }, [token]);
+
+  const handleCrearCaso = async (e) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      const response = await fetch('http://localhost:8000/api/v1/casos-escalados/manual', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({
+          id_estudiante: parseInt(formData.id_estudiante),
+          motivo: formData.motivo
+        })
+      });
+      
+      if (!response.ok) throw new Error('Error al crear el caso');
+      
+      // Limpiar y cerrar modal
+      setModalOpen(false);
+      setFormData({ id_estudiante: '', motivo: '' });
+      // Recargar la lista de casos
+      cargarCasos();
+    } catch (error) {
+      alert('No se pudo crear el caso manual.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="p-8 bg-gray-50/50 min-h-full flex flex-col h-screen">
@@ -30,17 +84,23 @@ export default function CasosEscalados() {
           <h2 className="text-3xl font-bold text-gray-900">Bandeja de Entrada: Psicopedagogía</h2>
           <p className="text-sm text-gray-500">Casos escalados para seguimiento especializado y resolución.</p>
         </div>
-        <button className="bg-eduPurple text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center">
+        <button 
+          onClick={() => setModalOpen(true)}
+          className="bg-eduPurple text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center hover:bg-opacity-90 transition-all"
+        >
           <Plus className="w-4 h-4 mr-2" /> Nuevo Caso Manual
         </button>
       </div>
 
       <div className="flex-1 flex gap-6 min-h-0">
         
+        {/* Panel Izquierdo: Lista de Casos Activos */}
         <div className="w-2/3 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
           <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
             <h3 className="font-bold text-gray-700 flex items-center">Casos Activos</h3>
-            <select className="text-sm border border-gray-300 rounded-md p-1"><option>Todos los Riesgos</option></select>
+            <select className="text-sm border border-gray-300 rounded-md p-1">
+              <option>Todos los Riesgos</option>
+            </select>
           </div>
           <div className="overflow-auto flex-1">
             <table className="w-full text-left">
@@ -91,23 +151,29 @@ export default function CasosEscalados() {
               </div>
 
               <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6">
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Motivo de Escalada ({seleccionado.tutor_nombre})</p>
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
+                  Motivo de Escalada ({seleccionado.tutor_nombre})
+                </p>
                 <p className="text-sm text-gray-700 italic">"{seleccionado.ultimo_acuerdo}"</p>
               </div>
 
               <div className="space-y-4">
                 <div>
                   <label className="text-xs font-bold text-gray-500">Notas de Seguimiento (Internas)</label>
-                  <textarea className="w-full mt-1 border border-gray-300 rounded-lg p-2 text-sm h-24 focus:ring-eduPurple" placeholder="Documentar análisis inicial..."></textarea>
+                  <textarea className="w-full mt-1 border border-gray-300 rounded-lg p-2 text-sm h-24 focus:ring-eduPurple focus:border-eduPurple outline-none transition-all" placeholder="Documentar análisis inicial..."></textarea>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs font-bold text-gray-500">Actualizar Estado</label>
-                    <select className="w-full mt-1 border border-gray-300 rounded-lg p-2 text-sm"><option>En Revisión</option></select>
+                    <select className="w-full mt-1 border border-gray-300 rounded-lg p-2 text-sm outline-none focus:border-eduPurple">
+                      <option>En Revisión</option>
+                    </select>
                   </div>
                 </div>
-                <button className="w-full bg-eduPurple text-white py-2.5 rounded-lg text-sm font-bold shadow-sm">Guardar Registro</button>
-                <Link to={`/estudiantes/${seleccionado.id_estudiante}/intervenciones`} className="w-full border border-gray-300 text-gray-700 py-2.5 rounded-lg text-sm font-bold flex justify-center items-center hover:bg-gray-50">
+                <button className="w-full bg-eduPurple text-white py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-opacity-90 transition-all">
+                  Guardar Registro
+                </button>
+                <Link to={`/estudiantes/${seleccionado.id_estudiante}/intervenciones`} className="w-full border border-gray-300 text-gray-700 py-2.5 rounded-lg text-sm font-bold flex justify-center items-center hover:bg-gray-50 transition-all">
                   Ir a Bitácora Completa <ExternalLink className="w-4 h-4 ml-2" />
                 </Link>
               </div>
@@ -115,6 +181,63 @@ export default function CasosEscalados() {
           </div>
         )}
       </div>
+
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h3 className="text-lg font-bold text-gray-900">Nuevo Caso Manual</h3>
+              <button onClick={() => setModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleCrearCaso} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1">Estudiante</label>
+                <select
+                  required
+                  value={formData.id_estudiante}
+                  onChange={e => setFormData({...formData, id_estudiante: e.target.value})}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm bg-white outline-none focus:border-eduPurple"
+                >
+                  <option value="">Selecciona un estudiante...</option>
+                  {estudiantes.map(e => (
+                    <option key={e.id_estudiante} value={e.id_estudiante}>
+                      {e.nombre_completo} — {e.matricula}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1">Motivo de la Escalada</label>
+                <textarea
+                  required
+                  value={formData.motivo}
+                  onChange={e => setFormData({...formData, motivo: e.target.value})}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm h-28 resize-none outline-none focus:border-eduPurple"
+                  placeholder="Describe la situación..."
+                />
+              </div>
+              <div className="pt-2 flex space-x-3">
+                <button 
+                  type="button" 
+                  onClick={() => setModalOpen(false)} 
+                  className="flex-1 py-2.5 border border-gray-300 text-gray-700 font-bold rounded-lg text-sm hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isSaving} 
+                  className="flex-1 py-2.5 bg-eduPurple text-white font-bold rounded-lg text-sm hover:bg-opacity-90 disabled:opacity-70 transition-all"
+                >
+                  {isSaving ? 'Guardando...' : 'Crear Caso'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -18,6 +18,10 @@ class IntervencionOut(BaseModel):
     class Config:
         from_attributes = True
 
+class CasoManualCreate(BaseModel):
+    id_estudiante: int
+    motivo: str
+
 # --- Esquemas para el Resumen Completo ---
 class RiesgoResumen(BaseModel):
     nivel_riesgo: str

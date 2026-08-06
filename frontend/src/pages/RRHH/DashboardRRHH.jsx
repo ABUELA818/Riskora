@@ -132,7 +132,7 @@ export default function DashboardRRHH() {
                 </div>
                 <ChevronRight className="w-4 h-4 text-gray-400" />
               </Link>
-              <div className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group cursor-pointer">
+              <Link to="/rrhh/auditoria" className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group cursor-pointer">
                 <div className="flex items-center">
                   <div className="bg-gray-100 p-2 rounded-lg mr-3 group-hover:bg-white border border-transparent group-hover:border-gray-200"><FileText className="w-4 h-4 text-gray-600" /></div>
                   <div>
@@ -141,7 +141,7 @@ export default function DashboardRRHH() {
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-gray-400" />
-              </div>
+              </Link>
             </div>
           </div>
 

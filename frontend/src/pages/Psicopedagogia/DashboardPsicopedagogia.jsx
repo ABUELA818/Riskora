@@ -33,9 +33,12 @@ export default function DashboardPsicopedagogia() {
           <h2 className="text-3xl font-bold text-gray-900">Visión Institucional</h2>
           <p className="text-sm text-gray-500">Monitoreo de riesgo académico y casos escalados por departamento.</p>
         </div>
-        <button className="bg-eduPurple text-white px-5 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-opacity-90">
-          Reportes Globales
-        </button>
+          <button 
+            onClick={() => navigate('/reportes')}
+            className="bg-eduPurple text-white px-5 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-opacity-90"
+          >
+            Reportes Globales
+          </button>
       </div>
 
       <div className="mb-10">

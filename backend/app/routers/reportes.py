@@ -22,13 +22,13 @@ from app.core.audit import registrar_auditoria
 router = APIRouter(prefix="/api/v1", tags=["Reportes y Notificaciones"])
 permitir_acceso = RoleChecker(["Administrador", "Director", "Tutor", "Psicopedagogia", "RRHH"])
 
-def obtener_datos_reporte(db: Session, grupo_id: Optional[int], carrera: Optional[str], nivel_riesgo: Optional[str]):
+def obtener_datos_reporte(db: Session, grupo_id: Optional[int], carrera: Optional[int], nivel_riesgo: Optional[str]):
     query = db.query(Estudiante).join(Grupo)
     
     if grupo_id:
         query = query.filter(Grupo.id_grupo == grupo_id)
     if carrera:
-        query = query.filter(Grupo.carrera.ilike(f"%{carrera}%"))
+        query = query.filter(Grupo.id_carrera == carrera)
         
     estudiantes = query.all()
     resultados = []

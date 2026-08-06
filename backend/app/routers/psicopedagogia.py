@@ -4,7 +4,7 @@ from typing import List, Optional
 from app.db.session import SessionLocal
 from app.models.models import (
     Estudiante, Grupo, Intervencion, Tutor, Usuario, 
-    Calificacion, Asistencia, ObservacionConducta, EstatusAsistenciaEnum
+    Calificacion, Asistencia, ObservacionConducta, EstatusAsistenciaEnum, Carrera
 )
 from app.schemas.psicopedagogia import CasoPendienteOut, ExpedienteCompletoOut
 from app.core.deps import get_db, RoleChecker, get_current_active_user
@@ -78,6 +78,12 @@ def obtener_expediente_completo(
         raise HTTPException(status_code=404, detail="Estudiante no encontrado")
         
     grupo = db.query(Grupo).filter(Grupo.id_grupo == estudiante.id_grupo).first()
+    nombre_carrera = "Sin carrera"
+    if grupo and grupo.id_carrera:
+        carrera_obj = db.query(Carrera).filter(Carrera.id_carrera == grupo.id_carrera).first()
+        if carrera_obj:
+            nombre_carrera = carrera_obj.nombre
+
     calificaciones = db.query(Calificacion).filter(Calificacion.id_estudiante == id_estudiante).all()
     asistencias = db.query(Asistencia).filter(Asistencia.id_estudiante == id_estudiante).all()
     observaciones = db.query(ObservacionConducta).filter(ObservacionConducta.id_estudiante == id_estudiante).all()
@@ -103,7 +109,7 @@ def obtener_expediente_completo(
         id_estudiante=estudiante.id_estudiante,
         nombre_completo=estudiante.nombre_completo,
         matricula=estudiante.matricula,
-        carrera=grupo.carrera if grupo else "Sin carrera",
+        carrera=nombre_carrera,
         historial_calificaciones=[{"id_materia": c.id_materia, "id_periodo": c.id_periodo, "parcial": c.parcial, "valor": float(c.valor)} for c in calificaciones],
         historial_asistencia=[{"fecha": a.fecha, "estatus": a.estatus.value if hasattr(a.estatus, 'value') else a.estatus} for a in asistencias],
         observaciones=[{"etiqueta": o.etiqueta, "nota": o.nota, "fecha_registro": o.fecha_registro} for o in observaciones],

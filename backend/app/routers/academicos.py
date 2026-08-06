@@ -32,9 +32,9 @@ def crear_estudiante(estudiante: EstudianteCreate, db: Session = Depends(get_db)
 
 @router.get("/estudiantes", response_model=List[EstudianteOut], dependencies=[Depends(todos_los_roles)])
 def obtener_estudiantes(
-    carrera: Optional[str] = Query(None),
+    carrera: Optional[int] = Query(None),
     grupo: Optional[str] = Query(None),
-    nivel_riesgo: Optional[str] = Query(None), # Mock preparado para el sprint de IA
+    nivel_riesgo: Optional[str] = Query(None),
     skip: int = 0, limit: int = 100,
     db: Session = Depends(get_db)
 ):
@@ -44,7 +44,7 @@ def obtener_estudiantes(
     if carrera or grupo:
         query = query.join(Grupo)
         if carrera:
-            query = query.filter(Grupo.carrera.ilike(f"%{carrera}%"))
+            query = query.filter(Grupo.id_carrera == carrera)
         if grupo:
             query = query.filter(Grupo.nombre_grupo.ilike(f"%{grupo}%"))
             
