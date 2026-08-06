@@ -19,6 +19,7 @@ class MateriaBase(BaseModel):
     nombre_materia: str
     clave_materia: str
     creditos: int
+    horas_semana: Optional[int] = None
     estado: Optional[bool] = True
 
 class MateriaCreate(MateriaBase): pass
@@ -26,6 +27,13 @@ class MateriaOut(MateriaBase):
     id_materia: int
     class Config: 
         from_attributes = True
+
+class MateriaUpdate(BaseModel):
+    nombre_materia: Optional[str] = None
+    clave_materia: Optional[str] = None
+    creditos: Optional[int] = None
+    horas_semana: Optional[int] = None
+    estado: Optional[bool] = None
 
 # --- GRUPOS ---
 class GrupoBase(BaseModel):
@@ -59,3 +67,15 @@ class EstudianteOut(EstudianteBase):
     # grupo: Optional[GrupoOut] = None 
     class Config: 
         from_attributes = True
+
+# --- DASHBOARD DOCENTE ---
+class ClaseDocenteOut(BaseModel):
+    id_horario: int
+    id_grupo: int
+    nombre_grupo: str
+    id_materia: int
+    nombre_materia: str
+    dia_semana: str
+    hora_inicio: str
+    hora_fin: str
+    num_alumnos: int
