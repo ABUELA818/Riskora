@@ -3,8 +3,9 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.db.session import SessionLocal
 from app.models.models import (
-    Estudiante, Grupo, Intervencion, Tutor, Usuario, 
-    Calificacion, Asistencia, ObservacionConducta, EstatusAsistenciaEnum, Carrera
+    Estudiante, Grupo, Intervencion, Tutor, Docente, Usuario, 
+    Calificacion, Asistencia, ObservacionConducta, EstatusAsistenciaEnum, Carrera,
+    Materia, Periodo
 )
 from app.schemas.psicopedagogia import CasoPendienteOut, ExpedienteCompletoOut
 from app.core.deps import get_db, RoleChecker, get_current_active_user
@@ -86,7 +87,12 @@ def obtener_expediente_completo(
 
     calificaciones = db.query(Calificacion).filter(Calificacion.id_estudiante == id_estudiante).all()
     asistencias = db.query(Asistencia).filter(Asistencia.id_estudiante == id_estudiante).all()
-    observaciones = db.query(ObservacionConducta).filter(ObservacionConducta.id_estudiante == id_estudiante).all()
+    observaciones_raw = db.query(ObservacionConducta, Usuario.nombre_completo)\
+        .join(Docente, ObservacionConducta.id_docente == Docente.id_docente)\
+        .join(Usuario, Docente.id_usuario == Usuario.id_usuario)\
+        .filter(ObservacionConducta.id_estudiante == id_estudiante)\
+        .order_by(ObservacionConducta.fecha_registro.desc())\
+        .all()
     
     intervenciones = db.query(Intervencion, Usuario.nombre_completo)\
         .join(Tutor, Intervencion.id_tutor == Tutor.id_tutor)\
@@ -105,14 +111,42 @@ def obtener_expediente_completo(
     else:
         nivel_riesgo, score = "Bajo", 0.15
 
+    materias_map = {m.id_materia: m.nombre_materia for m in db.query(Materia).all()}
+    periodos_map = {p.id_periodo: p.nombre_periodo for p in db.query(Periodo).all()}
+
+    historial_calif_resuelto = [
+        {
+            "id_materia": c.id_materia,
+            "nombre_materia": materias_map.get(c.id_materia, "Materia no encontrada"),
+            "id_periodo": c.id_periodo,
+            "nombre_periodo": periodos_map.get(c.id_periodo, "Periodo no encontrado"),
+            "parcial": c.parcial,
+            "valor": float(c.valor)
+        }
+        for c in calificaciones
+    ]
+
     respuesta = ExpedienteCompletoOut(
         id_estudiante=estudiante.id_estudiante,
         nombre_completo=estudiante.nombre_completo,
         matricula=estudiante.matricula,
         carrera=nombre_carrera,
-        historial_calificaciones=[{"id_materia": c.id_materia, "id_periodo": c.id_periodo, "parcial": c.parcial, "valor": float(c.valor)} for c in calificaciones],
+        fotografia_url=estudiante.fotografia_url,
+        correo_institucional=estudiante.correo_institucional,
+        contacto_emergencia_nombre=estudiante.contacto_emergencia_nombre,
+        contacto_emergencia_telefono=estudiante.contacto_emergencia_telefono,
+        historial_calificaciones=historial_calif_resuelto,
         historial_asistencia=[{"fecha": a.fecha, "estatus": a.estatus.value if hasattr(a.estatus, 'value') else a.estatus} for a in asistencias],
-        observaciones=[{"etiqueta": o.etiqueta, "nota": o.nota, "fecha_registro": o.fecha_registro} for o in observaciones],
+        observaciones=[
+            {
+                "id_observacion": o.id_observacion,
+                "etiqueta": o.etiqueta,
+                "nota": o.nota,
+                "fecha_registro": o.fecha_registro,
+                "nombre_docente": nombre
+            }
+            for o, nombre in observaciones_raw
+        ],
         intervenciones=[{"tutor_nombre": n, "fecha": i.fecha, "nivel_resolucion": i.nivel_resolucion, "acuerdos": i.acuerdos, "escalado": i.escalado} for i, n in intervenciones],
         nivel_riesgo_actual=nivel_riesgo,
         score_riesgo=score
