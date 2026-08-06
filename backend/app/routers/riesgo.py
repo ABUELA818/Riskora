@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List
 from datetime import date
 from app.db.session import SessionLocal
-from app.models.models import Estudiante, Grupo, Asistencia, Calificacion, EstatusAsistenciaEnum
-from app.schemas.riesgo import RiesgoEstudianteOut, RiesgoResumenOut, FactorRiesgo
-from app.core.deps import get_db, RoleChecker
+from app.models.models import Estudiante, Grupo, Asistencia, Calificacion, EstatusAsistenciaEnum, Tutor
+from app.schemas.riesgo import RiesgoEstudianteOut, RiesgoResumenOut, FactorRiesgo, AlumnoAtencionOut
+from app.core.deps import get_db, RoleChecker, get_current_active_user
 
 router = APIRouter(prefix="/api/v1", tags=["IA - Riesgo (Mock)"])
 permitir_acceso = RoleChecker(["Docente", "Tutor", "Administrador"])
@@ -107,3 +107,54 @@ def obtener_resumen_riesgo(
         alto=conteo["Alto"],
         total_estudiantes=len(estudiantes)
     )
+
+@router.get("/riesgo/alumnos-atencion", response_model=List[AlumnoAtencionOut])
+def obtener_alumnos_requieren_atencion(
+    limite: int = Query(5, le=20),
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
+    user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
+    if user_role != "Tutor":
+        raise HTTPException(status_code=403, detail="Solo disponible para el rol Tutor")
+
+    tutor = db.query(Tutor).filter(Tutor.id_usuario == current_user.id_usuario).first()
+    if not tutor:
+        raise HTTPException(status_code=400, detail="Tu cuenta no tiene un perfil de tutor asociado")
+
+    grupos_ids = [g.id_grupo for g in db.query(Grupo).filter(Grupo.id_tutor == tutor.id_tutor).all()]
+    if not grupos_ids:
+        return []
+
+    estudiantes = db.query(Estudiante).filter(
+        Estudiante.id_grupo.in_(grupos_ids),
+        Estudiante.estado == True
+    ).all()
+
+    resultados = []
+    for est in estudiantes:
+        p_asis, prom, _ = calcular_metricas_estudiante(db, est.id_estudiante)
+
+        if p_asis < 70.0 or prom < 60.0:
+            nivel, score = "Alto", 0.85
+        elif p_asis < 85.0 or prom < 75.0:
+            nivel, score = "Medio", 0.55
+        else:
+            nivel, score = "Bajo", 0.15
+
+        if nivel == "Bajo":
+            continue
+
+        resultados.append(AlumnoAtencionOut(
+            id_estudiante=est.id_estudiante,
+            nombre_completo=est.nombre_completo,
+            matricula=est.matricula,
+            correo_institucional=est.correo_institucional,
+            nivel_riesgo=nivel,
+            score=score
+        ))
+
+    orden_prioridad = {"Alto": 0, "Medio": 1}
+    resultados.sort(key=lambda r: orden_prioridad.get(r.nivel_riesgo, 2))
+
+    return resultados[:limite]

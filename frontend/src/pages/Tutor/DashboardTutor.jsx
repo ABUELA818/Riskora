@@ -7,6 +7,7 @@ import SimulationBadge from '../../components/SimulationBadge';
 export default function DashboardTutor() {
   const { token } = useAuth();
   const [resumen, setResumen] = useState({ bajo: 0, medio: 0, alto: 0, total_estudiantes: 0 });
+  const [alumnosAtencion, setAlumnosAtencion] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,6 +20,13 @@ export default function DashboardTutor() {
         setResumen(data);
         setLoading(false);
       })
+      .catch(err => console.error(err));
+
+    fetch('http://localhost:8000/api/v1/riesgo/alumnos-atencion', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setAlumnosAtencion(data); })
       .catch(err => console.error(err));
   }, [token]);
 
@@ -117,9 +125,58 @@ export default function DashboardTutor() {
           <h3 className="text-base font-bold text-gray-800">Alumnos que requieren atención</h3>
           <Link to="/panel-riesgo" className="text-sm font-semibold text-eduPurple hover:underline">Ver todos</Link>
         </div>
-        <div className="p-6 text-center text-gray-500 text-sm">
-          Accede al panel de predicciones detallado para interactuar con los expedientes de riesgo.
-        </div>
+
+        {alumnosAtencion.length === 0 ? (
+          <div className="p-6 text-center text-gray-500 text-sm">
+            No hay alumnos en riesgo medio o alto en tus grupos por el momento.
+          </div>
+        ) : (
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider border-b border-gray-100">
+                <th className="p-4 pl-6">Alumno</th>
+                <th className="p-4">Matrícula</th>
+                <th className="p-4">Nivel de Riesgo</th>
+                <th className="p-4 text-right pr-6">Acción</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {alumnosAtencion.map(alumno => {
+                const badgeColor = alumno.nivel_riesgo === 'Alto'
+                  ? 'bg-red-100 text-red-800 border-red-200'
+                  : 'bg-yellow-100 text-yellow-800 border-yellow-200';
+                return (
+                  <tr key={alumno.id_estudiante} className="hover:bg-gray-50 transition-colors">
+                    <td className="p-4 pl-6 font-semibold text-gray-900">{alumno.nombre_completo}</td>
+                    <td className="p-4 text-sm text-gray-600">{alumno.matricula}</td>
+                    <td className="p-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold border ${badgeColor}`}>
+                        Riesgo {alumno.nivel_riesgo}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right pr-6">
+                      {alumno.correo_institucional ? (
+                        
+                        <a  href={`mailto:${alumno.correo_institucional}`}
+                          className="inline-flex items-center text-xs font-semibold bg-indigo-50 text-eduPurple px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
+                        >
+                          <Mail className="w-3.5 h-3.5 mr-1.5" /> Enviar correo
+                        </a>
+                      ) : (
+                        <span
+                          title="Sin correo institucional registrado"
+                          className="inline-flex items-center text-xs font-semibold bg-gray-100 text-gray-400 px-3 py-1.5 rounded-lg cursor-not-allowed"
+                        >
+                          <Mail className="w-3.5 h-3.5 mr-1.5" /> Sin correo
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

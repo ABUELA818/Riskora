@@ -19,3 +19,11 @@ class RiesgoResumenOut(BaseModel):
     medio: int
     alto: int
     total_estudiantes: int
+
+class AlumnoAtencionOut(BaseModel):
+    id_estudiante: int
+    nombre_completo: str
+    matricula: str
+    correo_institucional: Optional[str] = None
+    nivel_riesgo: str
+    score: float
