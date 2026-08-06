@@ -15,7 +15,9 @@ class CasoPendienteOut(BaseModel):
 # Esquemas de apoyo para el expediente completo
 class CalificacionDetalle(BaseModel):
     id_materia: int
+    nombre_materia: str
     id_periodo: int
+    nombre_periodo: str
     parcial: int
     valor: float
 
@@ -24,9 +26,11 @@ class AsistenciaDetalle(BaseModel):
     estatus: str
 
 class ObservacionDetalle(BaseModel):
+    id_observacion: int
     etiqueta: str
-    nota: str
+    nota: Optional[str] = None
     fecha_registro: datetime
+    nombre_docente: str
 
 class IntervencionDetalle(BaseModel):
     tutor_nombre: str
@@ -40,6 +44,10 @@ class ExpedienteCompletoOut(BaseModel):
     nombre_completo: str
     matricula: str
     carrera: str
+    fotografia_url: Optional[str] = None
+    correo_institucional: Optional[str] = None
+    contacto_emergencia_nombre: Optional[str] = None
+    contacto_emergencia_telefono: Optional[str] = None
     historial_calificaciones: List[CalificacionDetalle]
     historial_asistencia: List[AsistenciaDetalle]
     observaciones: List[ObservacionDetalle]

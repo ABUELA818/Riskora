@@ -57,6 +57,9 @@ class EstudianteBase(BaseModel):
     id_grupo: Optional[int] = None
     datos_socioeconomicos: Optional[str] = None
     fecha_ingreso: date
+    correo_institucional: Optional[str] = None
+    contacto_emergencia_nombre: Optional[str] = None
+    contacto_emergencia_telefono: Optional[str] = None
     # El correo se maneja desde la tabla de usuarios cuando se les da acceso al sistema.
 
 class EstudianteCreate(EstudianteBase): pass

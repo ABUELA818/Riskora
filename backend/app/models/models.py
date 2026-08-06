@@ -106,6 +106,9 @@ class Estudiante(Base):
     datos_socioeconomicos = Column(Text)
     fecha_ingreso = Column(Date)
     estado = Column(Boolean, default=True)
+    correo_institucional = Column(String(150), unique=True, index=True, nullable=True)
+    contacto_emergencia_nombre = Column(String(150), nullable=True)
+    contacto_emergencia_telefono = Column(String(20), nullable=True)
 
 class Materia(Base):
     __tablename__ = 'materias'

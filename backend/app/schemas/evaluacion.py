@@ -5,9 +5,9 @@ from datetime import date, datetime
 # --- CALIFICACIONES ---
 class CalificacionCreate(BaseModel):
     id_materia: int
-    grupo_id: int # Lo pedimos para validar permisos (RBAC), aunque no se guarde en esta tabla
+    grupo_id: int
     id_periodo: int
-    parcial: int = Field(..., ge=1, le=3)
+    parcial: int = Field(..., ge=1, le=12)
     valor: float = Field(..., ge=0, le=100)
 
 class CalificacionOut(BaseModel):

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  Search, Download, Save, AlertCircle, X, 
+  Search, Download, Save, AlertCircle, X, Plus,
   Hand, AlertTriangle, Brain, CheckCircle 
 } from 'lucide-react';
 
@@ -16,7 +16,7 @@ export default function CapturaCalificaciones() {
   const [grupoSeleccionado, setGrupoSeleccionado] = useState('');
   const [materiasDisponibles, setMateriasDisponibles] = useState([]);
   const [materiaSeleccionada, setMateriaSeleccionada] = useState('');
-  const [parcialSeleccionado, setParcialSeleccionado] = useState('1');
+  const [numParciales, setNumParciales] = useState(1); // arranca en 1
   
   const [calificaciones, setCalificaciones] = useState({});
   
@@ -59,7 +59,7 @@ export default function CapturaCalificaciones() {
             const nuevoEstado = { ...prev };
             filtrados.forEach(est => {
               if (!nuevoEstado[est.id_estudiante]) {
-                nuevoEstado[est.id_estudiante] = { p1: '', p2: '', p3: '', final: '' };
+                nuevoEstado[est.id_estudiante] = {};
               }
             });
             return nuevoEstado;
@@ -86,6 +86,8 @@ export default function CapturaCalificaciones() {
     });
 }, [grupoSeleccionado, token]);
 
+  const camposActivos = Array.from({ length: numParciales }, (_, i) => `p${i + 1}`);
+
   const handleCalificacionChange = (id, campo, valor) => {
     if (valor !== '' && (isNaN(valor) || valor < 0 || valor > 150)) return; 
     
@@ -104,7 +106,9 @@ export default function CapturaCalificaciones() {
     let enRiesgo = 0;
 
     Object.values(calificaciones).forEach(calif => {
-      const notas = [calif.p1, calif.p2, calif.p3, calif.final].filter(n => n !== '' && n <= 100);
+      const notas = camposActivos
+        .map(c => calif[c])
+        .filter(n => n !== undefined && n !== '' && n <= 100);
       if (notas.length > 0) {
         const promPersonal = notas.reduce((a, b) => parseFloat(a) + parseFloat(b), 0) / notas.length;
         sumaTotal += promPersonal;
@@ -124,26 +128,33 @@ export default function CapturaCalificaciones() {
   const guardarCalificacionesLote = async () => {
     setIsSaving(true);
     try {
-      const promesas = estudiantes.map(est => {
-        const valor = calificaciones[est.id_estudiante][`p${parcialSeleccionado}`] || calificaciones[est.id_estudiante].final;
-        
-        if (valor === '' || valor > 100) return Promise.resolve();
+      const promesas = [];
 
-        const payload = {
-          id_materia: parseInt(materiaSeleccionada),
-          grupo_id: parseInt(grupoSeleccionado),
-          id_periodo: 1,
-          parcial: parseInt(parcialSeleccionado),
-          valor: parseFloat(valor),
-        };
+      estudiantes.forEach(est => {
+        const notasEst = calificaciones[est.id_estudiante] || {};
 
-        return fetch(`http://localhost:8000/api/v1/estudiantes/${est.id_estudiante}/calificaciones`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify(payload)
-        }).then(res => {
-          if (!res.ok) throw new Error(`Error en estudiante ${est.id_estudiante}`);
-          return res;
+        camposActivos.forEach((campo, idx) => {
+          const valor = notasEst[campo];
+          if (valor === undefined || valor === '' || valor > 100) return;
+
+          const payload = {
+            id_materia: parseInt(materiaSeleccionada),
+            grupo_id: parseInt(grupoSeleccionado),
+            id_periodo: 1,
+            parcial: idx + 1,
+            valor: parseFloat(valor),
+          };
+
+          promesas.push(
+            fetch(`http://localhost:8000/api/v1/estudiantes/${est.id_estudiante}/calificaciones`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+              body: JSON.stringify(payload)
+            }).then(res => {
+              if (!res.ok) throw new Error(`Error en estudiante ${est.id_estudiante}, parcial ${idx + 1}`);
+              return res;
+            })
+          );
         });
       });
 
@@ -242,26 +253,36 @@ export default function CapturaCalificaciones() {
       <div className="px-8 pb-8">
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           
-          <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-white">
-            <select 
-              value={grupoSeleccionado}
-              onChange={(e) => setGrupoSeleccionado(e.target.value)}
-              className="border border-gray-300 rounded-lg text-sm px-3 py-2 bg-gray-50 focus:ring-eduPurple"
-            >
-              {grupos.map(g => <option key={g.id_grupo} value={g.id_grupo}>{g.nombre_grupo}</option>)}
-            </select>
+          <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-white flex-wrap gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
+              <select 
+                value={grupoSeleccionado}
+                onChange={(e) => setGrupoSeleccionado(e.target.value)}
+                className="border border-gray-300 rounded-lg text-sm px-3 py-2 bg-gray-50 focus:ring-eduPurple"
+              >
+                {grupos.map(g => <option key={g.id_grupo} value={g.id_grupo}>{g.nombre_grupo}</option>)}
+              </select>
 
-            <select 
-              value={materiaSeleccionada}
-              onChange={(e) => setMateriaSeleccionada(e.target.value)}
-              className="border border-gray-300 rounded-lg text-sm px-3 py-2 bg-gray-50 focus:ring-eduPurple"
-            >
-              {materiasDisponibles.length === 0 ? (
-                <option value="">Sin materias asignadas</option>
-              ) : (
-                materiasDisponibles.map(m => <option key={m.id_materia} value={m.id_materia}>{m.nombre_materia}</option>)
-              )}
-            </select>
+              <select 
+                value={materiaSeleccionada}
+                onChange={(e) => setMateriaSeleccionada(e.target.value)}
+                className="border border-gray-300 rounded-lg text-sm px-3 py-2 bg-gray-50 focus:ring-eduPurple"
+              >
+                {materiasDisponibles.length === 0 ? (
+                  <option value="">Sin materias asignadas</option>
+                ) : (
+                  materiasDisponibles.map(m => <option key={m.id_materia} value={m.id_materia}>{m.nombre_materia}</option>)
+                )}
+              </select>
+
+              <button
+                onClick={() => setNumParciales(prev => Math.min(prev + 1, 12))}
+                disabled={numParciales >= 12}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium bg-white hover:bg-gray-50 flex items-center disabled:opacity-50"
+              >
+                <Plus className="w-4 h-4 mr-1" /> Agregar parcial
+              </button>
+            </div>
             
             <div className="flex items-center text-sm text-gray-500">
               <span className="w-2 h-2 rounded-full border border-red-500 mr-2"></span> Entrada inválida
@@ -273,26 +294,23 @@ export default function CapturaCalificaciones() {
               <tr className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider border-b border-gray-200">
                 <th className="p-4 pl-6 w-1/4">Nombre</th>
                 <th className="p-4">Matricula</th>
-                <th className="p-4 text-center">P1 <span className="text-gray-400 font-normal">(20%)</span></th>
-                <th className="p-4 text-center">P2 <span className="text-gray-400 font-normal">(20%)</span></th>
-                <th className="p-4 text-center">P3 <span className="text-gray-400 font-normal">(30%)</span></th>
-                <th className="p-4 text-center">Final <span className="text-gray-400 font-normal">(30%)</span></th>
+                {Array.from({ length: numParciales }, (_, i) => (
+                  <th key={i} className="p-4 text-center">P{i + 1}</th>
+                ))}
                 <th className="p-4 text-right pr-6">Calificación Final</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {estudiantes.map(est => {
-                const notas = calificaciones[est.id_estudiante] || { p1: '', p2: '', p3: '', final: '' };
+                const notas = calificaciones[est.id_estudiante] || {};
                 
                 const isInvalid = (val) => val !== '' && parseFloat(val) > 100;
-                
-                const p1 = parseFloat(notas.p1) || 0;
-                const p2 = parseFloat(notas.p2) || 0;
-                const p3 = parseFloat(notas.p3) || 0;
-                const final = parseFloat(notas.final) || 0;
-                const sumaFila = p1 + p2 + p3 + final;
-                const countFila = [notas.p1, notas.p2, notas.p3, notas.final].filter(n => n !== '').length;
-                const califFinal = countFila > 0 ? (sumaFila / countFila).toFixed(1) : '-';
+
+                const valoresCapturados = camposActivos
+                  .map(c => notas[c])
+                  .filter(v => v !== undefined && v !== '');
+                const suma = valoresCapturados.reduce((acc, v) => acc + parseFloat(v), 0);
+                const califFinal = valoresCapturados.length > 0 ? (suma / valoresCapturados.length).toFixed(1) : '-';
                 const isAtRisk = califFinal !== '-' && califFinal < 60;
 
                 return (
@@ -314,17 +332,21 @@ export default function CapturaCalificaciones() {
                     </td>
                     <td className="p-4 text-sm text-gray-600">{est.matricula}</td>
                     
-                    {['p1', 'p2', 'p3', 'final'].map((campo) => (
-                      <td key={campo} className="p-4 text-center">
-                        <input 
-                          type="text"
-                          value={notas[campo]}
-                          onChange={(e) => handleCalificacionChange(est.id_estudiante, campo, e.target.value)}
-                          className={`w-16 text-center border rounded-md py-1.5 text-sm focus:ring-2 focus:outline-none ${isInvalid(notas[campo]) ? 'border-red-500 bg-red-50 text-red-700 ring-red-200' : 'border-gray-300 focus:border-eduPurple focus:ring-indigo-100'}`}
-                          placeholder="-"
-                        />
-                      </td>
-                    ))}
+                    {Array.from({ length: numParciales }, (_, i) => {
+                      const campo = `p${i + 1}`;
+                      const valor = notas[campo] || '';
+                      return (
+                        <td key={campo} className="p-4 text-center">
+                          <input
+                            type="text"
+                            value={valor}
+                            onChange={(e) => handleCalificacionChange(est.id_estudiante, campo, e.target.value)}
+                            className={`w-16 text-center border rounded-md py-1.5 text-sm focus:ring-2 focus:outline-none ${isInvalid(valor) ? 'border-red-500 bg-red-50 text-red-700 ring-red-200' : 'border-gray-300 focus:border-eduPurple focus:ring-indigo-100'}`}
+                            placeholder="-"
+                          />
+                        </td>
+                      );
+                    })}
 
                     <td className={`p-4 text-right pr-6 font-bold ${isAtRisk ? 'text-red-600' : 'text-gray-700'}`}>
                       {califFinal}
