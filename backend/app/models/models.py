@@ -186,6 +186,7 @@ class Intervencion(Base):
     acuerdos = Column(Text)
     nivel_resolucion = Column(String(50))
     escalado = Column(Boolean, default=False)
+    id_usuario_creador = Column(Integer, ForeignKey('usuarios.id_usuario'), nullable=True)
 
 class Aviso(Base):
     __tablename__ = 'avisos'
