@@ -18,8 +18,8 @@ export default function ExpedienteCompleto() {
     if (!token || !id) return;
     
     const url = isPsico 
-      ? `http://localhost:8000/api/v1/estudiantes/${id}/expediente-completo?vista=psicopedagogia`
-      : `http://localhost:8000/api/v1/estudiantes/${id}/expediente-completo`;
+      ? `http://localhost:8000/api/v1/psicopedagogia/estudiantes/${id}/expediente-completo?vista=psicopedagogia`
+      : `http://localhost:8000/api/v1/psicopedagogia/estudiantes/${id}/expediente-completo`;
 
     fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
       .then(res => res.json())
