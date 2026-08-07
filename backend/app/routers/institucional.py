@@ -5,7 +5,7 @@ from app.db.session import SessionLocal
 from app.models.models import Estudiante, Grupo, Intervencion, Tutor, Usuario, DirectorCarrera, Carrera 
 from app.schemas.institucional import IndicadoresOut, GrupoRiesgoOut, CasoEscaladoOut
 from app.core.deps import get_db, RoleChecker, get_current_active_user
-from app.routers.riesgo import calcular_metricas_estudiante
+from app.routers.riesgo import calcular_metricas_estudiante, clasificar_riesgo
 from app.schemas.carrera import CarreraResumenOut
 
 router = APIRouter(prefix="/api/v1", tags=["Módulo Director / Institucional"])
@@ -47,16 +47,12 @@ def calcular_kpis(estudiantes, db: Session):
     for est in estudiantes:
         p_asis, prom, _ = calcular_metricas_estudiante(db, est.id_estudiante)
         suma_promedios += prom
-
         if prom < 60.0:
             reprobados += 1
-
-        if p_asis < 70.0 or prom < 60.0:
-            r_alto += 1
-        elif p_asis < 85.0 or prom < 75.0:
-            r_medio += 1
-        else:
-            r_bajo += 1
+        nivel, _ = clasificar_riesgo(p_asis, prom)
+        if nivel == "Alto": r_alto += 1
+        elif nivel == "Medio": r_medio += 1
+        else: r_bajo += 1
 
     promedio_final = suma_promedios / total
     porcentaje_rep = (reprobados / total) * 100

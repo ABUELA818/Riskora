@@ -40,6 +40,18 @@ def calcular_metricas_estudiante(db: Session, id_estudiante: int):
 
     return porcentaje_asistencia, promedio_general, tendencia
 
+def clasificar_riesgo(porcentaje_asistencia: float, promedio_general: float):
+    """
+    Única fuente de verdad para clasificar el nivel de riesgo de un estudiante.
+    Devuelve (nivel: str, score: float).
+    """
+    if porcentaje_asistencia < 70.0 or promedio_general < 60.0:
+        return "Alto", 0.85
+    elif porcentaje_asistencia < 85.0 or promedio_general < 75.0:
+        return "Medio", 0.55
+    else:
+        return "Bajo", 0.15
+
 @router.get("/estudiantes/{id}/riesgo", response_model=RiesgoEstudianteOut, dependencies=[Depends(permitir_acceso)])
 def obtener_riesgo_estudiante(id: int, db: Session = Depends(get_db)):
     estudiante = db.query(Estudiante).filter(Estudiante.id_estudiante == id).first()
@@ -47,16 +59,7 @@ def obtener_riesgo_estudiante(id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Estudiante no encontrado")
 
     porcentaje_asistencia, promedio_general, tendencia = calcular_metricas_estudiante(db, id)
-
-    if porcentaje_asistencia < 70.0 or promedio_general < 60.0:
-        nivel_riesgo = "Alto"
-        score = 0.85
-    elif porcentaje_asistencia < 85.0 or promedio_general < 75.0:
-        nivel_riesgo = "Medio"
-        score = 0.55
-    else:
-        nivel_riesgo = "Bajo"
-        score = 0.15
+    nivel_riesgo, score = clasificar_riesgo(porcentaje_asistencia, promedio_general)
 
     factores = [
         FactorRiesgo(variable="porcentaje_asistencia", peso=0.4, valor=f"{round(porcentaje_asistencia, 1)}%"),
@@ -93,13 +96,8 @@ def obtener_resumen_riesgo(
 
     for est in estudiantes:
         p_asis, prom, _ = calcular_metricas_estudiante(db, est.id_estudiante)
-        
-        if p_asis < 70.0 or prom < 60.0:
-            conteo["Alto"] += 1
-        elif p_asis < 85.0 or prom < 75.0:
-            conteo["Medio"] += 1
-        else:
-            conteo["Bajo"] += 1
+        nivel, _ = clasificar_riesgo(p_asis, prom)
+        conteo[nivel] += 1
 
     return RiesgoResumenOut(
         bajo=conteo["Bajo"],
@@ -134,14 +132,7 @@ def obtener_alumnos_requieren_atencion(
     resultados = []
     for est in estudiantes:
         p_asis, prom, _ = calcular_metricas_estudiante(db, est.id_estudiante)
-
-        if p_asis < 70.0 or prom < 60.0:
-            nivel, score = "Alto", 0.85
-        elif p_asis < 85.0 or prom < 75.0:
-            nivel, score = "Medio", 0.55
-        else:
-            nivel, score = "Bajo", 0.15
-
+        nivel, score = clasificar_riesgo(p_asis, prom)
         if nivel == "Bajo":
             continue
 

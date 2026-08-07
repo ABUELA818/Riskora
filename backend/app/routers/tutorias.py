@@ -9,7 +9,7 @@ from app.models.models import (
 )
 from app.schemas.tutoria import IntervencionCreate, IntervencionOut, ResumenCompletoOut, CasoManualCreate
 from app.core.deps import get_db, RoleChecker, get_current_active_user
-from app.routers.riesgo import calcular_metricas_estudiante
+from app.routers.riesgo import calcular_metricas_estudiante, clasificar_riesgo
 
 router = APIRouter(prefix="/api/v1", tags=["Tutorías e Intervenciones"])
 permitir_acceso = RoleChecker(["Tutor", "Administrador", "Director", "Psicopedagogia"])
@@ -105,13 +105,8 @@ def resumen_completo_estudiante(id_estudiante: int, db: Session = Depends(get_db
             nombre_carrera = carrera.nombre
     
     porcentaje_asistencia, promedio_general, _ = calcular_metricas_estudiante(db, id_estudiante)
-    
-    if porcentaje_asistencia < 70.0 or promedio_general < 60.0:
-        riesgo = {"nivel": "Alto", "score": 0.85}
-    elif porcentaje_asistencia < 85.0 or promedio_general < 75.0:
-        riesgo = {"nivel": "Medio", "score": 0.55}
-    else:
-        riesgo = {"nivel": "Bajo", "score": 0.15}
+    nivel, score = clasificar_riesgo(porcentaje_asistencia, promedio_general)
+    riesgo = {"nivel": nivel, "score": score}
 
     obs_raw = db.query(ObservacionConducta)\
         .filter(ObservacionConducta.id_estudiante == id_estudiante)\

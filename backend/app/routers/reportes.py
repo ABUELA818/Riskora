@@ -20,7 +20,7 @@ from app.schemas.reportes import (
     RiesgoPorCarreraOut, ReprobacionPorMateriaOut, TendenciaRiesgoPuntoOut  # NUEVO
 )
 from app.core.deps import get_db, RoleChecker, get_current_active_user
-from app.routers.riesgo import calcular_metricas_estudiante
+from app.routers.riesgo import calcular_metricas_estudiante, clasificar_riesgo
 from app.core.audit import registrar_auditoria
 
 router = APIRouter(prefix="/api/v1", tags=["Reportes y Notificaciones"])
@@ -38,15 +38,9 @@ def obtener_datos_reporte(db: Session, grupo_id: Optional[int], carrera: Optiona
     resultados = []
     
     for est in estudiantes:
-        p_asis, prom, _ = calcular_metricas_estudiante(db, est.id_estudiante)
 
-        if p_asis < 70.0 or prom < 60.0:
-            riesgo = "Alto"
-        elif p_asis < 85.0 or prom < 75.0:
-            riesgo = "Medio"
-        else:
-            riesgo = "Bajo"
-            
+        p_asis, prom, _ = calcular_metricas_estudiante(db, est.id_estudiante)
+        riesgo, _ = clasificar_riesgo(p_asis, prom)
         if nivel_riesgo and riesgo.lower() != nivel_riesgo.lower():
             continue
             
@@ -176,12 +170,11 @@ def riesgo_por_carrera(db: Session = Depends(get_db)):
         r_bajo = r_medio = r_alto = 0
         for est in estudiantes:
             p_asis, prom, _ = calcular_metricas_estudiante(db, est.id_estudiante)
-            if p_asis < 70.0 or prom < 60.0:
-                r_alto += 1
-            elif p_asis < 85.0 or prom < 75.0:
-                r_medio += 1
-            else:
-                r_bajo += 1
+            nivel, _ = clasificar_riesgo(p_asis, prom)
+            if nivel == "Alto": r_alto += 1
+            elif nivel == "Medio": r_medio += 1
+            else: r_bajo += 1
+
         resultado.append(RiesgoPorCarreraOut(
             id_carrera=carrera.id_carrera,
             carrera=carrera.nombre,
@@ -220,14 +213,12 @@ def generar_snapshot_riesgo(db: Session = Depends(get_db)):
     'alertas', usada como histórico para la gráfica de tendencia (RF-P7)."""
     estudiantes = db.query(Estudiante).filter(Estudiante.estado == True).all()
     creadas = 0
+    
+    NIVEL_A_ENUM = {"Alto": RiesgoEnum.ALTO, "Medio": RiesgoEnum.MEDIO, "Bajo": RiesgoEnum.BAJO}
     for est in estudiantes:
         p_asis, prom, _ = calcular_metricas_estudiante(db, est.id_estudiante)
-        if p_asis < 70.0 or prom < 60.0:
-            nivel, prob = RiesgoEnum.ALTO, 0.85
-        elif p_asis < 85.0 or prom < 75.0:
-            nivel, prob = RiesgoEnum.MEDIO, 0.55
-        else:
-            nivel, prob = RiesgoEnum.BAJO, 0.15
+        nivel_str, prob = clasificar_riesgo(p_asis, prom)
+        nivel = NIVEL_A_ENUM[nivel_str]
 
         db.add(Alerta(
             id_estudiante=est.id_estudiante,
