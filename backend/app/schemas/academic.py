@@ -76,7 +76,6 @@ class EstudianteOut(EstudianteBase):
 class EstudianteBajaIn(BaseModel):
     motivo_baja: str
 
-# --- DASHBOARD DOCENTE ---
 class ClaseDocenteOut(BaseModel):
     id_horario: int
     id_grupo: int
@@ -87,3 +86,18 @@ class ClaseDocenteOut(BaseModel):
     hora_inicio: str
     hora_fin: str
     num_alumnos: int
+
+class HistorialAcademicoPrevioBase(BaseModel):
+    institucion: str
+    nivel: str
+    periodo: Optional[str] = None
+    documento_url: Optional[str] = None
+
+class HistorialAcademicoPrevioCreate(HistorialAcademicoPrevioBase):
+    pass
+
+class HistorialAcademicoPrevioOut(HistorialAcademicoPrevioBase):
+    id_historial: int
+    id_estudiante: int
+    class Config:
+        from_attributes = True
