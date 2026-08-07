@@ -29,8 +29,10 @@ const MENU_ITEMS = {
   Psicopedagogia: [
   { name: 'Dashboard', path: '/psicopedagogia/dashboard', icon: LayoutDashboard },
   { name: 'Casos Urgentes', path: '/casos-escalados', icon: ShieldAlert },
+  { name: 'Carreras', path: '/carreras/gestion', icon: GraduationCap },
   { name: 'Materias', path: '/materias', icon: BookOpen },
   { name: 'Alta Estudiantes', path: '/estudiantes/nuevo', icon: UserPlus },
+  { name: 'Baja Estudiantes', path: '/estudiantes/baja', icon: UserX }, // NUEVO
   { name: 'Reportes', path: '/reportes', icon: FileText },
   ],
   RRHH: [
