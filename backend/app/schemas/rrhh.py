@@ -7,6 +7,9 @@ class PersonalCreate(BaseModel):
     correo: EmailStr
     rol: str
     id_carrera: Optional[int] = None
+    telefono: Optional[str] = None
+    telefono_familiar: Optional[str] = None
+    imagen_url: Optional[str] = None
 
 class PersonalOut(BaseModel):
     id_usuario: int
@@ -14,7 +17,10 @@ class PersonalOut(BaseModel):
     correo: str
     rol: str
     estado: bool
-    
+    telefono: Optional[str] = None
+    telefono_familiar: Optional[str] = None
+    imagen_url: Optional[str] = None
+
     class Config:
         from_attributes = True
 

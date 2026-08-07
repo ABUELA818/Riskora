@@ -30,6 +30,7 @@ import ExpedienteLaboral from './pages/ExpedienteLaboral';
 import DashboardDocente from './pages/Profesor/DashboardDocente';
 import GestionCarreras from './pages/Psicopedagogia/GestionCarreras';
 import BajaEstudiante from './pages/Psicopedagogia/BajaEstudiante';
+import SolicitudesPersonal from './pages/RRHH/SolicitudesPersonal';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoadingSession } = useAuth();
@@ -94,6 +95,7 @@ export default function App() {
             <Route path="rrhh/directorio" element={<RoleRoute allowedRoles={['Administrador', 'RRHH']}><DirectorioPersonal /></RoleRoute>} />
             <Route path="rrhh/auditoria" element={<RoleRoute allowedRoles={['Administrador', 'RRHH']}><AuditoriaAccesos /></RoleRoute>} />
             <Route path="rrhh/accesos" element={<RoleRoute allowedRoles={['Administrador', 'RRHH']}><GestionAccesos /></RoleRoute>} />
+            <Route path="rrhh/solicitudes" element={<RoleRoute allowedRoles={['Administrador', 'RRHH']}><SolicitudesPersonal /></RoleRoute>} />
             <Route path="estudiantes/:id/intervenciones" element={
               <RoleRoute allowedRoles={['Tutor', 'Administrador', 'Director', 'Psicopedagogia']}>
                 <BitacoraIntervenciones />

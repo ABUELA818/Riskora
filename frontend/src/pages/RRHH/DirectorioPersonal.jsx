@@ -14,10 +14,14 @@ export default function DirectorioPersonal() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
-    nombre_completo: '',
+    nombres: '',
+    apellidos: '',
     correo: '',
     rol: 'Docente',
-    id_carrera: ''
+    id_carrera: '',
+    telefono: '',
+    telefono_familiar: '',
+    imagen_url: ''
   });
 
   useEffect(() => {
@@ -43,25 +47,33 @@ export default function DirectorioPersonal() {
     try {
       const response = await fetch('http://localhost:8000/api/v1/personal', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          ...formData,
-          id_carrera: formData.id_carrera ? parseInt(formData.id_carrera) : null
+          nombre_completo: `${formData.nombres.trim()} ${formData.apellidos.trim()}`.trim(),
+          correo: formData.correo,
+          rol: formData.rol,
+          id_carrera: formData.id_carrera ? parseInt(formData.id_carrera) : null,
+          telefono: formData.telefono || null,
+          telefono_familiar: formData.telefono_familiar || null,
+          imagen_url: formData.imagen_url || null
         })
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.detail || 'Error al crear usuario');
       }
-      
+
       const nuevoUsuario = await response.json();
       setPersonal(prev => [nuevoUsuario, ...prev]);
       setIsModalOpen(false);
-      setFormData({ nombre_completo: '', correo: '', rol: 'Docente', id_carrera: '' });
+      setFormData({
+        nombres: '', apellidos: '', correo: '', rol: 'Docente',
+        id_carrera: '', telefono: '', telefono_familiar: '', imagen_url: ''
+      });
       alert('Personal dado de alta correctamente. Revisa la consola del backend para ver la contraseña temporal generada.');
     } catch (error) {
       alert(error.message);
@@ -85,7 +97,7 @@ export default function DirectorioPersonal() {
         </div>
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="bg-eduPurple text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-opacity-90 flex items-center"
+          className="bg-eduPurple text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-opacity-90 flex items-center transition-all"
         >
           <UserPlus className="w-4 h-4 mr-2" /> Dar de Alta Personal
         </button>
@@ -142,10 +154,15 @@ export default function DirectorioPersonal() {
             ) : (
               filtrados.map(persona => (
                 <tr key={persona.id_usuario} className="hover:bg-gray-50 transition-colors">
+                  {/* ACTUALIZADO: Celda de nombre con imagen_url o iniciales */}
                   <td className="p-4 pl-6 flex items-center">
-                    <div className={`w-8 h-8 rounded-full flex justify-center items-center font-bold text-xs mr-3 text-white ${persona.rol === 'Director' ? 'bg-purple-600' : (persona.rol === 'Docente' ? 'bg-blue-500' : 'bg-green-600')}`}>
-                      {persona.nombre_completo.substring(0,2).toUpperCase()}
-                    </div>
+                    {persona.imagen_url ? (
+                      <img src={persona.imagen_url} alt="" className="w-8 h-8 rounded-full object-cover mr-3" />
+                    ) : (
+                      <div className={`w-8 h-8 rounded-full flex justify-center items-center font-bold text-xs mr-3 text-white ${persona.rol === 'Director' ? 'bg-purple-600' : (persona.rol === 'Docente' ? 'bg-blue-500' : 'bg-green-600')}`}>
+                        {persona.nombre_completo.substring(0,2).toUpperCase()}
+                      </div>
+                    )}
                     <span className="font-bold text-gray-900">{persona.nombre_completo}</span>
                   </td>
                   <td className="p-4 text-sm text-gray-600">{persona.rol}</td>
@@ -176,27 +193,41 @@ export default function DirectorioPersonal() {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden my-8">
             <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h3 className="text-lg font-bold text-gray-900">Alta de Personal</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors"><X className="w-5 h-5" /></button>
             </div>
             
             <form onSubmit={handleAltaPersonal} className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1">Nombre Completo</label>
-                <input 
-                  required type="text"
-                  value={formData.nombre_completo}
-                  onChange={e => setFormData({...formData, nombre_completo: e.target.value})}
-                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-eduPurple outline-none"
-                  placeholder="Ej. Ana García"
-                />
+              {/* ACTUALIZADO: Formulario de alta con nuevos campos */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">Nombre(s)</label>
+                  <input
+                    required type="text"
+                    value={formData.nombres}
+                    onChange={e => setFormData({...formData, nombres: e.target.value})}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-eduPurple outline-none"
+                    placeholder="Ej. Ana"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">Apellidos</label>
+                  <input
+                    required type="text"
+                    value={formData.apellidos}
+                    onChange={e => setFormData({...formData, apellidos: e.target.value})}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-eduPurple outline-none"
+                    placeholder="Ej. García López"
+                  />
+                </div>
               </div>
+
               <div>
                 <label className="block text-xs font-bold text-gray-600 mb-1">Correo Institucional</label>
-                <input 
+                <input
                   required type="email"
                   value={formData.correo}
                   onChange={e => setFormData({...formData, correo: e.target.value})}
@@ -204,6 +235,40 @@ export default function DirectorioPersonal() {
                   placeholder="ana.garcia@institucion.edu"
                 />
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">Teléfono</label>
+                  <input
+                    type="text"
+                    value={formData.telefono}
+                    onChange={e => setFormData({...formData, telefono: e.target.value})}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-eduPurple outline-none"
+                    placeholder="618 123 4567"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">Teléfono de Familiar Cercano</label>
+                  <input
+                    type="text"
+                    value={formData.telefono_familiar}
+                    onChange={e => setFormData({...formData, telefono_familiar: e.target.value})}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-eduPurple outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1">URL de Imagen de Perfil</label>
+                <input
+                  type="text"
+                  value={formData.imagen_url}
+                  onChange={e => setFormData({...formData, imagen_url: e.target.value})}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-eduPurple outline-none"
+                  placeholder="https://..."
+                />
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-gray-600 mb-1">Rol Asignado</label>
                 <select 
@@ -241,8 +306,8 @@ export default function DirectorioPersonal() {
               </div>
 
               <div className="pt-2 flex space-x-3">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-2.5 border border-gray-300 text-gray-700 font-bold rounded-lg text-sm hover:bg-gray-50">Cancelar</button>
-                <button type="submit" disabled={isSaving} className="flex-1 py-2.5 bg-eduPurple text-white font-bold rounded-lg text-sm hover:bg-opacity-90 disabled:opacity-70">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-2.5 border border-gray-300 text-gray-700 font-bold rounded-lg text-sm hover:bg-gray-50 transition-colors">Cancelar</button>
+                <button type="submit" disabled={isSaving} className="flex-1 py-2.5 bg-eduPurple text-white font-bold rounded-lg text-sm hover:bg-opacity-90 disabled:opacity-70 transition-all">
                   {isSaving ? 'Guardando...' : 'Guardar y Generar Acceso'}
                 </button>
               </div>
