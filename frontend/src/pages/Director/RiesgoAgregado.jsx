@@ -11,15 +11,15 @@ export default function RiesgoAgregado() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !idCarrera) return;
     Promise.all([
-      fetch(`http://localhost:8000/api/v1/carreras/${id}/indicadores`, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
-      fetch(`http://localhost:8000/api/v1/carreras/${id}/riesgo-agregado-por-grupo`, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json())
+      fetch(`http://localhost:8000/api/v1/carreras/${idCarrera}/indicadores`, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
+      fetch(`http://localhost:8000/api/v1/carreras/${idCarrera}/riesgo-agregado-por-grupo`, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json())
     ]).then(([ind, grup]) => {
       setIndicadores(ind);
       setGrupos(grup);
     });
-  }, [id, token]);
+  }, [idCarrera, token]);
 
   if (!indicadores) return <div className="p-8 text-gray-500">Cargando gráficas...</div>;
 

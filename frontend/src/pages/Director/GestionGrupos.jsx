@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { UserPlus, X, Plus, Download, Upload, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Calendar, Trash2 } from 'lucide-react';
+import { X as CloseIcon, Info, AlertTriangle } from 'lucide-react';
 
 const FORM_GRUPO_INICIAL = {
   nombre_grupo: '',
@@ -41,6 +42,12 @@ export default function GestionGrupos() {
   const [erroresHorario, setErroresHorario] = useState([]);
   const [mensajeHorario, setMensajeHorario] = useState('');
 
+  const [riesgoPorGrupo, setRiesgoPorGrupo] = useState({});
+  const [grupoPanel, setGrupoPanel] = useState(null);
+  const [horariosPanel, setHorariosPanel] = useState([]);
+  const [filtroCuatrimestre, setFiltroCuatrimestre] = useState('');
+  const [filtroTutor, setFiltroTutor] = useState('');
+
   const cargarGrupos = () => {
     if (!token) return;
     fetch('http://localhost:8000/api/v1/grupos', {
@@ -49,6 +56,44 @@ export default function GestionGrupos() {
       .then(res => res.json())
       .then(data => { if (Array.isArray(data)) setGrupos(data); });
   };
+
+  useEffect(() => {
+  if (!token || !idCarrera) return;
+  fetch(`http://localhost:8000/api/v1/carreras/${idCarrera}/riesgo-agregado-por-grupo`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (!Array.isArray(data)) return;
+      const mapa = {};
+      data.forEach(g => { mapa[g.id_grupo] = g; });
+      setRiesgoPorGrupo(mapa);
+    })
+    .catch(err => console.error(err));
+  }, [token, idCarrera]);
+
+  const abrirPanelGrupo = (grupo) => {
+    setGrupoPanel(grupo);
+    setHorariosPanel([]);
+    fetch(`http://localhost:8000/api/v1/grupos/${grupo.id_grupo}/horarios`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setHorariosPanel(data); })
+      .catch(err => console.error(err));
+  };
+
+  const cerrarPanelGrupo = () => setGrupoPanel(null);
+
+  const cuatrimestresDisponibles = [...new Set(grupos.map(g => g.cuatrimestre).filter(Boolean))].sort((a, b) => a - b);
+  const tutoresDisponibles = docentesTutores;
+
+  const gruposFiltrados = grupos.filter(g => {
+    const matchCuatri = !filtroCuatrimestre || g.cuatrimestre === parseInt(filtroCuatrimestre);
+    const matchTutor = !filtroTutor || g.id_tutor === parseInt(filtroTutor);
+    return matchCuatri && matchTutor;
+  });
+
 
   useEffect(() => {
   if (!token) return;
@@ -273,7 +318,30 @@ const eliminarHorarioExistente = async (idHorario) => {
           <h2 className="text-2xl font-bold text-gray-800">Gestión de Grupos</h2>
           <p className="text-sm text-gray-500">Administra las cohortes y asigna tutores responsables.</p>
         </div>
-        <div className="flex gap-2">
+
+        <div className="flex flex-wrap gap-2 items-center">
+          <select
+            value={filtroCuatrimestre}
+            onChange={e => setFiltroCuatrimestre(e.target.value)}
+            className="border border-gray-300 rounded-md text-sm px-3 py-2"
+          >
+            <option value="">Todos los cuatrimestres</option>
+            {cuatrimestresDisponibles.map(c => (
+              <option key={c} value={c}>Cuatrimestre {c}</option>
+            ))}
+          </select>
+
+          <select
+            value={filtroTutor}
+            onChange={e => setFiltroTutor(e.target.value)}
+            className="border border-gray-300 rounded-md text-sm px-3 py-2"
+          >
+            <option value="">Todos los tutores</option>
+            {tutoresDisponibles.map(t => (
+              <option key={t.id_usuario} value={t.id_usuario}>{t.nombre_completo}</option>
+            ))}
+          </select>
+
           <button
             onClick={descargarPlantilla}
             className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50"
@@ -320,8 +388,12 @@ const eliminarHorarioExistente = async (idHorario) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {grupos.map(grupo => (
-              <tr key={grupo.id_grupo} className="hover:bg-gray-50">
+            {gruposFiltrados.map(grupo => (
+              <tr
+                key={grupo.id_grupo}
+                onClick={() => abrirPanelGrupo(grupo)}
+                className={`hover:bg-gray-50 cursor-pointer ${grupoPanel?.id_grupo === grupo.id_grupo ? 'bg-indigo-50/60' : ''}`}
+              >
                 <td className="p-3 text-sm font-bold text-gray-900">{grupo.nombre_grupo}</td>
                 <td className="p-3 text-sm text-gray-600">{grupo.nombre_carrera || '-'}</td>
                 <td className="p-3 text-sm text-gray-600">{grupo.cuatrimestre}</td>
@@ -333,7 +405,7 @@ const eliminarHorarioExistente = async (idHorario) => {
                   )}
                 </td>
                 <td className="p-3 text-sm">
-                  <div className="flex justify-center items-center gap-3">
+                   <div className="flex justify-center items-center gap-3" onClick={e => e.stopPropagation()}>
                     <button
                       onClick={() => { setGrupoSeleccionado(grupo); setModalOpen(true); }}
                       className="flex items-center text-eduPurple hover:text-indigo-800 bg-indigo-50 px-3 py-1 rounded-md text-xs font-semibold"
@@ -582,6 +654,101 @@ const eliminarHorarioExistente = async (idHorario) => {
             </div>
           </div>
         </div>
+      )}
+      {grupoPanel && (
+        <aside className="fixed top-0 right-0 h-full w-full sm:w-96 bg-white border-l border-gray-200 shadow-2xl z-40 flex flex-col">
+          <div className="p-5 border-b border-gray-100 flex justify-between items-start bg-gray-50/50">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">{grupoPanel.nombre_grupo}</h3>
+              <p className="text-sm text-gray-500">{grupoPanel.nombre_carrera || '-'} · Cuatrimestre {grupoPanel.cuatrimestre}</p>
+            </div>
+            <button onClick={cerrarPanelGrupo} className="text-gray-400 hover:text-gray-600">
+              <CloseIcon className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="p-5 overflow-y-auto flex-1 space-y-6">
+
+            {/* Info general */}
+            <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 space-y-2">
+              <div className="flex items-center text-sm text-gray-600">
+                <Info className="w-4 h-4 mr-2 text-gray-400" />
+                Tutor: {grupoPanel.id_tutor
+                  ? (docentesTutores.find(t => t.id_usuario === grupoPanel.id_tutor)?.nombre_completo || `ID ${grupoPanel.id_tutor}`)
+                  : 'Sin asignar'}
+              </div>
+              <div className="flex items-center text-sm text-gray-600">
+                <Users className="w-4 h-4 mr-2 text-gray-400" />
+                {riesgoPorGrupo[grupoPanel.id_grupo]?.total_estudiantes ?? '—'} estudiantes
+              </div>
+            </div>
+
+            {/* Distribución de riesgo */}
+            <div>
+              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Distribución de riesgo</h4>
+              {(() => {
+                const r = riesgoPorGrupo[grupoPanel.id_grupo];
+                if (!r) return <p className="text-sm text-gray-400 italic">Sin datos de riesgo aún.</p>;
+                const total = r.total_estudiantes || 1;
+                const pBajo = (r.riesgo_bajo / total) * 100;
+                const pMedio = (r.riesgo_medio / total) * 100;
+                const pAlto = (r.riesgo_alto / total) * 100;
+                return (
+                  <>
+                    <div className="w-full flex h-3 rounded-full overflow-hidden mb-2">
+                      <div className="bg-green-500" style={{ width: `${pBajo}%` }} />
+                      <div className="bg-yellow-400" style={{ width: `${pMedio}%` }} />
+                      <div className="bg-red-600" style={{ width: `${pAlto}%` }} />
+                    </div>
+                    <div className="flex justify-between text-xs font-semibold text-gray-600">
+                      <span className="text-green-700">{r.riesgo_bajo} Bajo</span>
+                      <span className="text-yellow-700">{r.riesgo_medio} Medio</span>
+                      <span className="text-red-700">{r.riesgo_alto} Alto</span>
+                    </div>
+                    {pAlto > 20 && (
+                      <div className="mt-3 flex items-start text-xs text-red-700 bg-red-50 border border-red-100 rounded-lg p-2">
+                        <AlertTriangle className="w-4 h-4 mr-1.5 shrink-0" />
+                        Más del 20% del grupo está en riesgo alto.
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+
+            {/* Materias del grupo */}
+            <div>
+              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Materias asignadas</h4>
+              {horariosPanel.length === 0 ? (
+                <p className="text-sm text-gray-400 italic">Sin materias asignadas todavía.</p>
+              ) : (
+                <div className="space-y-2">
+                  {horariosPanel.map(h => (
+                    <div key={h.id_horario} className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-sm">
+                      <p className="font-semibold text-gray-900">{h.nombre_materia}</p>
+                      <p className="text-xs text-gray-500">{h.nombre_docente} · {h.dia_semana} {h.hora_inicio}-{h.hora_fin}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="p-4 border-t border-gray-100 flex gap-2 bg-gray-50/50">
+            <button
+              onClick={() => { abrirModalHorario(grupoPanel); }}
+              className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-50"
+            >
+              Materias / Horario
+            </button>
+            <Link
+              to="/carreras/riesgo-agregado"
+              className="flex-1 py-2 bg-eduPurple text-white rounded-lg text-sm font-bold text-center hover:bg-opacity-90"
+            >
+              Ver riesgo agregado
+            </Link>
+          </div>
+        </aside>
       )}
     </div>
   );

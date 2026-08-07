@@ -2,7 +2,9 @@ from pydantic import BaseModel
 from typing import List, Optional, Any
 from datetime import date, datetime
 
+# psicopedagogia.py (schemas)
 class CasoPendienteOut(BaseModel):
+    id_intervencion: int 
     id_estudiante: int
     nombre_completo: str
     matricula: str

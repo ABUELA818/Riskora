@@ -1,5 +1,8 @@
 import io
+import re
+import unicodedata
 import openpyxl
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -12,7 +15,7 @@ from app.core.deps import get_db, RoleChecker, get_current_active_user
 from app.schemas.academic import (
     EstudianteCreate, EstudianteOut, GrupoCreate, GrupoOut, 
     MateriaCreate, MateriaOut, MateriaUpdate, PeriodoCreate, PeriodoOut,
-    ClaseDocenteOut
+    ClaseDocenteOut, EstudianteBajaIn
 )
 from app.core.deps import get_db, RoleChecker
 from app.schemas.carrera import CarreraOut
@@ -27,15 +30,52 @@ permitir_gestion_materias = RoleChecker(["Administrador", "Director", "Psicopeda
 todos_los_roles = RoleChecker(["Administrador", "Tutor", "Docente", "Director", "Psicopedagogia", "RRHH"])
 permitir_gestion_grupos = RoleChecker(["Administrador", "Director", "Psicopedagogia"])
 
+def _generar_matricula(db: Session) -> str:
+    anio = datetime.now().year
+    ultimo = db.query(Estudiante)\
+        .filter(Estudiante.matricula.like(f"MAT-{anio}%"))\
+        .order_by(Estudiante.matricula.desc())\
+        .first()
+    if ultimo:
+        try:
+            consecutivo = int(ultimo.matricula.split('-')[-1]) + 1
+        except (ValueError, IndexError):
+            consecutivo = 1
+    else:
+        consecutivo = 1
+    return f"MAT-{anio}{consecutivo:04d}"
+
+
+def _generar_correo_institucional(db: Session, nombre_completo: str) -> str:
+    partes = unicodedata.normalize('NFKD', nombre_completo.lower())\
+        .encode('ascii', 'ignore').decode('ascii')
+    partes = re.sub(r'[^a-z\s]', '', partes).split()
+    if not partes:
+        base = "alumno"
+    else:
+        nombre = partes[0]
+        apellido = partes[1] if len(partes) > 1 else ""
+        base = f"{nombre}.{apellido}" if apellido else nombre
+
+    correo = f"{base}@alumno.edupredict.edu"
+    sufijo = 1
+    while db.query(Estudiante).filter(Estudiante.correo_institucional == correo).first():
+        sufijo += 1
+        correo = f"{base}{sufijo}@alumno.edupredict.edu"
+    return correo
+
 
 # 1. ESTUDIANTES
 @router.post("/estudiantes", response_model=EstudianteOut, dependencies=[Depends(solo_admin)])
 def crear_estudiante(estudiante: EstudianteCreate, db: Session = Depends(get_db)):
-    existe = db.query(Estudiante).filter(Estudiante.matricula == estudiante.matricula).first()
-    if existe:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="La matrícula ya existe")
-    
-    nuevo_estudiante = Estudiante(**estudiante.model_dump())
+    matricula = _generar_matricula(db)
+    correo = _generar_correo_institucional(db, estudiante.nombre_completo)
+
+    nuevo_estudiante = Estudiante(
+        **estudiante.model_dump(),
+        matricula=matricula,
+        correo_institucional=correo
+    )
     db.add(nuevo_estudiante)
     db.commit()
     db.refresh(nuevo_estudiante)
@@ -102,16 +142,25 @@ def actualizar_estudiante(id: int, est_in: EstudianteCreate, db: Session = Depen
     return estudiante
 
 @router.delete("/estudiantes/{id}", dependencies=[Depends(solo_admin)])
-def eliminar_estudiante_soft(id: int, db: Session = Depends(get_db)):
+def eliminar_estudiante_soft(id: int, data: EstudianteBajaIn, db: Session = Depends(get_db)):
     estudiante = db.query(Estudiante).filter(Estudiante.id_estudiante == id).first()
     if not estudiante:
         raise HTTPException(status_code=404, detail="Estudiante no encontrado")
-    
+    if not estudiante.estado:
+        raise HTTPException(status_code=400, detail="El estudiante ya está dado de baja")
+
     estudiante.estado = False
+    estudiante.motivo_baja = data.motivo_baja
+    estudiante.fecha_baja = datetime.utcnow()
     db.commit()
-    return {"message": "Estudiante dado de baja correctamente (Soft delete)"}
+    return {"message": "Estudiante dado de baja correctamente", "motivo_baja": data.motivo_baja}
 
-
+@router.get("/estudiantes/buscar/{matricula}", response_model=EstudianteOut, dependencies=[Depends(todos_los_roles)])
+def buscar_estudiante_por_matricula(matricula: str, db: Session = Depends(get_db)):
+    estudiante = db.query(Estudiante).filter(Estudiante.matricula == matricula).first()
+    if not estudiante:
+        raise HTTPException(status_code=404, detail="No se encontró un estudiante con esa matrícula")
+    return estudiante
 
 # 2. GRUPOS
 @router.post("/grupos", response_model=GrupoOut, dependencies=[Depends(permitir_gestion_grupos)])

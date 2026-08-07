@@ -109,6 +109,10 @@ class Estudiante(Base):
     correo_institucional = Column(String(150), unique=True, index=True, nullable=True)
     contacto_emergencia_nombre = Column(String(150), nullable=True)
     contacto_emergencia_telefono = Column(String(20), nullable=True)
+    edad = Column(Integer, nullable=True)               
+    celular = Column(String(20), nullable=True)          
+    motivo_baja = Column(Text, nullable=True)            
+    fecha_baja = Column(DateTime, nullable=True)           
 
 class Materia(Base):
     __tablename__ = 'materias'
@@ -193,6 +197,7 @@ class Intervencion(Base):
     acuerdos = Column(Text)
     nivel_resolucion = Column(String(50))
     escalado = Column(Boolean, default=False)
+    revisado = Column(Boolean, default=False)
     id_usuario_creador = Column(Integer, ForeignKey('usuarios.id_usuario'), nullable=True)
 
 class Aviso(Base):
