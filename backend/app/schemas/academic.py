@@ -52,24 +52,29 @@ class GrupoOut(GrupoBase):
 
 # --- ESTUDIANTES ---
 class EstudianteBase(BaseModel):
-    matricula: str
     nombre_completo: str
     id_grupo: Optional[int] = None
     datos_socioeconomicos: Optional[str] = None
     fecha_ingreso: date
-    correo_institucional: Optional[str] = None
     contacto_emergencia_nombre: Optional[str] = None
     contacto_emergencia_telefono: Optional[str] = None
-    # El correo se maneja desde la tabla de usuarios cuando se les da acceso al sistema.
+    edad: Optional[int] = None            
+    celular: Optional[str] = None         
+    fotografia_url: Optional[str] = None      
 
 class EstudianteCreate(EstudianteBase): pass
 class EstudianteOut(EstudianteBase):
     id_estudiante: int
+    matricula: str
+    correo_institucional: Optional[str] = None
     estado: bool
-    # Opcional: devolvemos los datos del grupo asociado
-    # grupo: Optional[GrupoOut] = None 
-    class Config: 
+    motivo_baja: Optional[str] = None
+    fecha_baja: Optional[datetime] = None
+    class Config:
         from_attributes = True
+
+class EstudianteBajaIn(BaseModel):
+    motivo_baja: str
 
 # --- DASHBOARD DOCENTE ---
 class ClaseDocenteOut(BaseModel):
