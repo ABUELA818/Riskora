@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { UserPlus, X, Plus, Download, Upload, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import {
+  UserPlus, X, Plus, Download, Upload, Loader2, CheckCircle,
+  AlertTriangle, Calendar, Trash2, X as CloseIcon, Info, Users
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { Calendar, Trash2 } from 'lucide-react';
-import { X as CloseIcon, Info, AlertTriangle } from 'lucide-react';
 
 const FORM_GRUPO_INICIAL = {
   nombre_grupo: '',
