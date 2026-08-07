@@ -246,3 +246,26 @@ class DocenteMateria(Base):
     id_docente_materia = Column(Integer, primary_key=True, index=True)
     id_docente = Column(Integer, ForeignKey('docentes.id_docente'), nullable=False)
     id_materia = Column(Integer, ForeignKey('materias.id_materia'), nullable=False)
+
+class EstadoSolicitudEnum(enum.Enum):
+    PENDIENTE = "Pendiente"
+    ACEPTADA = "Aceptada"
+    RECHAZADA = "Rechazada"
+
+class SolicitudPersonal(Base):
+    __tablename__ = 'solicitudes_personal'
+    id_solicitud = Column(Integer, primary_key=True, index=True)
+    nombre_completo = Column(String(150), nullable=False)
+    correo = Column(String(150), nullable=False)
+    telefono = Column(String(20), nullable=True)
+    telefono_familiar = Column(String(20), nullable=True)
+    imagen_url = Column(String(255), nullable=True)
+    horas_semanales = Column(Integer, nullable=True)
+    rol_solicitado = Column(String(50), nullable=False, default="Docente")
+    id_carrera = Column(Integer, ForeignKey('carreras.id_carrera'), nullable=True)
+    estado = Column(Enum(EstadoSolicitudEnum), default=EstadoSolicitudEnum.PENDIENTE)
+    id_usuario_solicitante = Column(Integer, ForeignKey('usuarios.id_usuario'), nullable=False)
+    motivo_rechazo = Column(Text, nullable=True)
+    fecha_solicitud = Column(DateTime, default=datetime.utcnow)
+    fecha_resolucion = Column(DateTime, nullable=True)
+    id_usuario_resolutor = Column(Integer, ForeignKey('usuarios.id_usuario'), nullable=True)
