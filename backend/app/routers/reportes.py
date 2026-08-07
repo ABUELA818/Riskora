@@ -2,6 +2,7 @@ import io
 from fastapi import APIRouter, Depends, Query, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import func 
 from typing import List, Optional
 from datetime import datetime
 
@@ -13,8 +14,11 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 
 from app.db.session import SessionLocal
-from app.models.models import Estudiante, Grupo, Notificacion, Tutor
-from app.schemas.reportes import ReporteEstudianteOut, NotificacionOut, NotificacionCreate
+from app.models.models import Estudiante, Grupo, Notificacion, Tutor, Carrera, Materia, Calificacion, Alerta, RiesgoEnum
+from app.schemas.reportes import (
+    ReporteEstudianteOut, NotificacionOut, NotificacionCreate,
+    RiesgoPorCarreraOut, ReprobacionPorMateriaOut, TendenciaRiesgoPuntoOut  # NUEVO
+)
 from app.core.deps import get_db, RoleChecker, get_current_active_user
 from app.routers.riesgo import calcular_metricas_estudiante
 from app.core.audit import registrar_auditoria
@@ -159,3 +163,102 @@ def disparar_notificacion_riesgo(
 @router.get("/notificaciones", response_model=List[NotificacionOut])
 def mis_notificaciones(db: Session = Depends(get_db), current_user = Depends(get_current_active_user)):
     return db.query(Notificacion).filter(Notificacion.id_usuario == current_user.id_usuario).order_by(Notificacion.fecha.desc()).all()
+
+@router.get("/reportes/riesgo-por-carrera", response_model=List[RiesgoPorCarreraOut], dependencies=[Depends(permitir_acceso)])
+def riesgo_por_carrera(db: Session = Depends(get_db)):
+    carreras = db.query(Carrera).all()
+    resultado = []
+    for carrera in carreras:
+        estudiantes = db.query(Estudiante).join(Grupo).filter(
+            Grupo.id_carrera == carrera.id_carrera,
+            Estudiante.estado == True
+        ).all()
+        r_bajo = r_medio = r_alto = 0
+        for est in estudiantes:
+            p_asis, prom, _ = calcular_metricas_estudiante(db, est.id_estudiante)
+            if p_asis < 70.0 or prom < 60.0:
+                r_alto += 1
+            elif p_asis < 85.0 or prom < 75.0:
+                r_medio += 1
+            else:
+                r_bajo += 1
+        resultado.append(RiesgoPorCarreraOut(
+            id_carrera=carrera.id_carrera,
+            carrera=carrera.nombre,
+            riesgo_bajo=r_bajo,
+            riesgo_medio=r_medio,
+            riesgo_alto=r_alto,
+            total_estudiantes=len(estudiantes)
+        ))
+    return resultado
+
+
+@router.get("/reportes/reprobacion-por-materia", response_model=List[ReprobacionPorMateriaOut], dependencies=[Depends(permitir_acceso)])
+def reprobacion_por_materia(db: Session = Depends(get_db)):
+    materias = db.query(Materia).filter(Materia.estado == True).all()
+    resultado = []
+    for materia in materias:
+        calificaciones = db.query(Calificacion).filter(Calificacion.id_materia == materia.id_materia).all()
+        total = len(calificaciones)
+        if total == 0:
+            continue
+        reprobadas = sum(1 for c in calificaciones if float(c.valor) < 60.0)
+        resultado.append(ReprobacionPorMateriaOut(
+            id_materia=materia.id_materia,
+            materia=materia.nombre_materia,
+            total_evaluaciones=total,
+            reprobadas=reprobadas,
+            porcentaje_reprobacion=round((reprobadas / total) * 100, 1)
+        ))
+    resultado.sort(key=lambda r: r.porcentaje_reprobacion, reverse=True)
+    return resultado[:10]
+
+
+@router.post("/reportes/snapshot-riesgo", dependencies=[Depends(permitir_acceso)])
+def generar_snapshot_riesgo(db: Session = Depends(get_db)):
+    """Captura el nivel de riesgo actual de cada estudiante activo en la tabla
+    'alertas', usada como histórico para la gráfica de tendencia (RF-P7)."""
+    estudiantes = db.query(Estudiante).filter(Estudiante.estado == True).all()
+    creadas = 0
+    for est in estudiantes:
+        p_asis, prom, _ = calcular_metricas_estudiante(db, est.id_estudiante)
+        if p_asis < 70.0 or prom < 60.0:
+            nivel, prob = RiesgoEnum.ALTO, 0.85
+        elif p_asis < 85.0 or prom < 75.0:
+            nivel, prob = RiesgoEnum.MEDIO, 0.55
+        else:
+            nivel, prob = RiesgoEnum.BAJO, 0.15
+
+        db.add(Alerta(
+            id_estudiante=est.id_estudiante,
+            nivel_riesgo=nivel,
+            probabilidad=prob,
+            porcentaje_inasistencia=round(100 - p_asis, 2),
+            promedio_ponderado=round(prom, 2)
+        ))
+        creadas += 1
+    db.commit()
+    return {"message": f"Snapshot generado: {creadas} registros de riesgo capturados."}
+
+
+@router.get("/reportes/tendencia-riesgo", response_model=List[TendenciaRiesgoPuntoOut], dependencies=[Depends(permitir_acceso)])
+def tendencia_riesgo(meses: int = Query(6, le=24), db: Session = Depends(get_db)):
+    filas = db.query(
+        func.to_char(Alerta.fecha_calculo, 'YYYY-MM').label('periodo'),
+        Alerta.nivel_riesgo,
+        func.count(Alerta.id_alerta)
+    ).group_by('periodo', Alerta.nivel_riesgo).order_by('periodo').all()
+
+    mapa = {}
+    for periodo, nivel, cantidad in filas:
+        mapa.setdefault(periodo, {"riesgo_bajo": 0, "riesgo_medio": 0, "riesgo_alto": 0})
+        nivel_val = nivel.value if hasattr(nivel, 'value') else nivel
+        if nivel_val == "Riesgo Bajo":
+            mapa[periodo]["riesgo_bajo"] = cantidad
+        elif nivel_val == "Riesgo Medio":
+            mapa[periodo]["riesgo_medio"] = cantidad
+        elif nivel_val == "Riesgo Alto":
+            mapa[periodo]["riesgo_alto"] = cantidad
+
+    periodos = sorted(mapa.keys())[-meses:]
+    return [TendenciaRiesgoPuntoOut(periodo=p, **mapa[p]) for p in periodos]

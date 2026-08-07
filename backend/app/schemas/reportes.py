@@ -18,3 +18,24 @@ class NotificacionOut(BaseModel):
 
 class NotificacionCreate(BaseModel):
     id_estudiante: int
+
+class RiesgoPorCarreraOut(BaseModel):
+    id_carrera: int
+    carrera: str
+    riesgo_bajo: int
+    riesgo_medio: int
+    riesgo_alto: int
+    total_estudiantes: int
+
+class ReprobacionPorMateriaOut(BaseModel):
+    id_materia: int
+    materia: str
+    total_evaluaciones: int
+    reprobadas: int
+    porcentaje_reprobacion: float
+
+class TendenciaRiesgoPuntoOut(BaseModel):
+    periodo: str  # "2026-08"
+    riesgo_bajo: int
+    riesgo_medio: int
+    riesgo_alto: int
