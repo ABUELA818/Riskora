@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { 
   LayoutDashboard, ClipboardList, BarChart2, Users, 
   Settings, Bell, Search, HelpCircle, ShieldAlert, 
-  UserPlus, FileText, Lock, Folder, LogOut, BookOpen
+  UserPlus, FileText, Lock, Folder, LogOut, BookOpen, Clock
 } from 'lucide-react';
 
 const MENU_ITEMS = {
@@ -36,10 +36,11 @@ const MENU_ITEMS = {
   { name: 'Reportes', path: '/reportes', icon: FileText },
   ],
   RRHH: [
-    { name: 'Dashboard', path: '/rrhh/dashboard', icon: LayoutDashboard },
-    { name: 'Directorio Personal', path: '/rrhh/directorio', icon: Users },
-    { name: 'Gestión Accesos', path: '/rrhh/accesos', icon: Lock },
-    { name: 'Reportes', path: '/reportes', icon: FileText },
+  { name: 'Dashboard', path: '/rrhh/dashboard', icon: LayoutDashboard },
+  { name: 'Directorio Personal', path: '/rrhh/directorio', icon: Users },
+  { name: 'Solicitudes Pendientes', path: '/rrhh/solicitudes', icon: Clock },
+  { name: 'Gestión Accesos', path: '/rrhh/accesos', icon: Lock },
+  { name: 'Reportes', path: '/reportes', icon: FileText },
   ],
   Administrador: [
     { name: 'Dashboard RRHH', path: '/rrhh/dashboard', icon: LayoutDashboard },

@@ -9,7 +9,7 @@ from app.models.models import (
 )
 from app.schemas.psicopedagogia import CasoPendienteOut, ExpedienteCompletoOut
 from app.core.deps import get_db, RoleChecker, get_current_active_user
-from app.routers.riesgo import calcular_metricas_estudiante
+from app.routers.riesgo import calcular_metricas_estudiante, clasificar_riesgo
 
 router = APIRouter(prefix="/api/v1/psicopedagogia", tags=["Módulo Psicopedagogía"])
 
@@ -35,6 +35,7 @@ def obtener_casos_pendientes(db: Session = Depends(get_db)):
         metricas = calcular_metricas_estudiante(db, inter.id_estudiante)
         p_asis = metricas[0] if len(metricas) > 0 else 0
         prom = metricas[1] if len(metricas) > 1 else 0
+        nivel, score = clasificar_riesgo(p_asis, prom)
         
         if p_asis < 70.0 or prom < 60.0:
             nivel = "Alto"
@@ -122,12 +123,7 @@ def obtener_expediente_completo(
     prom = metricas[1] if len(metricas) > 1 else 0
     tendencia = metricas[2] if len(metricas) > 2 else "Estable"
 
-    if p_asis < 70.0 or prom < 60.0:
-        nivel_riesgo, score = "Alto", 0.85
-    elif p_asis < 85.0 or prom < 75.0:
-        nivel_riesgo, score = "Medio", 0.55
-    else:
-        nivel_riesgo, score = "Bajo", 0.15
+    nivel_riesgo, score = clasificar_riesgo(p_asis, prom)
 
     materias_map = {m.id_materia: m.nombre_materia for m in db.query(Materia).all()}
     periodos_map = {p.id_periodo: p.nombre_periodo for p in db.query(Periodo).all()}

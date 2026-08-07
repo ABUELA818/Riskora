@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Mail, Phone, Users, Edit2, UserX, UserCheck, X,
-  Plus, BookOpen, FileText, Clock
+  Plus, BookOpen, FileText, Clock, ShieldAlert, AlertTriangle
 } from 'lucide-react';
 
 export default function ExpedienteLaboral() {
@@ -24,7 +24,12 @@ export default function ExpedienteLaboral() {
   const [materiaSeleccionada, setMateriaSeleccionada] = useState('');
   const [isAssigning, setIsAssigning] = useState(false);
 
-  const puedeEditar = role === 'RRHH' || role === 'Administrador';
+  const puedeCambiarRol = role === 'RRHH' || role === 'Administrador';
+
+  const [modalRolOpen, setModalRolOpen] = useState(false);
+  const [nuevoRol, setNuevoRol] = useState('');
+  const [isChangingRole, setIsChangingRole] = useState(false);
+  const [rolError, setRolError] = useState('');
 
   const cargarExpediente = () => {
     if (!token || !id) return;
@@ -106,6 +111,42 @@ export default function ExpedienteLaboral() {
       setExpediente(prev => ({ ...prev, estado: nuevoEstado }));
     } catch (error) {
       alert(error.message);
+    }
+  };
+
+  const abrirModalRol = () => {
+    setNuevoRol(expediente.rol);
+    setRolError('');
+    setModalRolOpen(true);
+  };
+
+  const handleCambiarRol = async (e) => {
+    e.preventDefault();
+    if (nuevoRol === expediente.rol) {
+      setRolError('Selecciona un rol distinto al actual.');
+      return;
+    }
+    setIsChangingRole(true);
+    setRolError('');
+    try {
+      const response = await fetch(`http://localhost:8000/api/v1/usuarios/${id}/rol`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ nuevo_rol: nuevoRol })
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.detail || 'No se pudo cambiar el rol.');
+      }
+      setModalRolOpen(false);
+      cargarExpediente();
+    } catch (error) {
+      setRolError(error.message);
+    } finally {
+      setIsChangingRole(false);
     }
   };
 
@@ -214,6 +255,14 @@ export default function ExpedienteLaboral() {
             >
               <Edit2 className="w-4 h-4 mr-2" /> Editar datos
             </button>
+            {puedeCambiarRol && (
+              <button
+                onClick={abrirModalRol}
+                className="px-4 py-2 bg-purple-50 text-eduPurple border border-purple-100 rounded-lg text-sm font-bold hover:bg-purple-100 flex items-center justify-center"
+              >
+                <ShieldAlert className="w-4 h-4 mr-2" /> Cambiar rol
+              </button>
+            )}
             <button
               onClick={handleCambiarEstado}
               className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center border ${
@@ -376,6 +425,70 @@ export default function ExpedienteLaboral() {
                   className="flex-1 py-2.5 bg-eduPurple text-white font-bold rounded-lg text-sm hover:bg-opacity-90 disabled:opacity-70"
                 >
                   {isSaving ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Modal cambiar rol */}
+      {modalRolOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h3 className="text-lg font-bold text-gray-900">Cambiar Rol</h3>
+              <button onClick={() => setModalRolOpen(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleCambiarRol} className="p-6 space-y-4">
+              {rolError && (
+                <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+                  {rolError}
+                </div>
+              )}
+
+              <p className="text-sm text-gray-600">
+                Rol actual de <strong className="text-gray-900">{expediente.nombre_completo}</strong>:{' '}
+                <span className="font-bold">{expediente.rol}</span>
+              </p>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1">Nuevo Rol</label>
+                <select
+                  value={nuevoRol}
+                  onChange={e => setNuevoRol(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-eduPurple outline-none bg-white"
+                >
+                  <option value="Docente">Docente</option>
+                  <option value="Tutor">Tutor</option>
+                  <option value="Director">Director de Carrera</option>
+                  <option value="Psicopedagogia">Psicopedagogía</option>
+                  <option value="RRHH">Recursos Humanos</option>
+                </select>
+              </div>
+
+              <div className="bg-red-50 p-3 rounded-lg border border-red-100 flex items-start">
+                <AlertTriangle className="w-5 h-5 text-red-600 mr-2 shrink-0 mt-0.5" />
+                <p className="text-xs text-red-800 font-medium">
+                  Al guardar, la sesión actual de este usuario será invalidada automáticamente. Deberá iniciar sesión de nuevo para acceder con sus nuevos privilegios.
+                </p>
+              </div>
+
+              <div className="pt-2 flex space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setModalRolOpen(false)}
+                  className="flex-1 py-2.5 border border-gray-300 text-gray-700 font-bold rounded-lg text-sm hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isChangingRole}
+                  className="flex-1 py-2.5 bg-red-600 text-white font-bold rounded-lg text-sm hover:bg-red-700 disabled:opacity-70"
+                >
+                  {isChangingRole ? 'Aplicando...' : 'Confirmar Cambio'}
                 </button>
               </div>
             </form>

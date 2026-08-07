@@ -86,7 +86,10 @@ def obtener_directorio_personal(
             nombre_completo=u.nombre_completo,
             correo=u.correo_institucional,
             rol=u.rol.value if hasattr(u.rol, 'value') else str(u.rol),
-            estado=u.estado
+            estado=u.estado,
+            telefono=u.telefono,
+            telefono_familiar=u.telefono_familiar,
+            imagen_url=u.imagen_url
         ) for u in usuarios
     ]
 
@@ -160,6 +163,9 @@ def registrar_personal(
         correo_institucional=data.correo,
         password_hash=hashed_password,
         rol=nuevo_rol,
+        telefono=data.telefono,
+        telefono_familiar=data.telefono_familiar,
+        imagen_url=data.imagen_url,
         token_version=1
     )
     db.add(nuevo_usuario)
@@ -196,7 +202,10 @@ def registrar_personal(
         nombre_completo=nuevo_usuario.nombre_completo,
         correo=nuevo_usuario.correo_institucional,
         rol=nuevo_usuario.rol.value,
-        estado=nuevo_usuario.estado
+        estado=nuevo_usuario.estado,
+        telefono=nuevo_usuario.telefono,
+        telefono_familiar=nuevo_usuario.telefono_familiar,
+        imagen_url=nuevo_usuario.imagen_url
     )
 
 @router.put("/usuarios/{id_usuario}/rol", dependencies=[Depends(permitir_rrhh)])
