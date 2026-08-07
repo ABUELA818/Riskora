@@ -21,6 +21,7 @@ class IntervencionOut(BaseModel):
 class CasoManualCreate(BaseModel):
     id_estudiante: int
     motivo: str
+    nivel_resolucion: Optional[str] = "Caso Manual"
 
 # --- Esquemas para el Resumen Completo ---
 class RiesgoResumen(BaseModel):
