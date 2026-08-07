@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Save, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../config/api'; 
 
 export default function AltaEstudiantes() {
   const navigate = useNavigate();
@@ -12,9 +13,9 @@ export default function AltaEstudiantes() {
     id_grupo: '',
     fecha_ingreso: new Date().toISOString().split('T')[0],
     datos_socioeconomicos: '',
-    edad: '',                       // NUEVO
-    celular: '',                    // NUEVO
-    fotografia_url: '',             // NUEVO
+    edad: '',                     
+    celular: '',                 
+    fotografia_url: '',          
     contacto_emergencia_nombre: '',
     contacto_emergencia_telefono: ''
   });
@@ -23,7 +24,7 @@ export default function AltaEstudiantes() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('http://localhost:8000/api/v1/grupos', {
+    fetch('${API_BASE_URL}/api/v1/grupos', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -37,7 +38,7 @@ export default function AltaEstudiantes() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/estudiantes', {
+      const response = await fetch('${API_BASE_URL}/api/v1/estudiantes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,13 +1,13 @@
-import { BookOpen } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { BookOpen, GraduationCap, ExternalLink } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 export default function HistorialAcademicoTab({ historial, idEstudiante, token }) {
   const [historialPrevio, setHistorialPrevio] = useState([]);
 
   useEffect(() => {
     if (!token || !idEstudiante) return;
-    fetch(`http://localhost:8000/api/v1/estudiantes/${idEstudiante}/historial-previo`, {
+    fetch(`${API_BASE_URL}/api/v1/estudiantes/${idEstudiante}/historial-previo`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -22,7 +22,7 @@ export default function HistorialAcademicoTab({ historial, idEstudiante, token }
       </div>
     );
   }
-
+ 
   // Agrupar por materia
   const porMateria = {};
   historial.forEach(c => {

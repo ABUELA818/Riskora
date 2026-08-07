@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Users, ClipboardList, BarChart2, CalendarX } from 'lucide-react';
+import { API_BASE_URL } from '../../config/api'; 
 
 const DIAS_JS_A_ENUM = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO'];
 
@@ -36,7 +37,7 @@ export default function DashboardDocente() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('http://localhost:8000/api/v1/mis-clases', {
+    fetch('${API_BASE_URL}/api/v1/mis-clases', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Lock, CheckCircle } from 'lucide-react';
 import AuthLayout from '../../layout/AuthLayout';
+import { API_BASE_URL } from '../../config/api'; 
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -22,7 +23,7 @@ export default function ResetPassword() {
     setStatus({ type: 'loading', message: '' });
     
     try {
-      const res = await fetch('http://localhost:8000/api/v1/auth/reset-password', {
+      const res = await fetch('${API_BASE_URL}/api/v1/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, nueva_password: password })

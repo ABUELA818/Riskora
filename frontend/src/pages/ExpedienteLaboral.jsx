@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config/api';
 import {
   Mail, Phone, Users, Edit2, UserX, UserCheck, X,
   Plus, BookOpen, FileText, Clock, ShieldAlert, AlertTriangle
@@ -34,7 +35,7 @@ export default function ExpedienteLaboral() {
 
   const cargarExpediente = () => {
     if (!token || !id) return;
-    fetch(`http://localhost:8000/api/v1/personal/${id}`, {
+    fetch(`${API_BASE_URL}/api/v1/personal/${id}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => {
@@ -60,7 +61,7 @@ export default function ExpedienteLaboral() {
 
   useEffect(() => {
     if (!token || !expediente || expediente.rol !== 'Docente') return;
-    fetch('http://localhost:8000/api/v1/materias', {
+    fetch('${API_BASE_URL}/api/v1/materias', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -73,7 +74,7 @@ export default function ExpedienteLaboral() {
     setIsSaving(true);
     setFormError('');
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/personal/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/personal/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -104,7 +105,7 @@ export default function ExpedienteLaboral() {
     if (!window.confirm(confirmMsg)) return;
 
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/personal/${id}/estado?activo=${nuevoEstado}`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/personal/${id}/estado?activo=${nuevoEstado}`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -130,7 +131,7 @@ export default function ExpedienteLaboral() {
     setIsChangingRole(true);
     setRolError('');
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/usuarios/${id}/rol`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/usuarios/${id}/rol`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -155,7 +156,7 @@ export default function ExpedienteLaboral() {
     if (!materiaSeleccionada) return;
     setIsAssigning(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/personal/${id}/materias`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/personal/${id}/materias`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -179,7 +180,7 @@ export default function ExpedienteLaboral() {
   const handleQuitarMateria = async (id_materia, nombre) => {
     if (!window.confirm(`¿Quitar "${nombre}" de las materias que imparte?`)) return;
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/personal/${id}/materias/${id_materia}`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/personal/${id}/materias/${id_materia}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { AlertTriangle, Info, Users } from 'lucide-react';
 import SimulationBadge from '../../components/SimulationBadge';
+import { API_BASE_URL } from '../../config/api'; 
 
 export default function RiesgoAgregado() {
   const { id: idFromUrl } = useParams();
@@ -13,8 +14,8 @@ export default function RiesgoAgregado() {
   useEffect(() => {
     if (!token || !idCarrera) return;
     Promise.all([
-      fetch(`http://localhost:8000/api/v1/carreras/${idCarrera}/indicadores`, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
-      fetch(`http://localhost:8000/api/v1/carreras/${idCarrera}/riesgo-agregado-por-grupo`, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json())
+      fetch(`${API_BASE_URL}/api/v1/carreras/${idCarrera}/indicadores`, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
+      fetch(`${API_BASE_URL}/api/v1/carreras/${idCarrera}/riesgo-agregado-por-grupo`, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json())
     ]).then(([ind, grup]) => {
       setIndicadores(ind);
       setGrupos(grup);

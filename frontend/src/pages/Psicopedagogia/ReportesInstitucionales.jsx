@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Filter, FileText, Download, AlertTriangle, CheckCircle, Loader2, Info, RefreshCw } from 'lucide-react';
 import SimulationBadge from '../../components/SimulationBadge';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { API_BASE_URL } from '../../config/api'; 
 
 export default function ReportesInstitucionales() {
   const { token } = useAuth();
@@ -28,14 +29,14 @@ export default function ReportesInstitucionales() {
   useEffect(() => {
     if (!token) return;
 
-    fetch('http://localhost:8000/api/v1/reportes/riesgo-por-carrera', {
+    fetch('${API_BASE_URL}/api/v1/reportes/riesgo-por-carrera', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => { if (Array.isArray(data)) setRiesgoPorCarrera(data); })
       .catch(err => console.error(err));
 
-    fetch('http://localhost:8000/api/v1/reportes/reprobacion-por-materia', {
+    fetch('${API_BASE_URL}/api/v1/reportes/reprobacion-por-materia', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -46,7 +47,7 @@ export default function ReportesInstitucionales() {
   }, [token]);
 
   const cargarTendencia = () => {
-    fetch('http://localhost:8000/api/v1/reportes/tendencia-riesgo', {
+    fetch('${API_BASE_URL}/api/v1/reportes/tendencia-riesgo', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -57,7 +58,7 @@ export default function ReportesInstitucionales() {
   const handleGenerarSnapshot = async () => {
     setGenerandoSnapshot(true);
     try {
-      const res = await fetch('http://localhost:8000/api/v1/reportes/snapshot-riesgo', {
+      const res = await fetch('${API_BASE_URL}/api/v1/reportes/snapshot-riesgo', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -72,7 +73,7 @@ export default function ReportesInstitucionales() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('http://localhost:8000/api/v1/carreras', {
+    fetch('${API_BASE_URL}/api/v1/carreras', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -88,7 +89,7 @@ export default function ReportesInstitucionales() {
     const params = new URLSearchParams();
     if (filtros.carrera) params.append('carrera', filtros.carrera);
 
-    fetch(`http://localhost:8000/api/v1/riesgo/resumen?${params.toString()}`, {
+    fetch(`${API_BASE_URL}/api/v1/riesgo/resumen?${params.toString()}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -103,7 +104,7 @@ export default function ReportesInstitucionales() {
       if (filtros.carrera) queryParams.append('carrera', filtros.carrera);
       if (filtros.nivel_riesgo) queryParams.append('nivel_riesgo', filtros.nivel_riesgo);
       
-      const res = await fetch(`http://localhost:8000/api/v1/reportes/academico?${queryParams.toString()}`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/reportes/academico?${queryParams.toString()}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -133,7 +134,7 @@ export default function ReportesInstitucionales() {
       if (filtros.carrera) queryParams.append('carrera', filtros.carrera);
       if (filtros.nivel_riesgo) queryParams.append('nivel_riesgo', filtros.nivel_riesgo);
 
-      const res = await fetch(`http://localhost:8000/api/v1/reportes/academico/export?${queryParams.toString()}`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/reportes/academico/export?${queryParams.toString()}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

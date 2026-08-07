@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../config/api'; 
 import { 
   Search, Download, Save, AlertCircle, X, Plus,
   Hand, AlertTriangle, Brain, CheckCircle 
@@ -27,7 +28,7 @@ export default function CapturaCalificaciones() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('http://localhost:8000/api/v1/grupos', {
+    fetch('${API_BASE_URL}/api/v1/grupos', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -46,7 +47,7 @@ export default function CapturaCalificaciones() {
   useEffect(() => {
     if (!grupoSeleccionado || !token) return;
     
-    fetch(`http://localhost:8000/api/v1/estudiantes`, {
+    fetch(`${API_BASE_URL}/api/v1/estudiantes`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(r => r.json())
@@ -70,7 +71,7 @@ export default function CapturaCalificaciones() {
 
   useEffect(() => {
   if (!grupoSeleccionado || !token) return;
-  fetch(`http://localhost:8000/api/v1/grupos/${grupoSeleccionado}/mis-materias`, {
+  fetch(`${API_BASE_URL}/api/v1/grupos/${grupoSeleccionado}/mis-materias`, {
     headers: { 'Authorization': `Bearer ${token}` }
   })
     .then(r => r.json())
@@ -146,7 +147,7 @@ export default function CapturaCalificaciones() {
           };
 
           promesas.push(
-            fetch(`http://localhost:8000/api/v1/estudiantes/${est.id_estudiante}/calificaciones`, {
+            fetch(`${API_BASE_URL}/api/v1/estudiantes/${est.id_estudiante}/calificaciones`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
               body: JSON.stringify(payload)
@@ -174,7 +175,7 @@ export default function CapturaCalificaciones() {
     const severidad = obsForm.tipo === 'Indisciplina' ? 'Alta' : (obsForm.tipo === 'Dificultad de aprendizaje' ? 'Media' : 'Baja');
 
     try {
-      await fetch(`http://localhost:8000/api/v1/estudiantes/${modalObs.estudiante.id_estudiante}/observaciones`, {
+      await fetch(`${API_BASE_URL}/api/v1/estudiantes/${modalObs.estudiante.id_estudiante}/observaciones`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, Plus, ExternalLink, X } from 'lucide-react';
 import SimulationBadge from '../../components/SimulationBadge';
+import { API_BASE_URL } from '../../config/api'; 
 
 export default function CasosEscalados() {
   const { token } = useAuth();
@@ -11,7 +12,6 @@ export default function CasosEscalados() {
   const [seleccionado, setSeleccionado] = useState(null);
   const [vistaActiva, setVistaActiva] = useState('escalados');
   const [busquedaAlumno, setBusquedaAlumno] = useState('');
-
   const [modalOpen, setModalOpen] = useState(false);
   const [estudiantes, setEstudiantes] = useState([]);
   const [formData, setFormData] = useState({
@@ -22,7 +22,7 @@ export default function CasosEscalados() {
   const [isSaving, setIsSaving] = useState(false);
 
   const cargarCasos = () => {
-    fetch(`http://localhost:8000/api/v1/casos-escalados`, {
+    fetch(`${API_BASE_URL}/api/v1/casos-escalados`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -37,7 +37,7 @@ export default function CasosEscalados() {
     
     cargarCasos();
     
-    fetch('http://localhost:8000/api/v1/estudiantes', {
+    fetch('${API_BASE_URL}/api/v1/estudiantes', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -50,7 +50,7 @@ export default function CasosEscalados() {
     e.preventDefault();
     setIsSaving(true);
     try {
-      const response = await fetch('http://localhost:8000/api/v1/casos-escalados/manual', {
+      const response = await fetch('${API_BASE_URL}/api/v1/casos-escalados/manual', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json', 

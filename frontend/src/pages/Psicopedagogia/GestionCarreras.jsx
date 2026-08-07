@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { GraduationCap, AlertTriangle, Users, ChevronRight } from 'lucide-react';
+import { API_BASE_URL } from '../../config/api'; 
 
 export default function GestionCarreras() {
   const { token } = useAuth();
@@ -10,7 +11,7 @@ export default function GestionCarreras() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('http://localhost:8000/api/v1/carreras/resumen', {
+    fetch('${API_BASE_URL}/api/v1/carreras/resumen', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())

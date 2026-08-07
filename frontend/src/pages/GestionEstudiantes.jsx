@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Search, Edit, Trash2, Eye, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config/api'; 
 
 export default function GestionEstudiantes() {
   const { state } = useLocation();
@@ -14,7 +15,7 @@ export default function GestionEstudiantes() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('http://localhost:8000/api/v1/carreras', {
+    fetch('${API_BASE_URL}/api/v1/carreras', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -27,7 +28,7 @@ export default function GestionEstudiantes() {
       Object.entries(filtros).filter(([_, v]) => v !== '')
     ).toString();
 
-    fetch(`http://localhost:8000/api/v1/estudiantes?${query}`, {
+    fetch(`${API_BASE_URL}/api/v1/estudiantes?${query}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -43,7 +44,7 @@ export default function GestionEstudiantes() {
     const params = new URLSearchParams();
     if (filtros.carrera) params.append('carrera', filtros.carrera);
 
-    fetch(`http://localhost:8000/api/v1/riesgo/resumen?${params.toString()}`, {
+    fetch(`${API_BASE_URL}/api/v1/riesgo/resumen?${params.toString()}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -55,7 +56,7 @@ export default function GestionEstudiantes() {
     if (!token || estudiantes.length === 0) return;
     Promise.all(estudiantes.map(async est => {
       try {
-        const r = await fetch(`http://localhost:8000/api/v1/estudiantes/${est.id_estudiante}/riesgo`, {
+        const r = await fetch(`${API_BASE_URL}/api/v1/estudiantes/${est.id_estudiante}/riesgo`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await r.json();
@@ -69,7 +70,7 @@ export default function GestionEstudiantes() {
   const handleSoftDelete = async (id) => {
     if (!window.confirm('¿Estás seguro de dar de baja a este estudiante?')) return;
     
-    await fetch(`http://localhost:8000/api/v1/estudiantes/${id}`, { method: 'DELETE' });
+    await fetch(`${API_BASE_URL}/api/v1/estudiantes/${id}`, { method: 'DELETE' });
     setEstudiantes(estudiantes.filter(e => e.id_estudiante !== id));
   };
 

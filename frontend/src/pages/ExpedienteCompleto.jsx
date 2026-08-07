@@ -6,6 +6,7 @@ import SimulationBadge from '../components/SimulationBadge';
 import HistorialAcademicoTab from '../components/HistorialAcademicoTab';
 import CalendarioAsistencia from '../components/CalendarioAsistencia';
 import ObservacionesTab from '../components/ObservacionesTab';
+import { API_BASE_URL } from '../config/api';
 
 export default function ExpedienteCompleto() {
   const { id } = useParams();
@@ -21,8 +22,8 @@ export default function ExpedienteCompleto() {
     if (!token || !id) return;
     
     const url = isPsico 
-      ? `http://localhost:8000/api/v1/psicopedagogia/estudiantes/${id}/expediente-completo?vista=psicopedagogia`
-      : `http://localhost:8000/api/v1/psicopedagogia/estudiantes/${id}/expediente-completo`;
+      ? `${API_BASE_URL}/api/v1/psicopedagogia/estudiantes/${id}/expediente-completo?vista=psicopedagogia`
+      : `${API_BASE_URL}/api/v1/psicopedagogia/estudiantes/${id}/expediente-completo`;
 
     fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
       .then(res => res.json())

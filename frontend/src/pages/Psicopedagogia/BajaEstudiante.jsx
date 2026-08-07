@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, UserX, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../config/api'; 
 
 export default function BajaEstudiante() {
   const { token } = useAuth();
@@ -24,7 +25,7 @@ export default function BajaEstudiante() {
 
     setBuscando(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/estudiantes/buscar/${matricula.trim()}`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/estudiantes/buscar/${matricula.trim()}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('No se encontró un estudiante con esa matrícula.');
@@ -49,7 +50,7 @@ export default function BajaEstudiante() {
     setConfirmando(true);
     setError('');
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/estudiantes/${estudiante.id_estudiante}`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/estudiantes/${estudiante.id_estudiante}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

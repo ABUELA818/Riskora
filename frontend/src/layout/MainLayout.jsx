@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
+import { API_BASE_URL } from '../config/api';
 import { useAuth } from '../context/AuthContext'; 
 import { 
   LayoutDashboard, ClipboardList, BarChart2, Users, 
@@ -58,7 +59,7 @@ export default function MainLayout() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('http://localhost:8000/api/v1/notificaciones', {
+    fetch('${API_BASE_URL}/api/v1/notificaciones', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())

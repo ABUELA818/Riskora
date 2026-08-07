@@ -1,5 +1,6 @@
 import { createContext, useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../config/api';
 
 const AuthContext = createContext();
 
@@ -10,7 +11,7 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
    useEffect(() => {
-    fetch('http://localhost:8000/api/v1/auth/refresh', {
+    fetch('${API_BASE_URL}/api/v1/auth/refresh', {
       method: 'POST',
       credentials: 'include'
     })
@@ -30,7 +31,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (correo_institucional, password) => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/auth/login', {
+      const response = await fetch('${API_BASE_URL}/api/v1/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -53,7 +54,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    fetch('http://localhost:8000/api/v1/auth/logout', { method: 'POST', credentials: 'include' });
+    fetch('${API_BASE_URL}/api/v1/auth/logout', { method: 'POST', credentials: 'include' });
     setToken(null);
     setRole(null);
     navigate('/login');
