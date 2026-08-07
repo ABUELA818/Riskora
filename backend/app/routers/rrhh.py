@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from typing import List, Optional
-
+from datetime import datetime
 from app.db.session import SessionLocal
 from app.models.models import Usuario, Docente, Tutor, Grupo, RolEnum, DirectorCarrera, DocenteCarrera, Carrera, LogAuditoria
 from app.schemas.rrhh import PersonalCreate, PersonalOut, CambioRolIn, MetricasRRHHOut, MetricaCarrera, LogAuditoriaOut 
@@ -243,6 +243,17 @@ def metricas_rrhh(db: Session = Depends(get_db)):
     total_tut = db.query(Usuario).filter(Usuario.rol == RolEnum.TUTOR, Usuario.estado == True).count()
     total_psi = db.query(Usuario).filter(Usuario.rol == RolEnum.PSICOPEDAGOGIA, Usuario.estado == True).count()
 
+    ahora = datetime.utcnow()
+    primer_dia_mes = ahora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    roles_gestionados = [
+        RolEnum.DOCENTE, RolEnum.TUTOR, RolEnum.PSICOPEDAGOGIA,
+        RolEnum.DIRECTOR, RolEnum.RRHH
+    ]
+    altas_mes = db.query(Usuario).filter(
+        Usuario.rol.in_(roles_gestionados),
+        Usuario.fecha_creacion >= primer_dia_mes
+    ).count()
+
     distribucion = db.query(Carrera.nombre, func.count(Tutor.id_tutor))\
         .join(Grupo, Grupo.id_carrera == Carrera.id_carrera)\
         .join(Tutor, Grupo.id_tutor == Tutor.id_tutor)\
@@ -254,5 +265,6 @@ def metricas_rrhh(db: Session = Depends(get_db)):
         total_docentes=total_doc,
         total_tutores=total_tut,
         total_psicopedagogia=total_psi,
+        altas_mes=altas_mes,
         distribucion_carreras=dist_formateada
     )

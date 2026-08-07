@@ -163,7 +163,10 @@ def obtener_expediente_completo(
         ],
         intervenciones=[{"tutor_nombre": n, "fecha": i.fecha, "nivel_resolucion": i.nivel_resolucion, "acuerdos": i.acuerdos, "escalado": i.escalado} for i, n in intervenciones],
         nivel_riesgo_actual=nivel_riesgo,
-        score_riesgo=score
+        score_riesgo=score,
+        estado=estudiante.estado,
+        motivo_baja=estudiante.motivo_baja,
+        fecha_baja=estudiante.fecha_baja
     )
 
     user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol

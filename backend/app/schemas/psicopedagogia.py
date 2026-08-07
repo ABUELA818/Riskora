@@ -55,9 +55,11 @@ class ExpedienteCompletoOut(BaseModel):
     observaciones: List[ObservacionDetalle]
     intervenciones: List[IntervencionDetalle]
     
-    # Análisis Mock Base
     nivel_riesgo_actual: str
     score_riesgo: float
     
-    # Campo exclusivo validado por RBAC (HU-07)
+    estado: bool
+    motivo_baja: Optional[str] = None
+    fecha_baja: Optional[datetime] = None
+    
     analisis_ia_completo: Optional[Any] = None

@@ -9,13 +9,14 @@ from typing import List, Optional
 from app.db.session import SessionLocal
 from app.models.models import (
     Estudiante, Grupo, Materia, Periodo, Horario, Docente, Carrera,
-    Usuario, DirectorCarrera, DiaSemanaEnum
+    Usuario, DirectorCarrera, DiaSemanaEnum, HistorialAcademicoPrevio
 )
 from app.core.deps import get_db, RoleChecker, get_current_active_user
 from app.schemas.academic import (
     EstudianteCreate, EstudianteOut, GrupoCreate, GrupoOut, 
     MateriaCreate, MateriaOut, MateriaUpdate, PeriodoCreate, PeriodoOut,
-    ClaseDocenteOut, EstudianteBajaIn
+    ClaseDocenteOut, EstudianteBajaIn,
+    HistorialAcademicoPrevioCreate, HistorialAcademicoPrevioOut
 )
 from app.core.deps import get_db, RoleChecker
 from app.schemas.carrera import CarreraOut
@@ -575,3 +576,33 @@ def eliminar_horario(
     db.delete(h)
     db.commit()
     return {"message": "Horario eliminado correctamente."}
+
+permitir_historial = RoleChecker(["Administrador", "Psicopedagogia", "Tutor", "Director"])
+
+@router.get("/estudiantes/{id_estudiante}/historial-previo", response_model=List[HistorialAcademicoPrevioOut], dependencies=[Depends(permitir_historial)])
+def obtener_historial_previo(id_estudiante: int, db: Session = Depends(get_db)):
+    return db.query(HistorialAcademicoPrevio)\
+        .filter(HistorialAcademicoPrevio.id_estudiante == id_estudiante)\
+        .order_by(HistorialAcademicoPrevio.fecha_registro.desc())\
+        .all()
+
+@router.post("/estudiantes/{id_estudiante}/historial-previo", response_model=HistorialAcademicoPrevioOut, dependencies=[Depends(solo_admin)])
+def crear_historial_previo(id_estudiante: int, data: HistorialAcademicoPrevioCreate, db: Session = Depends(get_db)):
+    estudiante = db.query(Estudiante).filter(Estudiante.id_estudiante == id_estudiante).first()
+    if not estudiante:
+        raise HTTPException(status_code=404, detail="Estudiante no encontrado")
+
+    nuevo = HistorialAcademicoPrevio(id_estudiante=id_estudiante, **data.model_dump())
+    db.add(nuevo)
+    db.commit()
+    db.refresh(nuevo)
+    return nuevo
+
+@router.delete("/historial-previo/{id_historial}", dependencies=[Depends(solo_admin)])
+def eliminar_historial_previo(id_historial: int, db: Session = Depends(get_db)):
+    registro = db.query(HistorialAcademicoPrevio).filter(HistorialAcademicoPrevio.id_historial == id_historial).first()
+    if not registro:
+        raise HTTPException(status_code=404, detail="Registro no encontrado")
+    db.delete(registro)
+    db.commit()
+    return {"message": "Registro eliminado correctamente"}

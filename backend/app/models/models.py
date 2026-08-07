@@ -274,3 +274,13 @@ class SolicitudPersonal(Base):
     fecha_solicitud = Column(DateTime, default=datetime.utcnow)
     fecha_resolucion = Column(DateTime, nullable=True)
     id_usuario_resolutor = Column(Integer, ForeignKey('usuarios.id_usuario'), nullable=True)
+
+class HistorialAcademicoPrevio(Base):
+    __tablename__ = 'historial_academico_previo'
+    id_historial = Column(Integer, primary_key=True, index=True)
+    id_estudiante = Column(Integer, ForeignKey('estudiantes.id_estudiante'), nullable=False)
+    institucion = Column(String(150), nullable=False)
+    nivel = Column(String(50), nullable=False)
+    periodo = Column(String(50), nullable=True)
+    documento_url = Column(String(255), nullable=True)
+    fecha_registro = Column(DateTime, default=datetime.utcnow)

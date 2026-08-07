@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Brain, Calendar, FileText, Activity, AlertTriangle, Book, FileCheck, CheckCircle, Mail, Phone } from 'lucide-react';
+import { Brain, Calendar, FileText, Activity, AlertTriangle, Book, FileCheck, CheckCircle, Mail, Phone, UserX } from 'lucide-react';
 import SimulationBadge from '../components/SimulationBadge';
 import HistorialAcademicoTab from '../components/HistorialAcademicoTab';
 import CalendarioAsistencia from '../components/CalendarioAsistencia';
@@ -48,7 +48,23 @@ export default function ExpedienteCompleto() {
 
   return (
     <div className="p-8 bg-gray-50/50 min-h-full">
-      {/* SECCIÓN: Perfil, Botones y KPIs Laterales */}
+      {expediente.estado === false && (
+        <div className="bg-red-50 border border-red-200 text-red-800 px-5 py-4 rounded-2xl mb-6 flex items-start shadow-sm">
+          <UserX className="w-5 h-5 mr-3 text-red-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-bold text-sm mb-1">Este estudiante está dado de baja</p>
+            {expediente.fecha_baja && (
+              <p className="text-xs text-red-700">
+                Fecha de baja: {new Date(expediente.fecha_baja).toLocaleDateString()}
+              </p>
+            )}
+            <p className="text-sm text-red-700 mt-1">
+              Motivo: {expediente.motivo_baja || 'No se registró un motivo.'}
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm mb-6 flex flex-col lg:flex-row gap-6">
         <div className="flex-1 flex items-start">
           <img 
@@ -233,7 +249,11 @@ export default function ExpedienteCompleto() {
         )}
 
         {activeTab === 'academico' && (
-          <HistorialAcademicoTab historial={expediente.historial_calificaciones} />
+          <HistorialAcademicoTab
+            historial={expediente.historial_calificaciones}
+            idEstudiante={id}
+            token={token}
+          />
         )}
 
         {activeTab === 'asistencia' && (

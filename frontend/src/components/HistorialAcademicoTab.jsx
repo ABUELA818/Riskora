@@ -1,6 +1,20 @@
 import { BookOpen } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { BookOpen, GraduationCap, ExternalLink } from 'lucide-react';
 
-export default function HistorialAcademicoTab({ historial }) {
+export default function HistorialAcademicoTab({ historial, idEstudiante, token }) {
+  const [historialPrevio, setHistorialPrevio] = useState([]);
+
+  useEffect(() => {
+    if (!token || !idEstudiante) return;
+    fetch(`http://localhost:8000/api/v1/estudiantes/${idEstudiante}/historial-previo`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setHistorialPrevio(data); })
+      .catch(err => console.error(err));
+  }, [idEstudiante, token]);
+
   if (!historial || historial.length === 0) {
     return (
       <div className="lg:col-span-3 bg-white p-8 rounded-2xl border border-gray-200 shadow-sm text-center text-gray-500 min-h-[300px] flex items-center justify-center">
@@ -61,6 +75,39 @@ export default function HistorialAcademicoTab({ historial }) {
           </div>
         );
       })}
+      {/* NUEVO — F2.3: Historial académico preuniversitario */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-gray-100 flex items-center">
+          <GraduationCap className="w-5 h-5 text-eduPurple mr-2" />
+          <h4 className="font-bold text-gray-900">Historial Académico Preuniversitario</h4>
+        </div>
+        <div className="p-5">
+          {historialPrevio.length === 0 ? (
+            <p className="text-sm text-gray-500 italic">Sin historial preuniversitario registrado.</p>
+          ) : (
+            <div className="space-y-3">
+              {historialPrevio.map(h => (
+                <div key={h.id_historial} className="flex justify-between items-center bg-gray-50 border border-gray-100 rounded-xl p-4">
+                  <div>
+                    <p className="font-bold text-gray-900 text-sm">{h.institucion}</p>
+                    <p className="text-xs text-gray-500">{h.nivel}{h.periodo ? ` · ${h.periodo}` : ''}</p>
+                  </div>
+                  {h.documento_url && (
+                    <a
+                      href={h.documento_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center text-xs font-semibold text-eduPurple hover:underline"
+                    >
+                      Ver documento <ExternalLink className="w-3.5 h-3.5 ml-1" />
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
