@@ -7,7 +7,13 @@ from passlib.context import CryptContext
 # Configuración de bcrypt para encriptar
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-SECRET_KEY = os.getenv("JWT_SECRET", "super_secreto_para_el_proyecto")
+SECRET_KEY = os.getenv("JWT_SECRET")
+if not SECRET_KEY:
+    raise RuntimeError(
+        "La variable de entorno JWT_SECRET no está definida. "
+        "Define un valor seguro (ej. openssl rand -hex 32) en tu archivo .env antes de iniciar la aplicación."
+    )
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", 30))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("JWT_REFRESH_EXPIRE_DAYS", 7))
