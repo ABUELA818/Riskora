@@ -6,6 +6,7 @@ from app.models.models import Estudiante, Grupo, Intervencion, Tutor, Usuario, D
 from app.schemas.institucional import IndicadoresOut, GrupoRiesgoOut, CasoEscaladoOut
 from app.core.deps import get_db, RoleChecker, get_current_active_user
 from app.routers.riesgo import calcular_metricas_estudiante
+from app.schemas.carrera import CarreraResumenOut
 
 router = APIRouter(prefix="/api/v1", tags=["Módulo Director / Institucional"])
 
@@ -83,6 +84,45 @@ def verificar_carrera_director(db: Session, current_user, id_carrera: int):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No tienes permiso sobre esta carrera."
         )
+
+@router.get("/carreras/resumen", response_model=List[CarreraResumenOut], dependencies=[Depends(permitir_acceso)])
+def obtener_resumen_carreras(db: Session = Depends(get_db), current_user = Depends(get_current_active_user)):
+    user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
+
+    carreras = db.query(Carrera).all()
+
+    # Si es Director, solo ve las carreras que dirige
+    if user_role == "Director":
+        mis_carreras_ids = {
+            dc.id_carrera for dc in db.query(DirectorCarrera).filter(
+                DirectorCarrera.id_usuario == current_user.id_usuario
+            ).all()
+        }
+        carreras = [c for c in carreras if c.id_carrera in mis_carreras_ids]
+
+    resultado = []
+    for carrera in carreras:
+        estudiantes = db.query(Estudiante).join(Grupo).filter(Grupo.id_carrera == carrera.id_carrera).all()
+        kpis = calcular_kpis(estudiantes, db)
+
+        total = kpis["total_estudiantes"]
+        pct_riesgo_alto = round((kpis["riesgo_alto"] / total) * 100, 1) if total > 0 else 0.0
+
+        director = db.query(DirectorCarrera, Usuario)\
+            .join(Usuario, DirectorCarrera.id_usuario == Usuario.id_usuario)\
+            .filter(DirectorCarrera.id_carrera == carrera.id_carrera)\
+            .first()
+
+        resultado.append(CarreraResumenOut(
+            id_carrera=carrera.id_carrera,
+            nombre=carrera.nombre,
+            total_estudiantes=total,
+            promedio_riesgo_alto_pct=pct_riesgo_alto,
+            director_nombre=director[1].nombre_completo if director else None,
+            director_id_usuario=director[1].id_usuario if director else None
+        ))
+
+    return resultado
 
 @router.get("/director/mi-carrera")
 def obtener_mi_carrera(db: Session = Depends(get_db), current_user = Depends(get_current_active_user)):

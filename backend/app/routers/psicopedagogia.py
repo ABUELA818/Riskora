@@ -22,6 +22,7 @@ def obtener_casos_pendientes(db: Session = Depends(get_db)):
         .join(Tutor, Intervencion.id_tutor == Tutor.id_tutor)\
         .join(Usuario, Tutor.id_usuario == Usuario.id_usuario)\
         .filter(Intervencion.escalado == True)\
+        .filter(Intervencion.revisado.is_(False))\
         .all()
 
     casos = []
@@ -49,6 +50,7 @@ def obtener_casos_pendientes(db: Session = Depends(get_db)):
         
         if estudiante:
             casos.append({
+                "id_intervencion": inter.id_intervencion,  # NUEVO
                 "id_estudiante": estudiante.id_estudiante,
                 "nombre_completo": estudiante.nombre_completo,
                 "matricula": estudiante.matricula,
@@ -66,6 +68,22 @@ def obtener_casos_pendientes(db: Session = Depends(get_db)):
     ))
 
     return casos
+
+@router.put("/intervenciones/{id_intervencion}/marcar-visto", dependencies=[Depends(permitir_psico_admin)])
+def marcar_caso_como_visto(
+    id_intervencion: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
+    intervencion = db.query(Intervencion).filter(Intervencion.id_intervencion == id_intervencion).first()
+    if not intervencion:
+        raise HTTPException(status_code=404, detail="Caso no encontrado")
+    if not intervencion.escalado:
+        raise HTTPException(status_code=400, detail="Este caso no está marcado como escalado")
+
+    intervencion.revisado = True
+    db.commit()
+    return {"message": "Caso marcado como visto"}
 
 @router.get("/estudiantes/{id_estudiante}/expediente-completo", response_model=ExpedienteCompletoOut, dependencies=[Depends(permitir_expediente)])
 def obtener_expediente_completo(
