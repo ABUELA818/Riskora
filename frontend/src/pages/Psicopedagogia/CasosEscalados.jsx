@@ -7,11 +7,11 @@ import SimulationBadge from '../../components/SimulationBadge';
 export default function CasosEscalados() {
   const { token } = useAuth();
   
-  // Estados originales
   const [casos, setCasos] = useState([]);
   const [seleccionado, setSeleccionado] = useState(null);
+  const [vistaActiva, setVistaActiva] = useState('escalados');
+  const [busquedaAlumno, setBusquedaAlumno] = useState('');
 
-  // Nuevos estados para el modal y formulario
   const [modalOpen, setModalOpen] = useState(false);
   const [estudiantes, setEstudiantes] = useState([]);
   const [formData, setFormData] = useState({
@@ -21,7 +21,6 @@ export default function CasosEscalados() {
   });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Función extraída para poder recargar los casos después de crear uno nuevo
   const cargarCasos = () => {
     fetch(`http://localhost:8000/api/v1/casos-escalados`, {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -36,10 +35,8 @@ export default function CasosEscalados() {
   useEffect(() => {
     if (!token) return;
     
-    // Cargar casos iniciales
     cargarCasos();
     
-    // Cargar lista de estudiantes para el select del modal
     fetch('http://localhost:8000/api/v1/estudiantes', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -50,33 +47,33 @@ export default function CasosEscalados() {
   }, [token]);
 
   const handleCrearCaso = async (e) => {
-  e.preventDefault();
-  setIsSaving(true);
-  try {
-    const response = await fetch('http://localhost:8000/api/v1/casos-escalados/manual', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json', 
-        'Authorization': `Bearer ${token}` 
-      },
-      body: JSON.stringify({
-        id_estudiante: parseInt(formData.id_estudiante),
-        nivel_resolucion: formData.nivel_resolucion,   // NUEVO
-        motivo: formData.motivo
-      })
-    });
-    
-    if (!response.ok) throw new Error('Error al crear el caso');
-    
-    setModalOpen(false);
-    setFormData({ id_estudiante: '', nivel_resolucion: 'Llamada Telefónica', motivo: '' }); // reset actualizado
-    cargarCasos();
-  } catch (error) {
-    alert('No se pudo crear el caso manual.');
-  } finally {
-    setIsSaving(false);
-  }
-};
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      const response = await fetch('http://localhost:8000/api/v1/casos-escalados/manual', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({
+          id_estudiante: parseInt(formData.id_estudiante),
+          nivel_resolucion: formData.nivel_resolucion,
+          motivo: formData.motivo
+        })
+      });
+      
+      if (!response.ok) throw new Error('Error al crear el caso');
+      
+      setModalOpen(false);
+      setFormData({ id_estudiante: '', nivel_resolucion: 'Llamada Telefónica', motivo: '' });
+      cargarCasos();
+    } catch (error) {
+      alert('No se pudo crear el caso manual.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="p-8 bg-gray-50/50 min-h-full flex flex-col h-screen">
@@ -87,59 +84,131 @@ export default function CasosEscalados() {
           <h2 className="text-3xl font-bold text-gray-900">Bandeja de Entrada: Psicopedagogía</h2>
           <p className="text-sm text-gray-500">Casos escalados para seguimiento especializado y resolución.</p>
         </div>
-        <button 
-          onClick={() => setModalOpen(true)}
-          className="bg-eduPurple text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center hover:bg-opacity-90 transition-all"
-        >
-          <Plus className="w-4 h-4 mr-2" /> Registrar Intervención
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="flex space-x-1 bg-gray-100 border border-gray-200 rounded-lg p-1">
+            <button
+              onClick={() => setVistaActiva('escalados')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                vistaActiva === 'escalados' ? 'bg-white shadow-sm text-eduPurple' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Casos Escalados
+            </button>
+            <button
+              onClick={() => setVistaActiva('todos')}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+                vistaActiva === 'todos' ? 'bg-white shadow-sm text-eduPurple' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Todos los Alumnos
+            </button>
+          </div>
+
+          <button 
+            onClick={() => setModalOpen(true)}
+            className="bg-eduPurple text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center hover:bg-opacity-90 transition-all"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Registrar Intervención
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 flex gap-6 min-h-0">
         
-        {/* Panel Izquierdo: Lista de Casos Activos */}
+        {/* Panel Izquierdo: Lista de Casos Activos o Todos los Alumnos */}
         <div className="w-2/3 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
           <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-            <h3 className="font-bold text-gray-700 flex items-center">Casos Activos</h3>
-            <select className="text-sm border border-gray-300 rounded-md p-1">
-              <option>Todos los Riesgos</option>
-            </select>
+            <h3 className="font-bold text-gray-700 flex items-center">
+              {vistaActiva === 'escalados' ? 'Casos Activos' : 'Directorio de Alumnos'}
+            </h3>
+            {vistaActiva === 'escalados' ? (
+              <select className="text-sm border border-gray-300 rounded-md p-1 outline-none focus:border-eduPurple">
+                <option>Todos los Riesgos</option>
+              </select>
+            ) : (
+              <input
+                type="text"
+                placeholder="Buscar por nombre o matrícula..."
+                value={busquedaAlumno}
+                onChange={e => setBusquedaAlumno(e.target.value)}
+                className="text-sm border border-gray-300 rounded-md px-2 py-1 w-56 outline-none focus:border-eduPurple"
+              />
+            )}
           </div>
           <div className="overflow-auto flex-1">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="text-xs font-bold text-gray-400 uppercase border-b border-gray-100">
-                  <th className="p-4">Estudiante</th>
-                  <th className="p-4">Escalado Por</th>
-                  <th className="p-4">Estado</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {casos.length === 0 ? (
-                  <tr><td colSpan="3" className="p-6 text-center text-gray-500">No hay casos escalados.</td></tr>
-                ) : (
-                  casos.map(caso => (
-                    <tr 
-                      key={caso.id_estudiante} 
-                      onClick={() => setSeleccionado(caso)}
-                      className={`cursor-pointer transition-colors ${seleccionado?.id_estudiante === caso.id_estudiante ? 'bg-indigo-50/50' : 'hover:bg-gray-50'}`}
-                    >
-                      <td className="p-4">
-                        <p className="font-bold text-gray-900">{caso.nombre_completo}</p>
-                        <p className="text-xs text-gray-500">{caso.matricula}</p>
-                      </td>
-                      <td className="p-4 text-sm text-gray-600">{caso.tutor_nombre}</td>
-                      <td className="p-4">
-                        <span className="px-2.5 py-1 text-xs font-bold text-red-700 bg-red-100 border border-red-200 rounded text-center">Urgente</span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+            {vistaActiva === 'escalados' ? (
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="text-xs font-bold text-gray-400 uppercase border-b border-gray-100">
+                    <th className="p-4">Estudiante</th>
+                    <th className="p-4">Escalado Por</th>
+                    <th className="p-4">Estado</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {casos.length === 0 ? (
+                    <tr><td colSpan="3" className="p-6 text-center text-gray-500">No hay casos escalados.</td></tr>
+                  ) : (
+                    casos.map(caso => (
+                      <tr 
+                        key={caso.id_estudiante} 
+                        onClick={() => setSeleccionado(caso)}
+                        className={`cursor-pointer transition-colors ${seleccionado?.id_estudiante === caso.id_estudiante ? 'bg-indigo-50/50' : 'hover:bg-gray-50'}`}
+                      >
+                        <td className="p-4">
+                          <p className="font-bold text-gray-900">{caso.nombre_completo}</p>
+                          <p className="text-xs text-gray-500">{caso.matricula}</p>
+                        </td>
+                        <td className="p-4 text-sm text-gray-600">{caso.tutor_nombre}</td>
+                        <td className="p-4">
+                          <span className="px-2.5 py-1 text-xs font-bold text-red-700 bg-red-100 border border-red-200 rounded text-center">Urgente</span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            ) : (
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="text-xs font-bold text-gray-400 uppercase border-b border-gray-100">
+                    <th className="p-4">Estudiante</th>
+                    <th className="p-4">Matrícula</th>
+                    <th className="p-4 text-right">Acción</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {estudiantes
+                    .filter(e =>
+                      e.nombre_completo.toLowerCase().includes(busquedaAlumno.toLowerCase()) ||
+                      e.matricula.toLowerCase().includes(busquedaAlumno.toLowerCase())
+                    )
+                    .map(est => (
+                      <tr key={est.id_estudiante} className="hover:bg-gray-50 transition-colors">
+                        <td className="p-4">
+                          <p className="font-bold text-gray-900">{est.nombre_completo}</p>
+                        </td>
+                        <td className="p-4 text-sm text-gray-600">{est.matricula}</td>
+                        <td className="p-4 text-right">
+                          <button
+                            onClick={() => {
+                              setFormData({ ...formData, id_estudiante: String(est.id_estudiante) });
+                              setModalOpen(true);
+                            }}
+                            className="inline-flex items-center text-xs font-semibold bg-indigo-50 text-eduPurple px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
+                          >
+                            <Plus className="w-3.5 h-3.5 mr-1" /> Registrar Intervención
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
 
+        {/* Panel Derecho: Detalle del Caso Seleccionado */}
         {seleccionado && (
           <div className="w-1/3 flex flex-col gap-6 overflow-y-auto">
             <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
@@ -185,6 +254,7 @@ export default function CasosEscalados() {
         )}
       </div>
 
+      {/* Modal para Registrar Intervención */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
