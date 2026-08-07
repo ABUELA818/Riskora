@@ -1,45 +1,96 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Users, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, Users, CheckCircle, XCircle, BookOpen } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export default function RegistroAsistencia() {
-  const { token } = useAuth();
-  
+  const { token, role } = useAuth();
+
+  const [misClases, setMisClases] = useState([]);
   const [grupos, setGrupos] = useState([]);
+  const [horariosGrupo, setHorariosGrupo] = useState([]);
+
   const [estudiantes, setEstudiantes] = useState([]);
   const [riesgosMap, setRiesgosMap] = useState({});
-  
+
   const [grupoSeleccionado, setGrupoSeleccionado] = useState('');
+  const [horarioSeleccionado, setHorarioSeleccionado] = useState('');
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
-  
+
   const [asistencia, setAsistencia] = useState({});
   const [isEditing, setIsEditing] = useState(false);
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [mensaje, setMensaje] = useState({ text: '', type: '' });
+
+  const esDocente = role === 'Docente';
 
   useEffect(() => {
     if (!token) return;
 
-    fetch('http://localhost:8000/api/v1/grupos', {
+    if (esDocente) {
+      fetch('http://localhost:8000/api/v1/mis-clases', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => {
+          if (!res.ok) throw new Error("No autorizado");
+          return res.json();
+        })
+        .then(data => {
+          if (Array.isArray(data)) {
+            setMisClases(data);
+            if (data.length > 0) {
+              setHorarioSeleccionado(String(data[0].id_horario));
+              setGrupoSeleccionado(String(data[0].id_grupo));
+            }
+          }
+        })
+        .catch(err => console.error("Error cargando mis clases:", err));
+    } else {
+      fetch('http://localhost:8000/api/v1/grupos', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => {
+          if (!res.ok) throw new Error("No autorizado");
+          return res.json();
+        })
+        .then(data => {
+          if (Array.isArray(data)) {
+            setGrupos(data);
+            if (data.length > 0) setGrupoSeleccionado(String(data[0].id_grupo));
+          }
+        })
+        .catch(err => console.error("Error cargando grupos:", err));
+    }
+  }, [token, esDocente]);
+
+  useEffect(() => {
+    if (esDocente || !grupoSeleccionado || !token) return;
+
+    fetch(`http://localhost:8000/api/v1/grupos/${grupoSeleccionado}/horarios`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-      .then(res => {
-        if (!res.ok) throw new Error("No autorizado");
-        return res.json();
-      })
+      .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          setGrupos(data);
-          if (data.length > 0) setGrupoSeleccionado(data[0].id_grupo);
+          setHorariosGrupo(data);
+          setHorarioSeleccionado(data.length > 0 ? String(data[0].id_horario) : '');
+        } else {
+          setHorariosGrupo([]);
+          setHorarioSeleccionado('');
         }
       })
-      .catch(err => console.error("Error cargando grupos:", err));
-  }, [token]);
+      .catch(err => console.error("Error cargando horarios del grupo:", err));
+  }, [grupoSeleccionado, esDocente, token]);
+
+  const handleSeleccionarClaseDocente = (idHorario) => {
+    setHorarioSeleccionado(idHorario);
+    const clase = misClases.find(c => String(c.id_horario) === String(idHorario));
+    if (clase) setGrupoSeleccionado(String(clase.id_grupo));
+  };
 
   useEffect(() => {
     if (!grupoSeleccionado || !fecha || !token) return;
-    
+
     setIsLoading(true);
     setMensaje({ text: '', type: '' });
     setRiesgosMap({});
@@ -73,16 +124,20 @@ export default function RegistroAsistencia() {
       });
 
       const nuevoEstadoAsistencia = {};
-      
-      if (Array.isArray(asistenciaData) && asistenciaData.length > 0) {
+
+      const registrosClase = Array.isArray(asistenciaData) && horarioSeleccionado
+        ? asistenciaData.filter(r => String(r.id_horario) === String(horarioSeleccionado))
+        : [];
+
+      if (registrosClase.length > 0) {
         setIsEditing(true);
-        asistenciaData.forEach(reg => {
+        registrosClase.forEach(reg => {
           nuevoEstadoAsistencia[reg.id_estudiante] = reg.estatus;
         });
       } else {
         setIsEditing(false);
         estudiantesGrupo.forEach(est => {
-          nuevoEstadoAsistencia[est.id_estudiante] = 'Presente'; 
+          nuevoEstadoAsistencia[est.id_estudiante] = 'Presente';
         });
       }
       setAsistencia(nuevoEstadoAsistencia);
@@ -90,7 +145,7 @@ export default function RegistroAsistencia() {
     .catch(err => setMensaje({ text: 'Error al cargar los datos.', type: 'error' }))
     .finally(() => setIsLoading(false));
 
-  }, [grupoSeleccionado, fecha, token]);
+  }, [grupoSeleccionado, horarioSeleccionado, fecha, token]);
 
   const handleStatusChange = (id_estudiante, estatus) => {
     setAsistencia(prev => ({ ...prev, [id_estudiante]: estatus }));
@@ -105,12 +160,17 @@ export default function RegistroAsistencia() {
   };
 
   const guardarAsistencia = async () => {
+    if (!horarioSeleccionado) {
+      setMensaje({ text: 'Selecciona una clase/horario válido antes de guardar.', type: 'error' });
+      return;
+    }
+
     setIsLoading(true);
     setMensaje({ text: '', type: '' });
 
     const payload = {
       grupo_id: parseInt(grupoSeleccionado),
-      id_horario: 1, 
+      id_horario: parseInt(horarioSeleccionado),
       fecha: fecha,
       asistencias: Object.entries(asistencia).map(([id, estatus]) => ({
         id_estudiante: parseInt(id),
@@ -119,11 +179,11 @@ export default function RegistroAsistencia() {
     };
 
     try {
-      const method = isEditing ? 'PUT' : 'POST'; 
-      
+      const method = isEditing ? 'PUT' : 'POST';
+
       const response = await fetch('http://localhost:8000/api/v1/asistencia', {
         method: method,
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -136,7 +196,7 @@ export default function RegistroAsistencia() {
       if (!response.ok) throw new Error('Error al guardar la asistencia.');
 
       setMensaje({ text: '¡Asistencia guardada correctamente!', type: 'success' });
-      setIsEditing(true); 
+      setIsEditing(true);
     } catch (error) {
       setMensaje({ text: error.message, type: 'error' });
     } finally {
@@ -161,28 +221,72 @@ export default function RegistroAsistencia() {
           <p className="text-sm text-gray-500">Verifica y registra la asistencia para la sesión actual.</p>
         </div>
 
-        <div className="flex items-center space-x-2 bg-white border border-gray-300 rounded-lg p-1 shadow-sm">
-          <div className="flex items-center px-3 border-r border-gray-200">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-white border border-gray-300 rounded-lg p-1 shadow-sm">
+          <div className="flex items-center px-3 sm:border-r border-gray-200">
             <Calendar className="w-4 h-4 text-gray-500 mr-2" />
-            <input 
-              type="date" 
+            <input
+              type="date"
               value={fecha}
               onChange={e => setFecha(e.target.value)}
               className="border-none text-sm focus:ring-0 text-gray-700 bg-transparent"
             />
           </div>
-          <div className="flex items-center px-3">
-            <Users className="w-4 h-4 text-gray-500 mr-2" />
-            <select 
-              value={grupoSeleccionado}
-              onChange={e => setGrupoSeleccionado(e.target.value)}
-              className="border-none text-sm focus:ring-0 text-gray-700 bg-transparent pr-8"
-            >
-              {grupos.map(g => (
-                <option key={g.id_grupo} value={g.id_grupo}>{g.nombre_grupo} - {g.carrera}</option>
-              ))}
-            </select>
-          </div>
+
+          {esDocente ? (
+            <div className="flex items-center px-3">
+              <BookOpen className="w-4 h-4 text-gray-500 mr-2" />
+              <select
+                value={horarioSeleccionado}
+                onChange={e => handleSeleccionarClaseDocente(e.target.value)}
+                className="border-none text-sm focus:ring-0 text-gray-700 bg-transparent pr-8"
+              >
+                {misClases.length === 0 ? (
+                  <option value="">Sin clases asignadas</option>
+                ) : (
+                  misClases.map(c => (
+                    <option key={c.id_horario} value={c.id_horario}>
+                      {c.nombre_materia} · {c.nombre_grupo} ({c.dia_semana} {c.hora_inicio}-{c.hora_fin})
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center px-3 sm:border-r border-gray-200">
+                <Users className="w-4 h-4 text-gray-500 mr-2" />
+                <select
+                  value={grupoSeleccionado}
+                  onChange={e => setGrupoSeleccionado(e.target.value)}
+                  className="border-none text-sm focus:ring-0 text-gray-700 bg-transparent pr-8"
+                >
+                  {grupos.map(g => (
+                    <option key={g.id_grupo} value={g.id_grupo}>
+                      {g.nombre_grupo} - {g.nombre_carrera || g.carrera}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center px-3">
+                <BookOpen className="w-4 h-4 text-gray-500 mr-2" />
+                <select
+                  value={horarioSeleccionado}
+                  onChange={e => setHorarioSeleccionado(e.target.value)}
+                  className="border-none text-sm focus:ring-0 text-gray-700 bg-transparent pr-8"
+                >
+                  {horariosGrupo.length === 0 ? (
+                    <option value="">Sin horarios registrados</option>
+                  ) : (
+                    horariosGrupo.map(h => (
+                      <option key={h.id_horario} value={h.id_horario}>
+                        {h.nombre_materia} ({h.dia_semana} {h.hora_inicio}-{h.hora_fin})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -190,6 +294,15 @@ export default function RegistroAsistencia() {
         <div className={`mx-6 mt-4 p-3 rounded-lg text-sm flex items-center ${mensaje.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
           {mensaje.type === 'success' ? <CheckCircle className="w-4 h-4 mr-2" /> : <XCircle className="w-4 h-4 mr-2" />}
           {mensaje.text}
+        </div>
+      )}
+
+      {!horarioSeleccionado && !isLoading && (
+        <div className="mx-6 mt-4 p-3 rounded-lg text-sm bg-yellow-50 text-yellow-700 border border-yellow-200 flex items-center">
+          <XCircle className="w-4 h-4 mr-2" />
+          {esDocente
+            ? 'No tienes clases asignadas todavía. Contacta a tu Director de carrera.'
+            : 'Este grupo no tiene horarios registrados; asigna uno en Gestión de Grupos antes de tomar asistencia.'}
         </div>
       )}
 
@@ -216,10 +329,10 @@ export default function RegistroAsistencia() {
                 return (
                   <tr key={est.id_estudiante} className="hover:bg-gray-50 transition-colors">
                     <td className="py-3">
-                      <img 
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${est.nombre_completo}`} 
-                        alt="avatar" 
-                        className="w-10 h-10 rounded-full bg-gray-200 border border-gray-300" 
+                      <img
+                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${est.nombre_completo}`}
+                        alt="avatar"
+                        className="w-10 h-10 rounded-full bg-gray-200 border border-gray-300"
                       />
                     </td>
                     <td className="py-3 font-medium text-gray-900">{est.nombre_completo}</td>
@@ -267,17 +380,17 @@ export default function RegistroAsistencia() {
         <span className="text-sm text-gray-600 font-medium mb-3 md:mb-0">
           {conteoPresentes} de {estudiantes.length} estudiantes presentes
         </span>
-        
+
         <div className="flex space-x-3">
-          <button 
+          <button
             onClick={marcarTodosPresentes}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
             Marcar todos presentes
           </button>
-          <button 
+          <button
             onClick={guardarAsistencia}
-            disabled={isLoading || estudiantes.length === 0}
+            disabled={isLoading || estudiantes.length === 0 || !horarioSeleccionado}
             className="px-6 py-2 text-sm font-medium text-white bg-eduPurple border border-transparent rounded-lg hover:bg-opacity-90 disabled:bg-gray-400 transition-colors shadow-sm"
           >
             {isLoading ? 'Guardando...' : (isEditing ? 'Actualizar Asistencia' : 'Guardar Asistencia')}
