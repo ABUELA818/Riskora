@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from app.db.session import SessionLocal
-from app.models.models import Calificacion, ObservacionConducta, Grupo, Tutor, Docente, Horario
+from app.models.models import Calificacion, ObservacionConducta, Grupo, Tutor, Docente, Horario, Estudiante
 from app.schemas.evaluacion import (
     CalificacionCreate, CalificacionOut, ResumenCalificacionesOut, ResumenMateria,
     ObservacionCreate, ObservacionOut
@@ -12,7 +12,6 @@ from app.core.deps import get_db, RoleChecker, get_current_active_user
 router = APIRouter(prefix="/api/v1", tags=["Evaluaciones"])
 permitir_acceso = RoleChecker(["Docente", "Tutor", "Administrador"])
 
-# 1. CALIFICACIONES
 @router.post("/estudiantes/{id_estudiante}/calificaciones", response_model=CalificacionOut, dependencies=[Depends(permitir_acceso)])
 def registrar_calificacion(
     id_estudiante: int,
@@ -106,7 +105,6 @@ def obtener_resumen_calificaciones(id_estudiante: int, db: Session = Depends(get
         detalle_materias=detalle_materias
     )
 
-# 2. OBSERVACIONES DE CONDUCTA (RF-14)
 @router.post("/estudiantes/{id_estudiante}/observaciones", response_model=ObservacionOut, dependencies=[Depends(permitir_acceso)])
 def registrar_observacion(
     id_estudiante: int,
@@ -136,3 +134,12 @@ def historial_observaciones(id_estudiante: int, db: Session = Depends(get_db)):
         .order_by(ObservacionConducta.fecha_registro.desc())\
         .all()
     return observaciones
+
+@router.get("/grupos/{id_grupo}/calificaciones", response_model=List[CalificacionOut], dependencies=[Depends(permitir_acceso)])
+def calificaciones_del_grupo(id_grupo: int, id_materia: int, id_periodo: int = 1, db: Session = Depends(get_db)):
+    ids_estudiantes = [e.id_estudiante for e in db.query(Estudiante).filter(Estudiante.id_grupo == id_grupo).all()]
+    return db.query(Calificacion).filter(
+        Calificacion.id_estudiante.in_(ids_estudiantes),
+        Calificacion.id_materia == id_materia,
+        Calificacion.id_periodo == id_periodo
+    ).all()

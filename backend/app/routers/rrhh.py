@@ -242,6 +242,8 @@ def metricas_rrhh(db: Session = Depends(get_db)):
     total_doc = db.query(Usuario).filter(Usuario.rol == RolEnum.DOCENTE, Usuario.estado == True).count()
     total_tut = db.query(Usuario).filter(Usuario.rol == RolEnum.TUTOR, Usuario.estado == True).count()
     total_psi = db.query(Usuario).filter(Usuario.rol == RolEnum.PSICOPEDAGOGIA, Usuario.estado == True).count()
+    total_dir = db.query(Usuario).filter(Usuario.rol == RolEnum.DIRECTOR, Usuario.estado == True).count()
+    total_rrhh = db.query(Usuario).filter(Usuario.rol == RolEnum.RRHH, Usuario.estado == True).count()
 
     ahora = datetime.utcnow()
     primer_dia_mes = ahora.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -264,6 +266,9 @@ def metricas_rrhh(db: Session = Depends(get_db)):
     return MetricasRRHHOut(
         total_docentes=total_doc,
         total_tutores=total_tut,
+        total_dir=total_dir,
+        total_psi=total_psi,
+        total_rrhh=total_rrhh,
         total_psicopedagogia=total_psi,
         altas_mes=altas_mes,
         distribucion_carreras=dist_formateada

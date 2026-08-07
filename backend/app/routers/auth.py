@@ -15,8 +15,11 @@ router = APIRouter(prefix="/api/v1/auth", tags=["Auth"])
 def login(data: LoginSchema, response: Response, db: Session = Depends(get_db)):
     user = db.query(Usuario).filter(Usuario.correo_institucional == data.correo_institucional).first()
     
-    if not user or not verify_password(data.password, user.password_hash) or not user.estado:
+    if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales incorrectas")
+
+    if not user.estado:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tu cuenta ha sido deshabilitada. Contacta a RRHH.")
 
     user_role = user.rol.value if hasattr(user.rol, 'value') else user.rol
     payload = {"user_id": user.id_usuario, "rol": user_role, "token_version": user.token_version or 1}

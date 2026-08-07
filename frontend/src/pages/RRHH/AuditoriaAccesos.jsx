@@ -10,7 +10,7 @@ export default function AuditoriaAccesos() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('${API_BASE_URL}/api/v1/logs-auditoria', {
+    fetch(`${API_BASE_URL}/api/v1/logs-auditoria`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())

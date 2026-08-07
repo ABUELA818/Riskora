@@ -21,7 +21,7 @@ export default function SolicitudesPersonal() {
   const cargarSolicitudes = () => {
     if (!token) return;
     setLoading(true);
-    fetch('${API_BASE_URL}/api/v1/solicitudes-personal', {
+    fetch(`${API_BASE_URL}/api/v1/solicitudes-personal`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => {

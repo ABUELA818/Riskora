@@ -11,7 +11,7 @@ export default function GestionCarreras() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('${API_BASE_URL}/api/v1/carreras/resumen', {
+    fetch(`${API_BASE_URL}/api/v1/carreras/resumen`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())

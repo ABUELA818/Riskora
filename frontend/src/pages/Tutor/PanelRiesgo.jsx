@@ -15,7 +15,7 @@ export default function PanelRiesgo() {
   useEffect(() => {
     if (!token) return;
 
-    fetch('${API_BASE_URL}/api/v1/estudiantes', {
+    fetch(`${API_BASE_URL}/api/v1/estudiantes`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())

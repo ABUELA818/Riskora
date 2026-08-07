@@ -15,7 +15,7 @@ export default function GestionEstudiantes() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('${API_BASE_URL}/api/v1/carreras', {
+    fetch(`${API_BASE_URL}/api/v1/carreras`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())

@@ -14,7 +14,7 @@ export default function GestionAccesos() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('${API_BASE_URL}/api/v1/personal', {
+    fetch(`${API_BASE_URL}/api/v1/personal`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())

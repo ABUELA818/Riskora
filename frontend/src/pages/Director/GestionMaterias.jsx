@@ -3,8 +3,6 @@ import { Plus, Edit2, X, BookOpen } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../config/api'; 
 
-// NOTA: materias es un catálogo institucional, no ligado a un ciclo específico;
-// se muestra el periodo vigente solo como referencia visual.
 function calcularPeriodoVigente(periodos) {
   const hoy = new Date().toISOString().split('T')[0];
   const vigente = periodos.find(p => p.fecha_inicio <= hoy && hoy <= p.fecha_fin);
@@ -35,7 +33,7 @@ export default function GestionMaterias() {
   useEffect(() => {
     if (!token) return;
 
-    fetch('${API_BASE_URL}/api/v1/materias', {
+    fetch(`${API_BASE_URL}/api/v1/materias`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -43,7 +41,7 @@ export default function GestionMaterias() {
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
 
-    fetch('${API_BASE_URL}/api/v1/periodos', {
+    fetch(`${API_BASE_URL}/api/v1/periodos`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -118,7 +116,7 @@ export default function GestionMaterias() {
           estado: true
         };
 
-        const response = await fetch('${API_BASE_URL}/api/v1/materias', {
+        const response = await fetch(`${API_BASE_URL}/api/v1/materias`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -88,7 +88,7 @@ export default function App() {
             <Route path="panel-riesgo" element={<PanelRiesgo />} />
             <Route path="estudiantes/:id/analisis" element={<AnalisisPrediccion />} />
             <Route path="carreras/dashboard" element={<RoleRoute allowedRoles={['Administrador', 'Director']}><DashboardDirector /></RoleRoute>} />
-            <Route path="carreras/riesgo-agregado" element={<RoleRoute allowedRoles={['Administrador', 'Director']}><RiesgoAgregado /></RoleRoute>} />
+            <Route path="carreras/:id/riesgo-agregado" element={<RoleRoute allowedRoles={['Administrador', 'Director']}><RiesgoAgregado /></RoleRoute>} />
             <Route path="casos-escalados" element={<RoleRoute allowedRoles={['Administrador', 'Tutor', 'Director', 'Psicopedagogia']}><CasosEscalados /></RoleRoute>} />
             <Route path="institucional/dashboard" element={<RoleRoute allowedRoles={['Administrador', 'Director']}><DashboardInstitucional /></RoleRoute>} />
             <Route path="rrhh/dashboard" element={<RoleRoute allowedRoles={['Administrador', 'RRHH']}><DashboardRRHH /></RoleRoute>} />
@@ -96,6 +96,7 @@ export default function App() {
             <Route path="rrhh/auditoria" element={<RoleRoute allowedRoles={['Administrador', 'RRHH']}><AuditoriaAccesos /></RoleRoute>} />
             <Route path="rrhh/accesos" element={<RoleRoute allowedRoles={['Administrador', 'RRHH']}><GestionAccesos /></RoleRoute>} />
             <Route path="rrhh/solicitudes" element={<RoleRoute allowedRoles={['Administrador', 'RRHH']}><SolicitudesPersonal /></RoleRoute>} />
+            <Route path="estudiantes" element={<GestionEstudiantes />} />
             <Route path="estudiantes/:id/intervenciones" element={
               <RoleRoute allowedRoles={['Tutor', 'Administrador', 'Director', 'Psicopedagogia']}>
                 <BitacoraIntervenciones />

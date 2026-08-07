@@ -13,7 +13,7 @@ export default function ForgotPassword() {
     setStatus({ type: 'loading', message: 'Enviando...' });
 
     try {
-      await fetch('${API_BASE_URL}/api/v1/auth/forgot-password', {
+      await fetch(`${API_BASE_URL}/api/v1/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ correo_institucional: email })

@@ -9,7 +9,7 @@ from typing import List, Optional
 from app.db.session import SessionLocal
 from app.models.models import (
     Estudiante, Grupo, Materia, Periodo, Horario, Docente, Carrera,
-    Usuario, DirectorCarrera, DiaSemanaEnum, HistorialAcademicoPrevio
+    Usuario, DirectorCarrera, DiaSemanaEnum, HistorialAcademicoPrevio, Tutor 
 )
 from app.core.deps import get_db, RoleChecker, get_current_active_user
 from app.schemas.academic import (
@@ -18,7 +18,7 @@ from app.schemas.academic import (
     ClaseDocenteOut, EstudianteBajaIn,
     HistorialAcademicoPrevioCreate, HistorialAcademicoPrevioOut
 )
-from app.core.deps import get_db, RoleChecker
+from app.core.deps import get_db, RoleChecker, get_current_active_user
 from app.schemas.carrera import CarreraOut
 from app.routers.riesgo import calcular_metricas_estudiante
 from fastapi.responses import StreamingResponse
@@ -86,14 +86,24 @@ def crear_estudiante(estudiante: EstudianteCreate, db: Session = Depends(get_db)
 def obtener_estudiantes(
     carrera: Optional[int] = Query(None),
     grupo: Optional[str] = Query(None),
+    id_grupo: Optional[int] = Query(None),       
     nivel_riesgo: Optional[str] = Query(None),
-    skip: int = 0, limit: int = 100,
-    db: Session = Depends(get_db)
+    skip: int = 0, limit: int = 1000,        
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user) 
 ):
+    user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol 
 
     query = db.query(Estudiante).filter(Estudiante.estado == True)
-    
-    if carrera or grupo:
+
+    if id_grupo:
+        query = query.filter(Estudiante.id_grupo == id_grupo)
+
+    if user_role == "Tutor" and not (carrera or grupo or id_grupo):
+        tutor = db.query(Tutor).filter(Tutor.id_usuario == current_user.id_usuario).first()
+        grupos_ids = [g.id_grupo for g in db.query(Grupo).filter(Grupo.id_tutor == (tutor.id_tutor if tutor else -1)).all()]
+        query = query.filter(Estudiante.id_grupo.in_(grupos_ids or [-1]))
+    elif carrera or grupo:
         query = query.join(Grupo)
         if carrera:
             query = query.filter(Grupo.id_carrera == carrera)
@@ -197,8 +207,14 @@ def crear_grupo(
     )
 
 @router.get("/grupos", response_model=List[GrupoOut], dependencies=[Depends(todos_los_roles)])
-def obtener_grupos(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    grupos = db.query(Grupo).offset(skip).limit(limit).all()
+def obtener_grupos(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user = Depends(get_current_active_user)):
+    user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
+    query = db.query(Grupo)
+    if user_role == "Director":
+        mis_carreras = [c.id_carrera for c in db.query(DirectorCarrera).filter(DirectorCarrera.id_usuario == current_user.id_usuario).all()]
+        query = query.filter(Grupo.id_carrera.in_(mis_carreras or [-1]))
+    grupos = query.offset(skip).limit(limit).all()
+
     resultado = []
     for g in grupos:
         carrera = db.query(Carrera).filter(Carrera.id_carrera == g.id_carrera).first()

@@ -23,7 +23,7 @@ export default function ResetPassword() {
     setStatus({ type: 'loading', message: '' });
     
     try {
-      const res = await fetch('${API_BASE_URL}/api/v1/auth/reset-password', {
+      const res = await fetch(`${API_BASE_URL}/api/v1/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, nueva_password: password })

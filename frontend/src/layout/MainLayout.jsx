@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { 
   LayoutDashboard, ClipboardList, BarChart2, Users, 
   Settings, Bell, Search, HelpCircle, ShieldAlert, 
-  UserPlus, FileText, Lock, Folder, LogOut, BookOpen, Clock
+  UserPlus, FileText, Lock, Folder, LogOut, BookOpen, Clock, GraduationCap, UserX
 } from 'lucide-react';
 
 const MENU_ITEMS = {
@@ -29,13 +29,14 @@ const MENU_ITEMS = {
   ],
   Psicopedagogia: [
   { name: 'Dashboard', path: '/psicopedagogia/dashboard', icon: LayoutDashboard },
+  { name: 'Directorio de Alumnos', path: '/estudiantes', icon: Users },
   { name: 'Casos Urgentes', path: '/casos-escalados', icon: ShieldAlert },
   { name: 'Carreras', path: '/carreras/gestion', icon: GraduationCap },
   { name: 'Materias', path: '/materias', icon: BookOpen },
   { name: 'Alta Estudiantes', path: '/estudiantes/nuevo', icon: UserPlus },
-  { name: 'Baja Estudiantes', path: '/estudiantes/baja', icon: UserX }, // NUEVO
+  { name: 'Baja Estudiantes', path: '/estudiantes/baja', icon: UserX },
   { name: 'Reportes', path: '/reportes', icon: FileText },
-  ],
+],
   RRHH: [
   { name: 'Dashboard', path: '/rrhh/dashboard', icon: LayoutDashboard },
   { name: 'Directorio Personal', path: '/rrhh/directorio', icon: Users },
@@ -59,7 +60,7 @@ export default function MainLayout() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('${API_BASE_URL}/api/v1/notificaciones', {
+    fetch(`${API_BASE_URL}/api/v1/notificaciones`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -81,8 +82,8 @@ export default function MainLayout() {
                <span className="text-white font-bold">E</span>
             </div>
             <div>
-              <h1 className="font-bold text-gray-900 text-sm leading-tight">EduPredict AI</h1>
-              <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Institutional Reliability</p>
+              <h1 className="font-bold text-gray-900 text-sm leading-tight">RISKORA</h1>
+              <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Fiabilidad Institutional</p>
             </div>
           </div>
 
@@ -137,17 +138,7 @@ export default function MainLayout() {
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-0">
           <div className="flex items-center flex-1">
             <h2 className="text-lg font-bold text-gray-800 mr-8 hidden md:block">Portal Institucional</h2>
-            
-            <div className="max-w-md w-full relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                placeholder="Buscar clases o estudiantes..."
-                className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg text-sm placeholder-gray-400 focus:outline-none focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] transition-all bg-gray-50 hover:bg-white"
-              />
-            </div>
+          
           </div>
 
           <div className="flex items-center space-x-5">

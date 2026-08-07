@@ -29,7 +29,7 @@ export default function RegistroAsistencia() {
     if (!token) return;
 
     if (esDocente) {
-      fetch('${API_BASE_URL}/api/v1/mis-clases', {
+      fetch(`${API_BASE_URL}/api/v1/mis-clases`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => {
@@ -47,7 +47,7 @@ export default function RegistroAsistencia() {
         })
         .catch(err => console.error("Error cargando mis clases:", err));
     } else {
-      fetch('${API_BASE_URL}/api/v1/grupos', {
+      fetch(`${API_BASE_URL}/api/v1/grupos`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => {
@@ -97,7 +97,7 @@ export default function RegistroAsistencia() {
     setRiesgosMap({});
 
     Promise.all([
-      fetch(`${API_BASE_URL}/api/v1/estudiantes`, {
+      fetch(`${API_BASE_URL}/api/v1/estudiantes?id_grupo=${grupoSeleccionado}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       }).then(r => r.json()),
       fetch(`${API_BASE_URL}/api/v1/asistencia?grupo_id=${grupoSeleccionado}&fecha=${fecha}`, {
@@ -182,7 +182,7 @@ export default function RegistroAsistencia() {
     try {
       const method = isEditing ? 'PUT' : 'POST';
 
-      const response = await fetch('${API_BASE_URL}/api/v1/asistencia', {
+      const response = await fetch(`${API_BASE_URL}/api/v1/asistencia`, {
         method: method,
         headers: {
           'Content-Type': 'application/json',

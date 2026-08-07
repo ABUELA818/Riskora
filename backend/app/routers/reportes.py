@@ -6,7 +6,6 @@ from sqlalchemy import func
 from typing import List, Optional
 from datetime import datetime
 
-# Librerías para exportar
 import openpyxl
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
@@ -14,7 +13,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 
 from app.db.session import SessionLocal
-from app.models.models import Estudiante, Grupo, Notificacion, Tutor, Carrera, Materia, Calificacion, Alerta, RiesgoEnum
+from app.models.models import Estudiante, Grupo, Notificacion, Tutor, Carrera, Materia, Calificacion, Alerta, RiesgoEnum, DirectorCarrera
 from app.schemas.reportes import (
     ReporteEstudianteOut, NotificacionOut, NotificacionCreate,
     RiesgoPorCarreraOut, ReprobacionPorMateriaOut, TendenciaRiesgoPuntoOut  # NUEVO
@@ -26,9 +25,21 @@ from app.core.audit import registrar_auditoria
 router = APIRouter(prefix="/api/v1", tags=["Reportes y Notificaciones"])
 permitir_acceso = RoleChecker(["Administrador", "Director", "Tutor", "Psicopedagogia", "RRHH"])
 
-def obtener_datos_reporte(db: Session, grupo_id: Optional[int], carrera: Optional[int], nivel_riesgo: Optional[str]):
+def _carreras_permitidas(db: Session, current_user):
+    user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
+    if user_role != "Director":
+        return None
+    return [c.id_carrera for c in db.query(DirectorCarrera).filter(
+        DirectorCarrera.id_usuario == current_user.id_usuario
+    ).all()]
+
+def obtener_datos_reporte(db: Session, grupo_id: Optional[int], carrera: Optional[int], nivel_riesgo: Optional[str], current_user):
     query = db.query(Estudiante).join(Grupo)
     
+    permitidas = _carreras_permitidas(db, current_user)
+    if permitidas is not None:
+        query = query.filter(Grupo.id_carrera.in_(permitidas or [-1]))
+
     if grupo_id:
         query = query.filter(Grupo.id_grupo == grupo_id)
     if carrera:
@@ -60,9 +71,10 @@ def reporte_json(
     grupo_id: Optional[int] = Query(None),
     carrera: Optional[str] = Query(None),
     nivel_riesgo: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
 ):
-    return obtener_datos_reporte(db, grupo_id, carrera, nivel_riesgo)
+    return obtener_datos_reporte(db, grupo_id, carrera, nivel_riesgo, current_user)
 
 @router.get("/reportes/academico/export", dependencies=[Depends(permitir_acceso)])
 def exportar_reporte(
@@ -74,7 +86,7 @@ def exportar_reporte(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_active_user)
 ):
-    datos = obtener_datos_reporte(db, grupo_id, carrera, nivel_riesgo)
+    datos = obtener_datos_reporte(db, grupo_id, carrera, nivel_riesgo, current_user)
 
     registrar_auditoria(db, current_user.id_usuario, f"Exportación de reporte a {formato.upper()}", request.url.path)
 
@@ -159,8 +171,14 @@ def mis_notificaciones(db: Session = Depends(get_db), current_user = Depends(get
     return db.query(Notificacion).filter(Notificacion.id_usuario == current_user.id_usuario).order_by(Notificacion.fecha.desc()).all()
 
 @router.get("/reportes/riesgo-por-carrera", response_model=List[RiesgoPorCarreraOut], dependencies=[Depends(permitir_acceso)])
-def riesgo_por_carrera(db: Session = Depends(get_db)):
-    carreras = db.query(Carrera).all()
+def riesgo_por_carrera(db: Session = Depends(get_db), current_user = Depends(get_current_active_user)): 
+
+    permitidas = _carreras_permitidas(db, current_user)
+    query = db.query(Carrera)
+    if permitidas is not None:
+        query = query.filter(Carrera.id_carrera.in_(permitidas or [-1]))
+    carreras = query.all() 
+
     resultado = []
     for carrera in carreras:
         estudiantes = db.query(Estudiante).join(Grupo).filter(
@@ -187,11 +205,21 @@ def riesgo_por_carrera(db: Session = Depends(get_db)):
 
 
 @router.get("/reportes/reprobacion-por-materia", response_model=List[ReprobacionPorMateriaOut], dependencies=[Depends(permitir_acceso)])
-def reprobacion_por_materia(db: Session = Depends(get_db)):
+def reprobacion_por_materia(db: Session = Depends(get_db), current_user = Depends(get_current_active_user)):
+    permitidas = _carreras_permitidas(db, current_user)
+
     materias = db.query(Materia).filter(Materia.estado == True).all()
     resultado = []
     for materia in materias:
-        calificaciones = db.query(Calificacion).filter(Calificacion.id_materia == materia.id_materia).all()
+        query_califs = db.query(Calificacion).filter(Calificacion.id_materia == materia.id_materia)
+
+        if permitidas is not None:
+            ids_estudiantes = db.query(Estudiante.id_estudiante)\
+                .join(Grupo, Estudiante.id_grupo == Grupo.id_grupo)\
+                .filter(Grupo.id_carrera.in_(permitidas or [-1])).subquery()
+            query_califs = query_califs.filter(Calificacion.id_estudiante.in_(ids_estudiantes))
+
+        calificaciones = query_califs.all()
         total = len(calificaciones)
         if total == 0:
             continue
