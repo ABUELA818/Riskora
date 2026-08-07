@@ -19,7 +19,7 @@ export default function DashboardDirector() {
 
   useEffect(() => {
     if (idFromUrl || !token) return;
-    fetch('${API_BASE_URL}/api/v1/director/mi-carrera', {
+    fetch(`${API_BASE_URL}/api/v1/director/mi-carrera`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => {
@@ -76,7 +76,7 @@ export default function DashboardDirector() {
           <h2 className="text-3xl font-bold text-gray-900">{nombreCarrera || 'Ingeniería en Sistemas Computacionales'}</h2>
           <p className="text-sm text-gray-500">Ciclo Académico 2024-1 • Semana 8</p>
         </div>
-        <button className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium flex items-center shadow-sm hover:bg-gray-50">
+        <button onClick={() => navigate(`/carreras/${g.id_grupo}/riesgo-agregado`)} className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium flex items-center shadow-sm hover:bg-gray-50">
           <Download className="w-4 h-4 mr-2" /> Exportar Reporte
         </button>
       </div>

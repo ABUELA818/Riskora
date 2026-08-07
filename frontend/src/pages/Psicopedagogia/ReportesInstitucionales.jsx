@@ -29,14 +29,14 @@ export default function ReportesInstitucionales() {
   useEffect(() => {
     if (!token) return;
 
-    fetch('${API_BASE_URL}/api/v1/reportes/riesgo-por-carrera', {
+    fetch(`${API_BASE_URL}/api/v1/reportes/riesgo-por-carrera`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => { if (Array.isArray(data)) setRiesgoPorCarrera(data); })
       .catch(err => console.error(err));
 
-    fetch('${API_BASE_URL}/api/v1/reportes/reprobacion-por-materia', {
+    fetch(`${API_BASE_URL}/api/v1/reportes/reprobacion-por-materia`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -47,7 +47,7 @@ export default function ReportesInstitucionales() {
   }, [token]);
 
   const cargarTendencia = () => {
-    fetch('${API_BASE_URL}/api/v1/reportes/tendencia-riesgo', {
+    fetch(`${API_BASE_URL}/api/v1/reportes/tendencia-riesgo`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -58,7 +58,7 @@ export default function ReportesInstitucionales() {
   const handleGenerarSnapshot = async () => {
     setGenerandoSnapshot(true);
     try {
-      const res = await fetch('${API_BASE_URL}/api/v1/reportes/snapshot-riesgo', {
+      const res = await fetch(`${API_BASE_URL}/api/v1/reportes/snapshot-riesgo`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -73,7 +73,7 @@ export default function ReportesInstitucionales() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('${API_BASE_URL}/api/v1/carreras', {
+    fetch(`${API_BASE_URL}/api/v1/carreras`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())

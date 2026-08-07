@@ -37,7 +37,7 @@ export default function DashboardDocente() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('${API_BASE_URL}/api/v1/mis-clases', {
+    fetch(`${API_BASE_URL}/api/v1/mis-clases`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())

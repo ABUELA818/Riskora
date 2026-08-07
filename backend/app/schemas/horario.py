@@ -5,7 +5,7 @@ from datetime import time
 class HorarioItemIn(BaseModel):
     id_materia: int
     id_docente: int
-    dia_semana: str  # "Lunes", "Martes", "Miercoles", "Jueves", "Viernes"
+    dia_semana: str
     hora_inicio: time
     hora_fin: time
 
@@ -29,3 +29,12 @@ class HorarioOut(BaseModel):
 class DocenteDisponibleOut(BaseModel):
     id_docente: int
     nombre_completo: str
+
+class DocenteCatalogoOut(BaseModel):
+    id: int
+    nombre: str
+    apellidos: str
+    correo: str
+
+    class Config:
+        from_attributes = True

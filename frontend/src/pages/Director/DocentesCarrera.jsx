@@ -29,14 +29,14 @@ export default function DocentesCarrera() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('${API_BASE_URL}/api/v1/personal?rol=Docente', {
+    fetch(`${API_BASE_URL}/api/v1/personal?rol=Docente`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => { if (Array.isArray(data)) setDocentes(data); })
       .catch(err => console.error(err));
 
-    fetch('${API_BASE_URL}/api/v1/director/mi-carrera', {
+    fetch(`${API_BASE_URL}/api/v1/director/mi-carrera`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.ok ? res.json() : null)
@@ -59,7 +59,7 @@ export default function DocentesCarrera() {
     setIsSaving(true);
     setFormError('');
     try {
-      const response = await fetch('${API_BASE_URL}/api/v1/solicitudes-personal', {
+      const response = await fetch(`${API_BASE_URL}/api/v1/solicitudes-personal`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

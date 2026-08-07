@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 export default function CapturaCalificaciones() {
-  const { token } = useAuth();
+  const { token, role } = useAuth();
   const location = useLocation();
   
   const [grupos, setGrupos] = useState([]);
@@ -26,28 +26,100 @@ export default function CapturaCalificaciones() {
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState(null);
 
+  const exportarCSV = () => {
+    const headers = ['Matricula','Nombre', ...camposActivos.map(c=>c.toUpperCase()), 'Final'];
+    const filas = estudiantes.map(est => {
+      const notas = calificaciones[est.id_estudiante] || {};
+      const vals = camposActivos.map(c => notas[c] ?? '');
+      return [est.matricula, est.nombre_completo, ...vals].join(',');
+    });
+    const csv = [headers.join(','), ...filas].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `calificaciones_grupo_${grupoSeleccionado}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  };
+
+  // Efecto 1: Cargar grupos (según rol)
   useEffect(() => {
-    if (!token) return;
-    fetch('${API_BASE_URL}/api/v1/grupos', {
+    if (!token || !role) return;
+
+    const url = role === 'Docente' ? '/api/v1/mis-clases' : '/api/v1/grupos';
+    fetch(`${API_BASE_URL}${url}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
+        if (!Array.isArray(data)) return;
+
+        if (role === 'Docente') {
+          const gruposUnicos = [...new Map(
+            data.map(c => [c.id_grupo, { id_grupo: c.id_grupo, nombre_grupo: c.nombre_grupo }])
+          ).values()];
+          setGrupos(gruposUnicos);
+          const grupoInicial = location.state?.grupoPreseleccionado &&
+            gruposUnicos.some(g => g.id_grupo === location.state.grupoPreseleccionado)
+            ? location.state.grupoPreseleccionado
+            : gruposUnicos[0]?.id_grupo;
+          if (grupoInicial != null) setGrupoSeleccionado(String(grupoInicial));
+        } else {
           setGrupos(data);
           const grupoInicial = location.state?.grupoPreseleccionado &&
             data.some(g => g.id_grupo === location.state.grupoPreseleccionado)
             ? location.state.grupoPreseleccionado
             : data[0]?.id_grupo;
-          if (grupoInicial) setGrupoSeleccionado(grupoInicial.toString());
+          if (grupoInicial != null) setGrupoSeleccionado(String(grupoInicial));
         }
-      });
-  }, [token]);
+      })
+      .catch(err => console.error('Error cargando grupos:', err));
+  }, [token, role]);
 
+  // Efecto 2: Cargar materias del docente para el grupo seleccionado
+  useEffect(() => {
+    if (!grupoSeleccionado || !token) {
+      setMateriasDisponibles([]);
+      setMateriaSeleccionada('');
+      return;
+    }
+
+    fetch(`${API_BASE_URL}/api/v1/grupos/${grupoSeleccionado}/mis-materias`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (!Array.isArray(data)) {
+          setMateriasDisponibles([]);
+          setMateriaSeleccionada('');
+          return;
+        }
+
+        setMateriasDisponibles(data);
+
+        if (data.length === 0) {
+          setMateriaSeleccionada('');
+          return;
+        }
+
+        const preseleccionada = location.state?.materiaPreseleccionada;
+        const coincide = preseleccionada != null &&
+          data.some(m => String(m.id_materia) === String(preseleccionada));
+
+        const materiaInicial = coincide ? preseleccionada : data[0].id_materia;
+        setMateriaSeleccionada(String(materiaInicial));
+      })
+      .catch(err => {
+        console.error('Error cargando materias:', err);
+        setMateriasDisponibles([]);
+        setMateriaSeleccionada('');
+      });
+  }, [grupoSeleccionado, token]);
+
+  // Efecto 3: Cargar estudiantes del grupo
   useEffect(() => {
     if (!grupoSeleccionado || !token) return;
     
-    fetch(`${API_BASE_URL}/api/v1/estudiantes`, {
+    fetch(`${API_BASE_URL}/api/v1/estudiantes?id_grupo=${grupoSeleccionado}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(r => r.json())
@@ -68,24 +140,6 @@ export default function CapturaCalificaciones() {
         }
       });
   }, [grupoSeleccionado, token]);
-
-  useEffect(() => {
-  if (!grupoSeleccionado || !token) return;
-  fetch(`${API_BASE_URL}/api/v1/grupos/${grupoSeleccionado}/mis-materias`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  })
-    .then(r => r.json())
-    .then(data => {
-      if (Array.isArray(data)) {
-        setMateriasDisponibles(data);
-        const materiaInicial = location.state?.materiaPreseleccionada &&
-          data.some(m => m.id_materia === location.state.materiaPreseleccionada)
-          ? location.state.materiaPreseleccionada
-          : (data.length > 0 ? data[0].id_materia : '');
-        setMateriaSeleccionada(materiaInicial ? materiaInicial.toString() : '');
-      }
-    });
-}, [grupoSeleccionado, token]);
 
   const camposActivos = Array.from({ length: numParciales }, (_, i) => `p${i + 1}`);
 
@@ -196,6 +250,41 @@ export default function CapturaCalificaciones() {
     }
   };
 
+  // Cargar calificaciones ya guardadas para el grupo/materia seleccionados
+  useEffect(() => {
+    if (!grupoSeleccionado || !materiaSeleccionada || !token) return;
+
+    fetch(`${API_BASE_URL}/api/v1/grupos/${grupoSeleccionado}/calificaciones?id_materia=${materiaSeleccionada}&id_periodo=1`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (!Array.isArray(data) || data.length === 0) return;
+
+        const nuevoEstado = {};
+        let maxParcial = 1;
+
+        data.forEach(c => {
+          if (!nuevoEstado[c.id_estudiante]) {
+            nuevoEstado[c.id_estudiante] = {};
+          }
+          nuevoEstado[c.id_estudiante][`p${c.parcial}`] = String(c.valor);
+          if (c.parcial > maxParcial) maxParcial = c.parcial;
+        });
+
+        setNumParciales(prev => Math.max(prev, maxParcial));
+
+        setCalificaciones(prev => {
+          const combinado = { ...prev };
+          Object.entries(nuevoEstado).forEach(([idEst, notas]) => {
+            combinado[idEst] = { ...combinado[idEst], ...notas };
+          });
+          return combinado;
+        });
+      })
+      .catch(err => console.error('Error cargando calificaciones existentes:', err));
+  }, [grupoSeleccionado, materiaSeleccionada, token]);
+
   return (
     <div className="bg-gray-50/50 min-h-full">
       
@@ -204,7 +293,7 @@ export default function CapturaCalificaciones() {
         <div className="flex justify-between items-center">
           <p className="text-gray-500 text-sm">Ingrese las calificaciones del periodo de evaluación. Los valores deben estar entre 0 y 100.</p>
           <div className="flex space-x-3">
-            <button className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium bg-white hover:bg-gray-50">
+            <button onClick={exportarCSV} className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium bg-white hover:bg-gray-50">
               Exportar CSV
             </button>
             <button 
@@ -272,7 +361,11 @@ export default function CapturaCalificaciones() {
                 {materiasDisponibles.length === 0 ? (
                   <option value="">Sin materias asignadas</option>
                 ) : (
-                  materiasDisponibles.map(m => <option key={m.id_materia} value={m.id_materia}>{m.nombre_materia}</option>)
+                  materiasDisponibles.map(m => (
+                    <option key={m.id_materia} value={String(m.id_materia)}>
+                      {m.nombre_materia}
+                    </option>
+                  ))
                 )}
               </select>
 

@@ -13,7 +13,7 @@ export default function DashboardTutor() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('${API_BASE_URL}/api/v1/riesgo/resumen', {
+    fetch(`${API_BASE_URL}/api/v1/riesgo/resumen`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -23,7 +23,7 @@ export default function DashboardTutor() {
       })
       .catch(err => console.error(err));
 
-    fetch('${API_BASE_URL}/api/v1/riesgo/alumnos-atencion', {
+    fetch(`${API_BASE_URL}/api/v1/riesgo/alumnos-atencion`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())

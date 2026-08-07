@@ -80,11 +80,17 @@ def obtener_riesgo_estudiante(id: int, db: Session = Depends(get_db)):
 def obtener_resumen_riesgo(
     grupo_id: Optional[int] = Query(None),
     carrera: Optional[int] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
 ):
+    user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
     query = db.query(Estudiante).filter(Estudiante.estado == True)
 
-    if grupo_id or carrera:
+    if user_role == "Tutor":
+        tutor = db.query(Tutor).filter(Tutor.id_usuario == current_user.id_usuario).first()
+        grupos_ids = [g.id_grupo for g in db.query(Grupo).filter(Grupo.id_tutor == (tutor.id_tutor if tutor else -1)).all()]
+        query = query.filter(Estudiante.id_grupo.in_(grupos_ids or [-1]))
+    elif grupo_id or carrera:
         query = query.join(Grupo)
         if grupo_id:
             query = query.filter(Grupo.id_grupo == grupo_id)

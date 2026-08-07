@@ -9,6 +9,8 @@ export default function RiesgoAgregado() {
   const { id: idFromUrl } = useParams();
   const { token } = useAuth();
   const [idCarrera, setIdCarrera] = useState(idFromUrl || null);
+  const [indicadores, setIndicadores] = useState(null);   
+  const [grupos, setGrupos] = useState([]);               
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -19,8 +21,12 @@ export default function RiesgoAgregado() {
     ]).then(([ind, grup]) => {
       setIndicadores(ind);
       setGrupos(grup);
-    });
+    }).catch(err => setError('No se pudo cargar la información de riesgo.'));
   }, [idCarrera, token]);
+
+  if (error) {
+    return <div className="p-8 text-center text-red-600">{error}</div>;
+  }
 
   if (!indicadores) return <div className="p-8 text-gray-500">Cargando gráficas...</div>;
 

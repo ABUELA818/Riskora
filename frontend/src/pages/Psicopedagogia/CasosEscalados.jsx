@@ -7,6 +7,9 @@ import { API_BASE_URL } from '../../config/api';
 
 export default function CasosEscalados() {
   const { token } = useAuth();
+
+  const [notaSeguimiento, setNotaSeguimiento] = useState('');
+  const [guardandoNota, setGuardandoNota] = useState(false);
   
   const [casos, setCasos] = useState([]);
   const [seleccionado, setSeleccionado] = useState(null);
@@ -37,7 +40,7 @@ export default function CasosEscalados() {
     
     cargarCasos();
     
-    fetch('${API_BASE_URL}/api/v1/estudiantes', {
+    fetch(`${API_BASE_URL}/api/v1/estudiantes`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -50,7 +53,7 @@ export default function CasosEscalados() {
     e.preventDefault();
     setIsSaving(true);
     try {
-      const response = await fetch('${API_BASE_URL}/api/v1/casos-escalados/manual', {
+      const response = await fetch(`${API_BASE_URL}/api/v1/casos-escalados/manual`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json', 
@@ -231,20 +234,57 @@ export default function CasosEscalados() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs font-bold text-gray-500">Notas de Seguimiento (Internas)</label>
-                  <textarea className="w-full mt-1 border border-gray-300 rounded-lg p-2 text-sm h-24 focus:ring-eduPurple focus:border-eduPurple outline-none transition-all" placeholder="Documentar análisis inicial..."></textarea>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-bold text-gray-500">Actualizar Estado</label>
-                    <select className="w-full mt-1 border border-gray-300 rounded-lg p-2 text-sm outline-none focus:border-eduPurple">
-                      <option>En Revisión</option>
-                    </select>
-                  </div>
-                </div>
-                <button className="w-full bg-eduPurple text-white py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-opacity-90 transition-all">
-                  Guardar Registro
-                </button>
+  <label className="text-xs font-bold text-gray-500">Notas de Seguimiento (Internas)</label>
+  <textarea
+    value={notaSeguimiento}
+    onChange={(e) => setNotaSeguimiento(e.target.value)}
+    className="w-full mt-1 border border-gray-300 rounded-lg p-2 text-sm h-24 focus:ring-eduPurple focus:border-eduPurple outline-none transition-all"
+    placeholder="Documentar análisis inicial..."
+  ></textarea>
+</div>
+<div className="grid grid-cols-2 gap-3">
+  <div>
+    <label className="text-xs font-bold text-gray-500">Actualizar Estado</label>
+    <select className="w-full mt-1 border border-gray-300 rounded-lg p-2 text-sm outline-none focus:border-eduPurple">
+      <option>En Revisión</option>
+    </select>
+  </div>
+</div>
+<button
+  onClick={async () => {
+    if (!notaSeguimiento.trim()) {
+      alert('Escribe una nota antes de guardar.');
+      return;
+    }
+    setGuardandoNota(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/casos-escalados/manual`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          id_estudiante: seleccionado.id_estudiante,
+          nivel_resolucion: 'Seguimiento Psicopedagogía',
+          motivo: notaSeguimiento
+        })
+      });
+      if (!response.ok) throw new Error('Error al guardar el registro');
+      setNotaSeguimiento('');
+      cargarCasos();
+      alert('Registro guardado correctamente.');
+    } catch (error) {
+      alert('No se pudo guardar el registro de seguimiento.');
+    } finally {
+      setGuardandoNota(false);
+    }
+  }}
+  disabled={guardandoNota}
+  className="w-full bg-eduPurple text-white py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-opacity-90 disabled:opacity-70 transition-all"
+>
+  {guardandoNota ? 'Guardando...' : 'Guardar Registro'}
+</button>
                 <Link to={`/estudiantes/${seleccionado.id_estudiante}/intervenciones`} className="w-full border border-gray-300 text-gray-700 py-2.5 rounded-lg text-sm font-bold flex justify-center items-center hover:bg-gray-50 transition-all">
                   Ir a Bitácora Completa <ExternalLink className="w-4 h-4 ml-2" />
                 </Link>

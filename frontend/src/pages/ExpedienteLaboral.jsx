@@ -61,7 +61,7 @@ export default function ExpedienteLaboral() {
 
   useEffect(() => {
     if (!token || !expediente || expediente.rol !== 'Docente') return;
-    fetch('${API_BASE_URL}/api/v1/materias', {
+    fetch(`${API_BASE_URL}/api/v1/materias`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())

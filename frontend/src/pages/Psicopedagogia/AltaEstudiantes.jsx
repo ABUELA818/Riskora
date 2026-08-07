@@ -24,7 +24,7 @@ export default function AltaEstudiantes() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('${API_BASE_URL}/api/v1/grupos', {
+    fetch(`${API_BASE_URL}/api/v1/grupos`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -38,7 +38,7 @@ export default function AltaEstudiantes() {
     setError('');
 
     try {
-      const response = await fetch('${API_BASE_URL}/api/v1/estudiantes', {
+      const response = await fetch(`${API_BASE_URL}/api/v1/estudiantes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

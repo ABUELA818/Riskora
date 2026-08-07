@@ -27,14 +27,14 @@ export default function DirectorioPersonal() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('${API_BASE_URL}/api/v1/personal', {
+    fetch(`${API_BASE_URL}/api/v1/personal`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => setPersonal(data))
       .catch(err => console.error(err));
 
-    fetch('${API_BASE_URL}/api/v1/carreras', {
+    fetch(`${API_BASE_URL}/api/v1/carreras`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -46,7 +46,7 @@ export default function DirectorioPersonal() {
     e.preventDefault();
     setIsSaving(true);
     try {
-      const response = await fetch('${API_BASE_URL}/api/v1/personal', {
+      const response = await fetch(`${API_BASE_URL}/api/v1/personal`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

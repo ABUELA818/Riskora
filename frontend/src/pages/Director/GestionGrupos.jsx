@@ -53,7 +53,7 @@ export default function GestionGrupos() {
 
   const cargarGrupos = () => {
     if (!token) return;
-    fetch('${API_BASE_URL}/api/v1/grupos', {
+    fetch(`${API_BASE_URL}/api/v1/grupos`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -102,28 +102,28 @@ export default function GestionGrupos() {
   if (!token) return;
   cargarGrupos();
 
-  fetch('${API_BASE_URL}/api/v1/director/mi-carrera', {
+  fetch(`${API_BASE_URL}/api/v1/director/mi-carrera`, {
     headers: { 'Authorization': `Bearer ${token}` }
   })
     .then(res => res.ok ? res.json() : null)
     .then(data => { if (data) setIdCarrera(data.id_carrera); })
     .catch(err => console.error(err));
 
-  fetch('${API_BASE_URL}/api/v1/personal?rol=Tutor', {
+  fetch(`${API_BASE_URL}/api/v1/personal?rol=Tutor`, {
     headers: { 'Authorization': `Bearer ${token}` }
   })
     .then(res => res.json())
     .then(data => { if (Array.isArray(data)) setDocentesTutores(data); })
     .catch(err => console.error(err));
 
-  fetch('${API_BASE_URL}/api/v1/materias', {
+  fetch(`${API_BASE_URL}/api/v1/materias`, {
     headers: { 'Authorization': `Bearer ${token}` }
   })
     .then(res => res.json())
     .then(data => { if (Array.isArray(data)) setMaterias(data); })
     .catch(err => console.error(err));
 
-  fetch('${API_BASE_URL}/api/v1/docentes-catalogo', {
+  fetch(`${API_BASE_URL}/api/v1/docentes-catalogo`, {
     headers: { 'Authorization': `Bearer ${token}` }
   })
     .then(res => res.json())
@@ -173,7 +173,7 @@ const guardarHorarios = async () => {
   }
 
   try {
-    const response = await fetch('${API_BASE_URL}/api/v1/horarios/lote', {
+    const response = await fetch(`${API_BASE_URL}/api/v1/horarios/lote`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify({
@@ -245,7 +245,7 @@ const eliminarHorarioExistente = async (idHorario) => {
     setIsSavingGrupo(true);
     setFormGrupoError('');
     try {
-      const response = await fetch('${API_BASE_URL}/api/v1/grupos', {
+      const response = await fetch(`${API_BASE_URL}/api/v1/grupos`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -275,7 +275,7 @@ const eliminarHorarioExistente = async (idHorario) => {
   };
 
   const descargarPlantilla = async () => {
-    const res = await fetch('${API_BASE_URL}/api/v1/grupos/plantilla-importacion', {
+    const res = await fetch(`${API_BASE_URL}/api/v1/grupos/plantilla-importacion`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (!res.ok) return;
