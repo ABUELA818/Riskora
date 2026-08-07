@@ -14,7 +14,11 @@ export default function CasosEscalados() {
   // Nuevos estados para el modal y formulario
   const [modalOpen, setModalOpen] = useState(false);
   const [estudiantes, setEstudiantes] = useState([]);
-  const [formData, setFormData] = useState({ id_estudiante: '', motivo: '' });
+  const [formData, setFormData] = useState({
+    id_estudiante: '',
+    nivel_resolucion: 'Llamada Telefónica',
+    motivo: ''
+  });
   const [isSaving, setIsSaving] = useState(false);
 
   // Función extraída para poder recargar los casos después de crear uno nuevo
@@ -46,34 +50,33 @@ export default function CasosEscalados() {
   }, [token]);
 
   const handleCrearCaso = async (e) => {
-    e.preventDefault();
-    setIsSaving(true);
-    try {
-      const response = await fetch('http://localhost:8000/api/v1/casos-escalados/manual', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'Authorization': `Bearer ${token}` 
-        },
-        body: JSON.stringify({
-          id_estudiante: parseInt(formData.id_estudiante),
-          motivo: formData.motivo
-        })
-      });
-      
-      if (!response.ok) throw new Error('Error al crear el caso');
-      
-      // Limpiar y cerrar modal
-      setModalOpen(false);
-      setFormData({ id_estudiante: '', motivo: '' });
-      // Recargar la lista de casos
-      cargarCasos();
-    } catch (error) {
-      alert('No se pudo crear el caso manual.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  e.preventDefault();
+  setIsSaving(true);
+  try {
+    const response = await fetch('http://localhost:8000/api/v1/casos-escalados/manual', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json', 
+        'Authorization': `Bearer ${token}` 
+      },
+      body: JSON.stringify({
+        id_estudiante: parseInt(formData.id_estudiante),
+        nivel_resolucion: formData.nivel_resolucion,   // NUEVO
+        motivo: formData.motivo
+      })
+    });
+    
+    if (!response.ok) throw new Error('Error al crear el caso');
+    
+    setModalOpen(false);
+    setFormData({ id_estudiante: '', nivel_resolucion: 'Llamada Telefónica', motivo: '' }); // reset actualizado
+    cargarCasos();
+  } catch (error) {
+    alert('No se pudo crear el caso manual.');
+  } finally {
+    setIsSaving(false);
+  }
+};
 
   return (
     <div className="p-8 bg-gray-50/50 min-h-full flex flex-col h-screen">
@@ -88,7 +91,7 @@ export default function CasosEscalados() {
           onClick={() => setModalOpen(true)}
           className="bg-eduPurple text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center hover:bg-opacity-90 transition-all"
         >
-          <Plus className="w-4 h-4 mr-2" /> Nuevo Caso Manual
+          <Plus className="w-4 h-4 mr-2" /> Registrar Intervención
         </button>
       </div>
 
@@ -186,7 +189,7 @@ export default function CasosEscalados() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
             <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <h3 className="text-lg font-bold text-gray-900">Nuevo Caso Manual</h3>
+              <h3 className="text-lg font-bold text-gray-900">Registrar Intervención</h3>
               <button onClick={() => setModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
                 <X className="w-5 h-5" />
               </button>
@@ -208,6 +211,21 @@ export default function CasosEscalados() {
                   ))}
                 </select>
               </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1">Tipo de Intervención</label>
+                <select
+                  value={formData.nivel_resolucion}
+                  onChange={e => setFormData({...formData, nivel_resolucion: e.target.value})}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-sm bg-white outline-none focus:border-eduPurple"
+                >
+                  <option value="Llamada Telefónica">Llamada Telefónica</option>
+                  <option value="Cita Presencial">Cita Presencial</option>
+                  <option value="Canalización a Psicopedagogía">Canalización a Psicología</option>
+                  <option value="Seguimiento Académico">Seguimiento Académico</option>
+                </select>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-gray-600 mb-1">Motivo de la Escalada</label>
                 <textarea
@@ -231,7 +249,7 @@ export default function CasosEscalados() {
                   disabled={isSaving} 
                   className="flex-1 py-2.5 bg-eduPurple text-white font-bold rounded-lg text-sm hover:bg-opacity-90 disabled:opacity-70 transition-all"
                 >
-                  {isSaving ? 'Guardando...' : 'Crear Caso'}
+                  {isSaving ? 'Guardando...' : 'Registrar Intervención'}
                 </button>
               </div>
             </form>

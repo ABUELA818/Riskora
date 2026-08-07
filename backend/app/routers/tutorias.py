@@ -184,7 +184,7 @@ def crear_caso_manual(
         id_usuario_creador=current_user.id_usuario,
         fecha=date.today(),
         acuerdos=data.motivo,
-        nivel_resolucion="Caso Manual",
+        nivel_resolucion=data.nivel_resolucion or "Caso Manual",
         escalado=True
     )
     db.add(nueva_intervencion)

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { Filter, FileText, Download, AlertTriangle, CheckCircle, Loader2, Info } from 'lucide-react';
+import { Filter, FileText, Download, AlertTriangle, CheckCircle, Loader2, Info, RefreshCw } from 'lucide-react';
 import SimulationBadge from '../../components/SimulationBadge';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts';
 
 export default function ReportesInstitucionales() {
   const { token } = useAuth();
@@ -17,8 +18,57 @@ export default function ReportesInstitucionales() {
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [exportingFormat, setExportingFormat] = useState(null);
 
-  // NUEVO: Estado para KPIs reales
   const [resumenRiesgo, setResumenRiesgo] = useState({ bajo: 0, medio: 0, alto: 0, total_estudiantes: 0 });
+
+  const [riesgoPorCarrera, setRiesgoPorCarrera] = useState([]);
+  const [reprobacionPorMateria, setReprobacionPorMateria] = useState([]);
+  const [tendenciaRiesgo, setTendenciaRiesgo] = useState([]);
+  const [generandoSnapshot, setGenerandoSnapshot] = useState(false);
+
+  useEffect(() => {
+    if (!token) return;
+
+    fetch('http://localhost:8000/api/v1/reportes/riesgo-por-carrera', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setRiesgoPorCarrera(data); })
+      .catch(err => console.error(err));
+
+    fetch('http://localhost:8000/api/v1/reportes/reprobacion-por-materia', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setReprobacionPorMateria(data); })
+      .catch(err => console.error(err));
+
+    cargarTendencia();
+  }, [token]);
+
+  const cargarTendencia = () => {
+    fetch('http://localhost:8000/api/v1/reportes/tendencia-riesgo', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setTendenciaRiesgo(data); })
+      .catch(err => console.error(err));
+  };
+
+  const handleGenerarSnapshot = async () => {
+    setGenerandoSnapshot(true);
+    try {
+      const res = await fetch('http://localhost:8000/api/v1/reportes/snapshot-riesgo', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Error al generar snapshot');
+      cargarTendencia();
+    } catch (error) {
+      alert('No se pudo generar el snapshot de riesgo.');
+    } finally {
+      setGenerandoSnapshot(false);
+    }
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -32,7 +82,7 @@ export default function ReportesInstitucionales() {
       .catch(err => console.error("Error al cargar carreras:", err));
   }, [token]);
 
-  // NUEVO: Cargar resumen de riesgo real, filtrado solo por carrera
+  // Cargar resumen de riesgo real, filtrado solo por carrera
   useEffect(() => {
     if (!token) return;
     const params = new URLSearchParams();
@@ -71,7 +121,7 @@ export default function ReportesInstitucionales() {
     if (token) fetchPreview();
   }, [token]);
 
-  // NUEVO: Promedio de asistencia real a partir de los datos cargados en la tabla
+  // Promedio de asistencia real a partir de los datos cargados en la tabla
   const asistenciaPromedio = previewData.length > 0
     ? Math.round(previewData.reduce((acc, e) => acc + e.porcentaje_asistencia, 0) / previewData.length)
     : null;
@@ -158,7 +208,7 @@ export default function ReportesInstitucionales() {
           <button 
             onClick={fetchPreview}
             disabled={isLoadingPreview}
-            className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-semibold flex items-center shadow-sm hover:bg-gray-50 disabled:opacity-70"
+            className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-semibold flex items-center shadow-sm hover:bg-gray-50 disabled:opacity-70 transition-colors"
           >
             {isLoadingPreview ? <Loader2 className="w-4 h-4 mr-2 animate-spin text-gray-400" /> : <Filter className="w-4 h-4 mr-2 text-gray-600" />}
             Filtrar
@@ -193,7 +243,6 @@ export default function ReportesInstitucionales() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* ACTUALIZADO: Tarjeta de Estudiantes en Riesgo Alto */}
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative">
           <AlertTriangle className="absolute top-6 right-6 w-6 h-6 text-red-500" />
           <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Estudiantes en Riesgo Alto</p>
@@ -203,7 +252,6 @@ export default function ReportesInstitucionales() {
           <p className="text-sm text-gray-500">Requieren intervención inmediata</p>
         </div>
 
-        {/* ACTUALIZADO: Tarjeta de Asistencia Promedio */}
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative">
           <CheckCircle className="absolute top-6 right-6 w-6 h-6 text-green-500" />
           <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Asistencia Promedio</p>
@@ -228,6 +276,85 @@ export default function ReportesInstitucionales() {
           </p>
         </div>
       </div>
+
+      {/* NUEVO BLOQUE: Gráficas de Análisis Institucional */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Riesgo por carrera */}
+        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+          <h3 className="text-base font-bold text-gray-900 mb-4">Riesgo por Carrera</h3>
+          {riesgoPorCarrera.length === 0 ? (
+            <p className="text-sm text-gray-400 italic py-12 text-center">Sin datos suficientes todavía.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={riesgoPorCarrera} layout="vertical" margin={{ left: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                <XAxis type="number" allowDecimals={false} />
+                <YAxis type="category" dataKey="carrera" width={110} tick={{ fontSize: 11 }} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="riesgo_bajo" stackId="a" fill="#4ade80" name="Bajo" />
+                <Bar dataKey="riesgo_medio" stackId="a" fill="#facc15" name="Medio" />
+                <Bar dataKey="riesgo_alto" stackId="a" fill="#dc2626" name="Alto" />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        {/* Reprobación por materia */}
+        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+          <h3 className="text-base font-bold text-gray-900 mb-4">Materias con Mayor Reprobación</h3>
+          {reprobacionPorMateria.length === 0 ? (
+            <p className="text-sm text-gray-400 italic py-12 text-center">Sin calificaciones capturadas todavía.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={reprobacionPorMateria} layout="vertical" margin={{ left: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                <XAxis type="number" unit="%" />
+                <YAxis type="category" dataKey="materia" width={110} tick={{ fontSize: 11 }} />
+                <Tooltip formatter={(v) => `${v}%`} />
+                <Bar dataKey="porcentaje_reprobacion" fill="#dc2626" name="% Reprobación" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        {/* Tendencia histórica */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h3 className="text-base font-bold text-gray-900">Tendencia de Riesgo</h3>
+              <p className="text-xs text-gray-500">Basada en snapshots mensuales. Genera uno nuevo para reflejar el estado actual.</p>
+            </div>
+            <button
+              onClick={handleGenerarSnapshot}
+              disabled={generandoSnapshot}
+              className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-semibold bg-white hover:bg-gray-50 flex items-center disabled:opacity-60 transition-colors"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${generandoSnapshot ? 'animate-spin' : ''}`} />
+              {generandoSnapshot ? 'Generando...' : 'Generar snapshot'}
+            </button>
+          </div>
+          {tendenciaRiesgo.length === 0 ? (
+            <p className="text-sm text-gray-400 italic py-12 text-center">
+              Aún no hay snapshots históricos. Genera el primero con el botón de arriba.
+            </p>
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={tendenciaRiesgo}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="periodo" tick={{ fontSize: 11 }} />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="riesgo_alto" stroke="#dc2626" name="Alto" strokeWidth={2} />
+                <Line type="monotone" dataKey="riesgo_medio" stroke="#facc15" name="Medio" strokeWidth={2} />
+                <Line type="monotone" dataKey="riesgo_bajo" stroke="#4ade80" name="Bajo" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </div>
+      {/* FIN DEL NUEVO BLOQUE */}
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
         <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
