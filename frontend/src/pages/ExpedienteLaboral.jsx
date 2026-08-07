@@ -24,6 +24,7 @@ export default function ExpedienteLaboral() {
   const [materiaSeleccionada, setMateriaSeleccionada] = useState('');
   const [isAssigning, setIsAssigning] = useState(false);
 
+  const puedeEditar = role === 'RRHH' || role === 'Administrador';
   const puedeCambiarRol = role === 'RRHH' || role === 'Administrador';
 
   const [modalRolOpen, setModalRolOpen] = useState(false);

@@ -58,8 +58,10 @@ export default function DashboardRRHH() {
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center">
             <UserPlus className="w-4 h-4 mr-2 text-gray-400" /> Altas del Mes
           </p>
-          <h3 className="text-5xl font-black text-gray-900 mb-2">14</h3>
-          <p className="text-xs text-gray-500 relative z-10">Nuevos contratos procesados en Octubre</p>
+          <h3 className="text-5xl font-black text-gray-900 mb-2">{metricas.altas_mes}</h3>
+          <p className="text-xs text-gray-500 relative z-10">
+            Nuevos contratos procesados en {new Date().toLocaleDateString('es-ES', { month: 'long' })}
+          </p>
         </div>
 
         <div className="bg-orange-50 p-6 rounded-2xl border border-orange-100 shadow-sm relative">
