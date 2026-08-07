@@ -166,7 +166,13 @@ export default function GestionEstudiantes() {
                     <td className="p-3 text-sm flex justify-center space-x-3">
                       <button className="text-gray-400 hover:text-eduPurple"><Eye className="w-4 h-4" /></button>
                       <button className="text-gray-400 hover:text-blue-600"><Edit className="w-4 h-4" /></button>
-                      <button onClick={() => handleSoftDelete(est.id_estudiante)} className="text-gray-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
+                      <Link
+                        to="/estudiantes/baja"
+                        title="Dar de baja"
+                        className="text-gray-400 hover:text-red-600"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Link>
                     </td>
                   </tr>
                 );

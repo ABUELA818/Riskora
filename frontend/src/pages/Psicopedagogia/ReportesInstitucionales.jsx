@@ -17,6 +17,9 @@ export default function ReportesInstitucionales() {
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [exportingFormat, setExportingFormat] = useState(null);
 
+  // NUEVO: Estado para KPIs reales
+  const [resumenRiesgo, setResumenRiesgo] = useState({ bajo: 0, medio: 0, alto: 0, total_estudiantes: 0 });
+
   useEffect(() => {
     if (!token) return;
     fetch('http://localhost:8000/api/v1/carreras', {
@@ -28,6 +31,20 @@ export default function ReportesInstitucionales() {
       })
       .catch(err => console.error("Error al cargar carreras:", err));
   }, [token]);
+
+  // NUEVO: Cargar resumen de riesgo real, filtrado solo por carrera
+  useEffect(() => {
+    if (!token) return;
+    const params = new URLSearchParams();
+    if (filtros.carrera) params.append('carrera', filtros.carrera);
+
+    fetch(`http://localhost:8000/api/v1/riesgo/resumen?${params.toString()}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => setResumenRiesgo(data))
+      .catch(err => console.error(err));
+  }, [filtros.carrera, token]);
 
   const fetchPreview = async () => {
     setIsLoadingPreview(true);
@@ -53,6 +70,11 @@ export default function ReportesInstitucionales() {
   useEffect(() => {
     if (token) fetchPreview();
   }, [token]);
+
+  // NUEVO: Promedio de asistencia real a partir de los datos cargados en la tabla
+  const asistenciaPromedio = previewData.length > 0
+    ? Math.round(previewData.reduce((acc, e) => acc + e.porcentaje_asistencia, 0) / previewData.length)
+    : null;
 
   const handleExport = async (formato) => {
     setExportingFormat(formato);
@@ -171,24 +193,30 @@ export default function ReportesInstitucionales() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* ACTUALIZADO: Tarjeta de Estudiantes en Riesgo Alto */}
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative">
           <AlertTriangle className="absolute top-6 right-6 w-6 h-6 text-red-500" />
           <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Estudiantes en Riesgo Alto</p>
           <div className="flex items-center mb-2">
-            <h3 className="text-5xl font-black text-gray-900 mr-3">142</h3>
-            <span className="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-full">↑ 12%</span>
+            <h3 className="text-5xl font-black text-gray-900 mr-3">{resumenRiesgo.alto}</h3>
           </div>
           <p className="text-sm text-gray-500">Requieren intervención inmediata</p>
         </div>
 
+        {/* ACTUALIZADO: Tarjeta de Asistencia Promedio */}
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative">
           <CheckCircle className="absolute top-6 right-6 w-6 h-6 text-green-500" />
           <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Asistencia Promedio</p>
           <div className="flex items-center mb-2">
-            <h3 className="text-5xl font-black text-gray-900 mr-3">89%</h3>
-            <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded-full">↓ 2%</span>
+            <h3 className="text-5xl font-black text-gray-900 mr-3">
+              {asistenciaPromedio !== null ? `${asistenciaPromedio}%` : '—'}
+            </h3>
           </div>
-          <p className="text-sm text-gray-500">Por debajo de la meta institucional (92%)</p>
+          <p className="text-sm text-gray-500">
+            {asistenciaPromedio !== null 
+              ? `Calculado sobre ${previewData.length} estudiante(s) con los filtros actuales` 
+              : 'Sin datos para los filtros aplicados'}
+          </p>
         </div>
         
         <div className="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 shadow-sm flex flex-col justify-center">
