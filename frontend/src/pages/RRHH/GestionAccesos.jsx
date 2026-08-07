@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Edit2, ShieldAlert, CheckCircle, Search, Filter, AlertTriangle } from 'lucide-react';
+import { API_BASE_URL } from '../../config/api'; 
 
 export default function GestionAccesos() {
   const { token } = useAuth();
@@ -13,7 +14,7 @@ export default function GestionAccesos() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('http://localhost:8000/api/v1/personal', {
+    fetch('${API_BASE_URL}/api/v1/personal', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -26,7 +27,7 @@ export default function GestionAccesos() {
     setIsUpdating(true);
     
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/usuarios/${confirmModal.user.id_usuario}/rol`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/usuarios/${confirmModal.user.id_usuario}/rol`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',

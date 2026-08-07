@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../config/api'; 
 import { 
   Phone, Users, Activity, FileText, CheckCircle, 
   AlertTriangle, Calendar, Plus, Brain 
@@ -26,7 +27,7 @@ export default function BitacoraIntervenciones() {
   useEffect(() => {
     if (!token || !id) return;
     
-    fetch(`http://localhost:8000/api/v1/estudiantes/${id}/resumen-completo`, {
+    fetch(`${API_BASE_URL}/api/v1/estudiantes/${id}/resumen-completo`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => {
@@ -47,7 +48,7 @@ export default function BitacoraIntervenciones() {
 
     setIsSaving(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/estudiantes/${id}/intervenciones`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/estudiantes/${id}/intervenciones`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

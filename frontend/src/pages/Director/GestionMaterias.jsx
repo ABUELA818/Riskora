@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit2, X, BookOpen } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../config/api'; 
 
 // NOTA: materias es un catálogo institucional, no ligado a un ciclo específico;
 // se muestra el periodo vigente solo como referencia visual.
@@ -34,7 +35,7 @@ export default function GestionMaterias() {
   useEffect(() => {
     if (!token) return;
 
-    fetch('http://localhost:8000/api/v1/materias', {
+    fetch('${API_BASE_URL}/api/v1/materias', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -42,7 +43,7 @@ export default function GestionMaterias() {
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
 
-    fetch('http://localhost:8000/api/v1/periodos', {
+    fetch('${API_BASE_URL}/api/v1/periodos', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -92,7 +93,7 @@ export default function GestionMaterias() {
           horas_semana: formData.horas_semana === '' ? null : parseInt(formData.horas_semana)
         };
 
-        const response = await fetch(`http://localhost:8000/api/v1/materias/${materiaSeleccionada.id_materia}`, {
+        const response = await fetch(`${API_BASE_URL}/api/v1/materias/${materiaSeleccionada.id_materia}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -117,7 +118,7 @@ export default function GestionMaterias() {
           estado: true
         };
 
-        const response = await fetch('http://localhost:8000/api/v1/materias', {
+        const response = await fetch('${API_BASE_URL}/api/v1/materias', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

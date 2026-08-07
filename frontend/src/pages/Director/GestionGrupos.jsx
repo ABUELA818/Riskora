@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../../config/api'; 
 import {
   UserPlus, X, Plus, Download, Upload, Loader2, CheckCircle,
   AlertTriangle, Calendar, Trash2, X as CloseIcon, Info, Users
@@ -52,7 +53,7 @@ export default function GestionGrupos() {
 
   const cargarGrupos = () => {
     if (!token) return;
-    fetch('http://localhost:8000/api/v1/grupos', {
+    fetch('${API_BASE_URL}/api/v1/grupos', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -61,7 +62,7 @@ export default function GestionGrupos() {
 
   useEffect(() => {
   if (!token || !idCarrera) return;
-  fetch(`http://localhost:8000/api/v1/carreras/${idCarrera}/riesgo-agregado-por-grupo`, {
+  fetch(`${API_BASE_URL}/api/v1/carreras/${idCarrera}/riesgo-agregado-por-grupo`, {
     headers: { 'Authorization': `Bearer ${token}` }
   })
     .then(res => res.json())
@@ -77,7 +78,7 @@ export default function GestionGrupos() {
   const abrirPanelGrupo = (grupo) => {
     setGrupoPanel(grupo);
     setHorariosPanel([]);
-    fetch(`http://localhost:8000/api/v1/grupos/${grupo.id_grupo}/horarios`, {
+    fetch(`${API_BASE_URL}/api/v1/grupos/${grupo.id_grupo}/horarios`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -101,28 +102,28 @@ export default function GestionGrupos() {
   if (!token) return;
   cargarGrupos();
 
-  fetch('http://localhost:8000/api/v1/director/mi-carrera', {
+  fetch('${API_BASE_URL}/api/v1/director/mi-carrera', {
     headers: { 'Authorization': `Bearer ${token}` }
   })
     .then(res => res.ok ? res.json() : null)
     .then(data => { if (data) setIdCarrera(data.id_carrera); })
     .catch(err => console.error(err));
 
-  fetch('http://localhost:8000/api/v1/personal?rol=Tutor', {
+  fetch('${API_BASE_URL}/api/v1/personal?rol=Tutor', {
     headers: { 'Authorization': `Bearer ${token}` }
   })
     .then(res => res.json())
     .then(data => { if (Array.isArray(data)) setDocentesTutores(data); })
     .catch(err => console.error(err));
 
-  fetch('http://localhost:8000/api/v1/materias', {
+  fetch('${API_BASE_URL}/api/v1/materias', {
     headers: { 'Authorization': `Bearer ${token}` }
   })
     .then(res => res.json())
     .then(data => { if (Array.isArray(data)) setMaterias(data); })
     .catch(err => console.error(err));
 
-  fetch('http://localhost:8000/api/v1/docentes-catalogo', {
+  fetch('${API_BASE_URL}/api/v1/docentes-catalogo', {
     headers: { 'Authorization': `Bearer ${token}` }
   })
     .then(res => res.json())
@@ -140,7 +141,7 @@ export default function GestionGrupos() {
 };
 
 const cargarHorariosDeGrupo = (idGrupo) => {
-  fetch(`http://localhost:8000/api/v1/grupos/${idGrupo}/horarios`, {
+  fetch(`${API_BASE_URL}/api/v1/grupos/${idGrupo}/horarios`, {
     headers: { 'Authorization': `Bearer ${token}` }
   })
     .then(res => res.json())
@@ -172,7 +173,7 @@ const guardarHorarios = async () => {
   }
 
   try {
-    const response = await fetch('http://localhost:8000/api/v1/horarios/lote', {
+    const response = await fetch('${API_BASE_URL}/api/v1/horarios/lote', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify({
@@ -209,7 +210,7 @@ const guardarHorarios = async () => {
 
 const eliminarHorarioExistente = async (idHorario) => {
   if (!window.confirm('¿Eliminar este horario del grupo?')) return;
-  await fetch(`http://localhost:8000/api/v1/horarios/${idHorario}`, {
+  await fetch(`${API_BASE_URL}/api/v1/horarios/${idHorario}`, {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${token}` }
   });
@@ -218,7 +219,7 @@ const eliminarHorarioExistente = async (idHorario) => {
 
   const handleAsignarDocente = async (e) => {
     e.preventDefault();
-    await fetch(`http://localhost:8000/api/v1/grupos/${grupoSeleccionado.id_grupo}/asignar-docente?id_docente=${nuevoDocenteId}`, {
+    await fetch(`${API_BASE_URL}/api/v1/grupos/${grupoSeleccionado.id_grupo}/asignar-docente?id_docente=${nuevoDocenteId}`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -244,7 +245,7 @@ const eliminarHorarioExistente = async (idHorario) => {
     setIsSavingGrupo(true);
     setFormGrupoError('');
     try {
-      const response = await fetch('http://localhost:8000/api/v1/grupos', {
+      const response = await fetch('${API_BASE_URL}/api/v1/grupos', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -274,7 +275,7 @@ const eliminarHorarioExistente = async (idHorario) => {
   };
 
   const descargarPlantilla = async () => {
-    const res = await fetch('http://localhost:8000/api/v1/grupos/plantilla-importacion', {
+    const res = await fetch('${API_BASE_URL}/api/v1/grupos/plantilla-importacion', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
     if (!res.ok) return;
@@ -298,7 +299,7 @@ const eliminarHorarioExistente = async (idHorario) => {
     formData.append('archivo', file);
 
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/grupos/${idGrupo}/importar-alumnos`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/grupos/${idGrupo}/importar-alumnos`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData

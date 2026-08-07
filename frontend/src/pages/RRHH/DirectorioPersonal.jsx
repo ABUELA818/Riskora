@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Search, UserPlus, Edit2, X } from 'lucide-react';
+import { API_BASE_URL } from '../../config/api'; 
 
 export default function DirectorioPersonal() {
   const { token } = useAuth();
@@ -26,14 +27,14 @@ export default function DirectorioPersonal() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('http://localhost:8000/api/v1/personal', {
+    fetch('${API_BASE_URL}/api/v1/personal', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => setPersonal(data))
       .catch(err => console.error(err));
 
-    fetch('http://localhost:8000/api/v1/carreras', {
+    fetch('${API_BASE_URL}/api/v1/carreras', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -45,7 +46,7 @@ export default function DirectorioPersonal() {
     e.preventDefault();
     setIsSaving(true);
     try {
-      const response = await fetch('http://localhost:8000/api/v1/personal', {
+      const response = await fetch('${API_BASE_URL}/api/v1/personal', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

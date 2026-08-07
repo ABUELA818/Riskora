@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { AlertTriangle, TrendingDown, Users, ArrowRight, Mail } from 'lucide-react';
 import SimulationBadge from '../../components/SimulationBadge';
+import { API_BASE_URL } from '../../config/api'; 
 
 export default function DashboardTutor() {
   const { token } = useAuth();
@@ -12,7 +13,7 @@ export default function DashboardTutor() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('http://localhost:8000/api/v1/riesgo/resumen', {
+    fetch('${API_BASE_URL}/api/v1/riesgo/resumen', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -22,7 +23,7 @@ export default function DashboardTutor() {
       })
       .catch(err => console.error(err));
 
-    fetch('http://localhost:8000/api/v1/riesgo/alumnos-atencion', {
+    fetch('${API_BASE_URL}/api/v1/riesgo/alumnos-atencion', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())

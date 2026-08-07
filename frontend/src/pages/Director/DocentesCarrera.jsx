@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Eye, UserPlus, X, Clock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../config/api'; 
 
 const FORM_INICIAL = {
   nombre_completo: '',
@@ -28,14 +29,14 @@ export default function DocentesCarrera() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('http://localhost:8000/api/v1/personal?rol=Docente', {
+    fetch('${API_BASE_URL}/api/v1/personal?rol=Docente', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => { if (Array.isArray(data)) setDocentes(data); })
       .catch(err => console.error(err));
 
-    fetch('http://localhost:8000/api/v1/director/mi-carrera', {
+    fetch('${API_BASE_URL}/api/v1/director/mi-carrera', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.ok ? res.json() : null)
@@ -58,7 +59,7 @@ export default function DocentesCarrera() {
     setIsSaving(true);
     setFormError('');
     try {
-      const response = await fetch('http://localhost:8000/api/v1/solicitudes-personal', {
+      const response = await fetch('${API_BASE_URL}/api/v1/solicitudes-personal', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

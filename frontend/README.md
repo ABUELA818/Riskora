@@ -26,3 +26,11 @@ Antes de levantar el backend, copia `backend/.env.example` a `backend/.env` y de
 - `DATABASE_URL`: cadena de conexión a PostgreSQL.
 
 Variables opcionales (tienen valor por defecto): `JWT_EXPIRE_MINUTES`, `JWT_REFRESH_EXPIRE_DAYS`.
+
+## Configuración de variables de entorno (Frontend)
+
+Copia `frontend/.env.example` a `frontend/.env` (o `.env.local`) y define:
+
+- `VITE_API_URL`: URL base del backend (ej. `http://localhost:8000` en desarrollo,
+  `https://api.tu-dominio.com` en producción). Si no se define, se usa
+  `http://localhost:8000` por defecto (ver `src/config/api.js`).

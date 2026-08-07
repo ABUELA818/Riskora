@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { Users, UserPlus, Key, ChevronRight, Shield, FileText, Lock } from 'lucide-react';
+import { API_BASE_URL } from '../../config/api'; 
 
 export default function DashboardRRHH() {
   const { token } = useAuth();
@@ -13,8 +14,8 @@ export default function DashboardRRHH() {
     if (!token) return;
     
     Promise.all([
-      fetch('http://localhost:8000/api/v1/personal/metricas', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
-      fetch('http://localhost:8000/api/v1/personal', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json())
+      fetch('${API_BASE_URL}/api/v1/personal/metricas', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
+      fetch('${API_BASE_URL}/api/v1/personal', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json())
     ])
     .then(([metData, persData]) => {
       setMetricas(metData);

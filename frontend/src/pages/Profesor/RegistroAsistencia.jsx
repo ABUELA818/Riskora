@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Users, CheckCircle, XCircle, BookOpen } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../config/api'; 
 
 export default function RegistroAsistencia() {
   const { token, role } = useAuth();
@@ -28,7 +29,7 @@ export default function RegistroAsistencia() {
     if (!token) return;
 
     if (esDocente) {
-      fetch('http://localhost:8000/api/v1/mis-clases', {
+      fetch('${API_BASE_URL}/api/v1/mis-clases', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => {
@@ -46,7 +47,7 @@ export default function RegistroAsistencia() {
         })
         .catch(err => console.error("Error cargando mis clases:", err));
     } else {
-      fetch('http://localhost:8000/api/v1/grupos', {
+      fetch('${API_BASE_URL}/api/v1/grupos', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => {
@@ -66,7 +67,7 @@ export default function RegistroAsistencia() {
   useEffect(() => {
     if (esDocente || !grupoSeleccionado || !token) return;
 
-    fetch(`http://localhost:8000/api/v1/grupos/${grupoSeleccionado}/horarios`, {
+    fetch(`${API_BASE_URL}/api/v1/grupos/${grupoSeleccionado}/horarios`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -96,10 +97,10 @@ export default function RegistroAsistencia() {
     setRiesgosMap({});
 
     Promise.all([
-      fetch(`http://localhost:8000/api/v1/estudiantes`, {
+      fetch(`${API_BASE_URL}/api/v1/estudiantes`, {
         headers: { 'Authorization': `Bearer ${token}` }
       }).then(r => r.json()),
-      fetch(`http://localhost:8000/api/v1/asistencia?grupo_id=${grupoSeleccionado}&fecha=${fecha}`, {
+      fetch(`${API_BASE_URL}/api/v1/asistencia?grupo_id=${grupoSeleccionado}&fecha=${fecha}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       }).then(r => r.json())
     ])
@@ -111,7 +112,7 @@ export default function RegistroAsistencia() {
 
       Promise.all(estudiantesGrupo.map(async est => {
         try {
-          const r = await fetch(`http://localhost:8000/api/v1/estudiantes/${est.id_estudiante}/riesgo`, {
+          const r = await fetch(`${API_BASE_URL}/api/v1/estudiantes/${est.id_estudiante}/riesgo`, {
             headers: { 'Authorization': `Bearer ${token}` }
           });
           const data = await r.json();
@@ -181,7 +182,7 @@ export default function RegistroAsistencia() {
     try {
       const method = isEditing ? 'PUT' : 'POST';
 
-      const response = await fetch('http://localhost:8000/api/v1/asistencia', {
+      const response = await fetch('${API_BASE_URL}/api/v1/asistencia', {
         method: method,
         headers: {
           'Content-Type': 'application/json',

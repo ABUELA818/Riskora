@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Clock, CheckCircle, XCircle, X, User, Phone, Briefcase } from 'lucide-react';
+import { API_BASE_URL } from '../../config/api'; 
 
 const ESTADO_STYLES = {
   Pendiente: 'bg-yellow-50 text-yellow-700 border-yellow-200',
@@ -20,7 +21,7 @@ export default function SolicitudesPersonal() {
   const cargarSolicitudes = () => {
     if (!token) return;
     setLoading(true);
-    fetch('http://localhost:8000/api/v1/solicitudes-personal', {
+    fetch('${API_BASE_URL}/api/v1/solicitudes-personal', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => {
@@ -41,7 +42,7 @@ export default function SolicitudesPersonal() {
 
     setProcesandoId(solicitud.id_solicitud);
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/solicitudes-personal/${solicitud.id_solicitud}/aceptar`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/solicitudes-personal/${solicitud.id_solicitud}/aceptar`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -69,7 +70,7 @@ export default function SolicitudesPersonal() {
     const { solicitud, motivo } = rechazoModal;
     setProcesandoId(solicitud.id_solicitud);
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/solicitudes-personal/${solicitud.id_solicitud}/rechazar`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/solicitudes-personal/${solicitud.id_solicitud}/rechazar`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

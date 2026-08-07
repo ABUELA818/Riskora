@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { AlertCircle, Clock, ChevronRight, CheckCircle, AlertTriangle, Eye } from 'lucide-react';
+import { API_BASE_URL } from '../../config/api'; 
 
 export default function DashboardPsicopedagogia() {
   const { token } = useAuth();
@@ -16,7 +17,7 @@ export default function DashboardPsicopedagogia() {
   useEffect(() => {
     if (!token) return;
 
-    fetch(`http://localhost:8000/api/v1/psicopedagogia/casos-pendientes`, {
+    fetch(`${API_BASE_URL}/api/v1/psicopedagogia/casos-pendientes`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -26,7 +27,7 @@ export default function DashboardPsicopedagogia() {
       })
       .catch(err => console.error(err));
 
-    fetch(`http://localhost:8000/api/v1/institucional/indicadores`, {
+    fetch(`${API_BASE_URL}/api/v1/institucional/indicadores`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -34,7 +35,7 @@ export default function DashboardPsicopedagogia() {
       .catch(err => console.error(err));
 
     // P3: carreras con datos reales (reutiliza el endpoint creado en P4)
-    fetch(`http://localhost:8000/api/v1/carreras/resumen`, {
+    fetch(`${API_BASE_URL}/api/v1/carreras/resumen`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -46,7 +47,7 @@ export default function DashboardPsicopedagogia() {
     setMarcandoVisto(idIntervencion);
     try {
       const res = await fetch(
-        `http://localhost:8000/api/v1/psicopedagogia/intervenciones/${idIntervencion}/marcar-visto`,
+        `${API_BASE_URL}/api/v1/psicopedagogia/intervenciones/${idIntervencion}/marcar-visto`,
         { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } }
       );
       if (!res.ok) throw new Error('No se pudo marcar el caso como visto');

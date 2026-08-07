@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { TrendingUp, AlertTriangle, Eye, ChevronRight } from 'lucide-react';
 import SimulationBadge from '../../components/SimulationBadge';
+import { API_BASE_URL } from '../../config/api'; 
 
 export default function DashboardInstitucional() {
   const { token } = useAuth();
@@ -9,7 +10,7 @@ export default function DashboardInstitucional() {
 
   useEffect(() => {
     if (!token) return;
-    fetch(`http://localhost:8000/api/v1/institucional/indicadores`, {
+    fetch(`${API_BASE_URL}/api/v1/institucional/indicadores`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())

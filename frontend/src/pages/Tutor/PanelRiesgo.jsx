@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { AlertTriangle, Eye, FileText, ClipboardList } from 'lucide-react';
 import SimulationBadge from '../../components/SimulationBadge';
+import { API_BASE_URL } from '../../config/api'; 
 
 export default function PanelRiesgo() {
   const { token } = useAuth();
@@ -14,7 +15,7 @@ export default function PanelRiesgo() {
   useEffect(() => {
     if (!token) return;
 
-    fetch('http://localhost:8000/api/v1/estudiantes', {
+    fetch('${API_BASE_URL}/api/v1/estudiantes', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -25,7 +26,7 @@ export default function PanelRiesgo() {
         const mapa = {};
         await Promise.all(data.map(async est => {
           try {
-            const r = await fetch(`http://localhost:8000/api/v1/estudiantes/${est.id_estudiante}/riesgo`, {
+            const r = await fetch(`${API_BASE_URL}/api/v1/estudiantes/${est.id_estudiante}/riesgo`, {
               headers: { 'Authorization': `Bearer ${token}` }
             });
             const riesgoData = await r.json();

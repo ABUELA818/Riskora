@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ArrowLeft, Activity, Calendar } from 'lucide-react';
 import SimulationBadge from '../../components/SimulationBadge';
+import { API_BASE_URL } from '../../config/api'; 
 
 export default function AnalisisPrediccion() {
   const { id } = useParams();
@@ -12,7 +13,7 @@ export default function AnalisisPrediccion() {
 
   useEffect(() => {
     if (!token || !id) return;
-    fetch(`http://localhost:8000/api/v1/estudiantes/${id}/riesgo`, {
+    fetch(`${API_BASE_URL}/api/v1/estudiantes/${id}/riesgo`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())

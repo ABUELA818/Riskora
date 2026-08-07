@@ -69,7 +69,7 @@ class EstudianteOut(EstudianteBase):
     correo_institucional: Optional[str] = None
     estado: bool
     motivo_baja: Optional[str] = None
-    fecha_baja: Optional[datetime] = None
+    fecha_baja: Optional[date] = None
     class Config:
         from_attributes = True
 

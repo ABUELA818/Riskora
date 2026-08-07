@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { ShieldAlert, Clock } from 'lucide-react';
+import { API_BASE_URL } from '../../config/api'; 
 
 export default function AuditoriaAccesos() {
   const { token } = useAuth();
@@ -9,7 +10,7 @@ export default function AuditoriaAccesos() {
 
   useEffect(() => {
     if (!token) return;
-    fetch('http://localhost:8000/api/v1/logs-auditoria', {
+    fetch('${API_BASE_URL}/api/v1/logs-auditoria', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())

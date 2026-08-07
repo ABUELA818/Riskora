@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config/api'; 
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Users, BookOpen, GraduationCap, ChevronRight, Download } from 'lucide-react';
@@ -18,7 +19,7 @@ export default function DashboardDirector() {
 
   useEffect(() => {
     if (idFromUrl || !token) return;
-    fetch('http://localhost:8000/api/v1/director/mi-carrera', {
+    fetch('${API_BASE_URL}/api/v1/director/mi-carrera', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => {
@@ -36,8 +37,8 @@ export default function DashboardDirector() {
     if (!token || !idCarrera) return;
     
     Promise.all([
-      fetch(`http://localhost:8000/api/v1/carreras/${idCarrera}/indicadores`, { headers: { 'Authorization': `Bearer ${token}` } }),
-      fetch(`http://localhost:8000/api/v1/carreras/${idCarrera}/riesgo-agregado-por-grupo`, { headers: { 'Authorization': `Bearer ${token}` } })
+      fetch(`${API_BASE_URL}/api/v1/carreras/${idCarrera}/indicadores`, { headers: { 'Authorization': `Bearer ${token}` } }),
+      fetch(`${API_BASE_URL}/api/v1/carreras/${idCarrera}/riesgo-agregado-por-grupo`, { headers: { 'Authorization': `Bearer ${token}` } })
     ])
     .then(async ([indRes, grupRes]) => {
       if (indRes.status === 403 || grupRes.status === 403) {
