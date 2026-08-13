@@ -20,3 +20,26 @@ backend/backup_antes_de_carreras.sql
 backend/*.sql
 backend/backup_antes_de_carreras.sql
 backend/*.sql
+
+# Scripts temporales de debug
+backend/test_*.py
+backend/verificar_*.py
+backend/debug_*.py
+backend/diagnostico_*.py
+backend/corregir_*.py
+backend/ajustar_*.py
+backend/arreglar_*.py
+backend/crear_*.py
+backend/consulta_*.py
+backend/eliminar_*.py
+backend/fix_*.py
+backend/force_*.py
+backend/inspect_*.py
+backend/investigar_*.py
+backend/limpiar_*.py
+backend/paso*.py
+backend/prueba_*.py
+backend/seed_data.py
+backend/seed_data_simplificado.py
+backend/dummy.py
+backend/datos_minimos.py

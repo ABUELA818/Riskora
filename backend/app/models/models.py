@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Date, Time, Enum, DECIMAL, Text, DateTime, Float
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Date, Time, Enum, DECIMAL, Text, DateTime, Float, Numeric
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 from datetime import datetime
@@ -113,6 +113,15 @@ class Estudiante(Base):
     celular = Column(String(20), nullable=True)          
     motivo_baja = Column(Text, nullable=True)            
     fecha_baja = Column(DateTime, nullable=True)           
+    # Nuevas columnas para IA
+    dificultad_economica = Column(Integer, default=0)
+    trabaja_actualmente = Column(Integer, default=0)
+    reporte_emocional = Column(Integer, default=0)
+    solicitud_baja = Column(Integer, default=0)
+    acceso_tecnologico = Column(String(20), default='Parcial')
+    # Columnas calculadas por el modelo XGBoost
+    nivel_riesgo = Column(String(10), default='Bajo')
+    probabilidad_riesgo = Column(Numeric(5, 4), default=0.0)
 
 class Materia(Base):
     __tablename__ = 'materias'
@@ -251,6 +260,23 @@ class DocenteMateria(Base):
     id_docente_materia = Column(Integer, primary_key=True, index=True)
     id_docente = Column(Integer, ForeignKey('docentes.id_docente'), nullable=False)
     id_materia = Column(Integer, ForeignKey('materias.id_materia'), nullable=False)
+
+# --- NUEVOS MODELOS PARA IA ---
+class HistorialCalificacion(Base):
+    __tablename__ = 'historial_calificaciones'
+    id = Column(Integer, primary_key=True)
+    estudiante_id = Column(Integer, ForeignKey('estudiantes.id_estudiante'))
+    parcial = Column(Integer)
+    promedio = Column(Float)
+    fecha_registro = Column(DateTime, default=datetime.now)
+
+class HistorialAsistencia(Base):
+    __tablename__ = 'historial_asistencia'
+    id = Column(Integer, primary_key=True)
+    estudiante_id = Column(Integer, ForeignKey('estudiantes.id_estudiante'))
+    fecha = Column(Date)
+    asistio = Column(Boolean)
+    fecha_registro = Column(DateTime, default=datetime.now)
 
 class EstadoSolicitudEnum(enum.Enum):
     PENDIENTE = "Pendiente"

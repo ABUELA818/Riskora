@@ -22,59 +22,45 @@ export default function HistorialAcademicoTab({ historial, idEstudiante, token }
       </div>
     );
   }
- 
-  // Agrupar por materia
-  const porMateria = {};
-  historial.forEach(c => {
-    if (!porMateria[c.id_materia]) {
-      porMateria[c.id_materia] = { nombre: c.nombre_materia, registros: [] };
-    }
-    porMateria[c.id_materia].registros.push(c);
-  });
+
+  // Nuevo formato: directo por parcial (sin agrupar por materia/periodo)
+  const promedioGeneral = (historial.reduce((acc, c) => acc + (c.promedio || 0), 0) / historial.length).toFixed(1);
+  const esRiesgo = parseFloat(promedioGeneral) < 60;
 
   return (
     <div className="lg:col-span-3 space-y-4">
-      {Object.entries(porMateria).map(([idMateria, data]) => {
-        const promedio = (data.registros.reduce((acc, r) => acc + r.valor, 0) / data.registros.length).toFixed(1);
-        const esRiesgo = parseFloat(promedio) < 60;
-
-        // Agrupar por periodo dentro de la materia
-        const porPeriodo = {};
-        data.registros.forEach(r => {
-          if (!porPeriodo[r.id_periodo]) porPeriodo[r.id_periodo] = { nombre: r.nombre_periodo, parciales: [] };
-          porPeriodo[r.id_periodo].parciales.push(r);
-        });
-
-        return (
-          <div key={idMateria} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-gray-100 flex justify-between items-center">
-              <div className="flex items-center">
-                <BookOpen className="w-5 h-5 text-eduPurple mr-2" />
-                <h4 className="font-bold text-gray-900">{data.nombre}</h4>
-              </div>
-              <span className={`px-3 py-1 rounded-full text-sm font-bold ${esRiesgo ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                Promedio: {promedio}
-              </span>
-            </div>
-            <div className="p-5 space-y-3">
-              {Object.entries(porPeriodo).map(([idPeriodo, pdata]) => (
-                <div key={idPeriodo} className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">{pdata.nombre}</span>
-                  <div className="flex gap-2">
-                    {pdata.parciales
-                      .sort((a, b) => a.parcial - b.parcial)
-                      .map(p => (
-                        <span key={p.parcial} className="px-2 py-1 bg-gray-50 border border-gray-200 rounded text-xs font-medium text-gray-700">
-                          P{p.parcial}: {p.valor}
-                        </span>
-                      ))}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-gray-100 flex justify-between items-center">
+          <div className="flex items-center">
+            <BookOpen className="w-5 h-5 text-eduPurple mr-2" />
+            <h4 className="font-bold text-gray-900">Historial de Calificaciones</h4>
+          </div>
+          <span className={`px-3 py-1 rounded-full text-sm font-bold ${esRiesgo ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+            Promedio General: {promedioGeneral}
+          </span>
+        </div>
+        <div className="p-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {historial
+              .sort((a, b) => a.parcial - b.parcial)
+              .map(c => (
+                <div key={`${c.parcial}-${c.fecha_registro}`} className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-bold text-gray-500 uppercase">Parcial {c.parcial}</span>
+                    {c.fecha_registro && (
+                      <span className="text-xs text-gray-400">
+                        {new Date(c.fecha_registro).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {c.promedio !== null && c.promedio !== undefined ? c.promedio.toFixed(1) : 'N/A'}
                   </div>
                 </div>
               ))}
-            </div>
           </div>
-        );
-      })}
+        </div>
+      </div>
       {/* NUEVO — F2.3: Historial académico preuniversitario */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="p-5 border-b border-gray-100 flex items-center">

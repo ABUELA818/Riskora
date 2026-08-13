@@ -112,21 +112,32 @@ def obtener_estudiantes(
 
     resultado = query.offset(skip).limit(limit).all()
 
+    # CORRECCIÓN 1: Usar lógica determinista para calcular nivel_riesgo en el listado
+    resultado_modificado = []
+    for est in resultado:
+        est_dict = est.__dict__.copy()
+        p_asis, prom, _ = calcular_metricas_estudiante(db, est.id_estudiante)
+        if p_asis < 70.0 or prom < 60.0:
+            nivel = "Alto"
+            prob = 0.85
+        elif p_asis < 85.0 or prom < 75.0:
+            nivel = "Medio"
+            prob = 0.60
+        else:
+            nivel = "Bajo"
+            prob = 0.95
+        est_dict['nivel_riesgo'] = nivel
+        est_dict['probabilidad_riesgo'] = prob
+        resultado_modificado.append(est)
+
     if nivel_riesgo and nivel_riesgo != "":
         filtrados = []
-        for est in resultado:
-            p_asis, prom, _ = calcular_metricas_estudiante(db, est.id_estudiante)
-            if p_asis < 70.0 or prom < 60.0:
-                nivel = "Alto"
-            elif p_asis < 85.0 or prom < 75.0:
-                nivel = "Medio"
-            else:
-                nivel = "Bajo"
-            if nivel == nivel_riesgo:
+        for est in resultado_modificado:
+            if est.nivel_riesgo == nivel_riesgo:
                 filtrados.append(est)
         return filtrados
 
-    return resultado
+    return resultado_modificado
 
 @router.get("/carreras", response_model=List[CarreraOut], dependencies=[Depends(todos_los_roles)])
 def obtener_carreras(db: Session = Depends(get_db)):
@@ -463,10 +474,21 @@ def _hay_colision_horario(db: Session, id_docente: int, id_aula, dia_semana, hor
 
 @router.get("/docentes-catalogo", response_model=List[DocenteCatalogoOut], dependencies=[Depends(todos_los_roles)])
 def catalogo_docentes(db: Session = Depends(get_db)):
-    docentes = db.query(Docente, Usuario.nombre_completo)\
+    docentes = db.query(Docente, Usuario)\
         .join(Usuario, Docente.id_usuario == Usuario.id_usuario)\
         .filter(Usuario.estado == True).all()
-    return [DocenteCatalogoOut(id_docente=d.id_docente, nombre_completo=nombre) for d, nombre in docentes]
+    resultado = []
+    for d, u in docentes:
+        nombre_parts = u.nombre_completo.split()
+        nombre = nombre_parts[0] if nombre_parts else ""
+        apellidos = " ".join(nombre_parts[1:]) if len(nombre_parts) > 1 else ""
+        resultado.append(DocenteCatalogoOut(
+            id=d.id_docente,
+            nombre=nombre,
+            apellidos=apellidos,
+            correo=u.correo_institucional or ""
+        ))
+    return resultado
 
 
 @router.get("/grupos/{id_grupo}/horarios", response_model=List[HorarioOut], dependencies=[Depends(todos_los_roles)])

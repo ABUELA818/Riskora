@@ -5,11 +5,12 @@ from app.db.session import SessionLocal
 from app.models.models import (
     Estudiante, Grupo, Intervencion, Tutor, Docente, Usuario, 
     Calificacion, Asistencia, ObservacionConducta, EstatusAsistenciaEnum, Carrera,
-    Materia, Periodo
+    Materia, Periodo, HistorialCalificacion, HistorialAsistencia
 )
 from app.schemas.psicopedagogia import CasoPendienteOut, ExpedienteCompletoOut
 from app.core.deps import get_db, RoleChecker, get_current_active_user
 from app.routers.riesgo import calcular_metricas_estudiante, clasificar_riesgo
+from app.core.prediction_service import predecir_riesgo
 
 router = APIRouter(prefix="/api/v1/psicopedagogia", tags=["Módulo Psicopedagogía"])
 
@@ -104,38 +105,46 @@ def obtener_expediente_completo(
         if carrera_obj:
             nombre_carrera = carrera_obj.nombre
 
-    calificaciones = db.query(Calificacion).filter(Calificacion.id_estudiante == id_estudiante).all()
-    asistencias = db.query(Asistencia).filter(Asistencia.id_estudiante == id_estudiante).all()
-    observaciones_raw = db.query(ObservacionConducta, Usuario.nombre_completo)\
-        .join(Docente, ObservacionConducta.id_docente == Docente.id_docente)\
-        .join(Usuario, Docente.id_usuario == Usuario.id_usuario)\
-        .filter(ObservacionConducta.id_estudiante == id_estudiante)\
-        .order_by(ObservacionConducta.fecha_registro.desc())\
-        .all()
+    calificaciones = db.query(HistorialCalificacion).filter(HistorialCalificacion.estudiante_id == id_estudiante).all()
+    asistencias = db.query(HistorialAsistencia).filter(HistorialAsistencia.estudiante_id == id_estudiante).all()
     
-    intervenciones = db.query(Intervencion, Usuario.nombre_completo)\
-        .join(Tutor, Intervencion.id_tutor == Tutor.id_tutor)\
-        .join(Usuario, Tutor.id_usuario == Usuario.id_usuario)\
-        .filter(Intervencion.id_estudiante == id_estudiante).order_by(Intervencion.fecha.desc()).all()
+    observaciones_raw = []
+    try:
+        observaciones_raw = db.query(ObservacionConducta, Usuario.nombre_completo)\
+            .join(Docente, ObservacionConducta.id_docente == Docente.id_docente)\
+            .join(Usuario, Docente.id_usuario == Usuario.id_usuario)\
+            .filter(ObservacionConducta.id_estudiante == id_estudiante)\
+            .order_by(ObservacionConducta.fecha_registro.desc())\
+            .all()
+    except:
+        pass  # Si falla, continuar sin observaciones
+    
+    intervenciones = []
+    try:
+        intervenciones = db.query(Intervencion, Usuario.nombre_completo)\
+            .join(Tutor, Intervencion.id_tutor == Tutor.id_tutor)\
+            .join(Usuario, Tutor.id_usuario == Usuario.id_usuario)\
+            .filter(Intervencion.id_estudiante == id_estudiante).order_by(Intervencion.fecha.desc()).all()
+    except:
+        pass  # Si falla, continuar sin intervenciones
 
-    metricas = calcular_metricas_estudiante(db, id_estudiante)
-    p_asis = metricas[0] if len(metricas) > 0 else 0
-    prom = metricas[1] if len(metricas) > 1 else 0
-    tendencia = metricas[2] if len(metricas) > 2 else "Estable"
-
-    nivel_riesgo, score = clasificar_riesgo(p_asis, prom)
-
-    materias_map = {m.id_materia: m.nombre_materia for m in db.query(Materia).all()}
-    periodos_map = {p.id_periodo: p.nombre_periodo for p in db.query(Periodo).all()}
+    # Usar XGBoost con fallback para consistencia con dashboard
+    try:
+        prediccion = predecir_riesgo(db, id_estudiante)
+        nivel_riesgo = prediccion["riesgo"]
+        score = prediccion["probabilidad"]
+    except (RuntimeError, Exception):
+        # Fallback a lógica determinista
+        metricas = calcular_metricas_estudiante(db, id_estudiante)
+        p_asis = metricas[0] if len(metricas) > 0 else 0
+        prom = metricas[1] if len(metricas) > 1 else 0
+        nivel_riesgo, score = clasificar_riesgo(p_asis, prom)
 
     historial_calif_resuelto = [
         {
-            "id_materia": c.id_materia,
-            "nombre_materia": materias_map.get(c.id_materia, "Materia no encontrada"),
-            "id_periodo": c.id_periodo,
-            "nombre_periodo": periodos_map.get(c.id_periodo, "Periodo no encontrado"),
             "parcial": c.parcial,
-            "valor": float(c.valor)
+            "promedio": float(c.promedio),
+            "fecha_registro": c.fecha_registro.isoformat() if c.fecha_registro else None
         }
         for c in calificaciones
     ]
@@ -150,7 +159,7 @@ def obtener_expediente_completo(
         contacto_emergencia_nombre=estudiante.contacto_emergencia_nombre,
         contacto_emergencia_telefono=estudiante.contacto_emergencia_telefono,
         historial_calificaciones=historial_calif_resuelto,
-        historial_asistencia=[{"fecha": a.fecha, "estatus": a.estatus.value if hasattr(a.estatus, 'value') else a.estatus} for a in asistencias],
+        historial_asistencia=[{"fecha": a.fecha.isoformat() if a.fecha else None, "asistio": a.asistio} for a in asistencias],
         observaciones=[
             {
                 "id_observacion": o.id_observacion,
