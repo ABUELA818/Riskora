@@ -39,7 +39,6 @@ backend/investigar_*.py
 backend/limpiar_*.py
 backend/paso*.py
 backend/prueba_*.py
-backend/seed_data.py
 backend/seed_data_simplificado.py
 backend/dummy.py
 backend/datos_minimos.py
