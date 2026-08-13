@@ -116,7 +116,7 @@ def exportar_reporte(
         elementos = []
         estilos = getSampleStyleSheet()
         
-        elementos.append(Paragraph("EduPredict AI - Reporte Académico Institucional", estilos['Title']))
+        elementos.append(Paragraph("Riskora - Reporte Académico Institucional", estilos['Title']))
         elementos.append(Paragraph(f"Fecha de generación: {datetime.now().strftime('%Y-%m-%d %H:%M')}", estilos['Normal']))
         elementos.append(Spacer(1, 12))
         
@@ -170,7 +170,7 @@ def disparar_notificacion_riesgo(
 def mis_notificaciones(db: Session = Depends(get_db), current_user = Depends(get_current_active_user)):
     return db.query(Notificacion).filter(Notificacion.id_usuario == current_user.id_usuario).order_by(Notificacion.fecha.desc()).all()
 
-@router.get("/reportes/riesgo-por-carrera", response_model=List[RiesgoPorCarreraOut], dependencies=[Depends(permitir_acceso)])
+@router.get("/reportes/riesgo-por-carrera", dependencies=[Depends(permitir_acceso)])
 def riesgo_por_carrera(db: Session = Depends(get_db), current_user = Depends(get_current_active_user)): 
 
     permitidas = _carreras_permitidas(db, current_user)
@@ -187,20 +187,22 @@ def riesgo_por_carrera(db: Session = Depends(get_db), current_user = Depends(get
         ).all()
         r_bajo = r_medio = r_alto = 0
         for est in estudiantes:
-            p_asis, prom, _ = calcular_metricas_estudiante(db, est.id_estudiante)
-            nivel, _ = clasificar_riesgo(p_asis, prom)
-            if nivel == "Alto": r_alto += 1
-            elif nivel == "Medio": r_medio += 1
-            else: r_bajo += 1
+            # Usar el nivel de riesgo ya calculado por XGBoost
+            if est.nivel_riesgo == "Alto":
+                r_alto += 1
+            elif est.nivel_riesgo == "Medio":
+                r_medio += 1
+            elif est.nivel_riesgo == "Bajo":
+                r_bajo += 1
 
-        resultado.append(RiesgoPorCarreraOut(
-            id_carrera=carrera.id_carrera,
-            carrera=carrera.nombre,
-            riesgo_bajo=r_bajo,
-            riesgo_medio=r_medio,
-            riesgo_alto=r_alto,
-            total_estudiantes=len(estudiantes)
-        ))
+        resultado.append({
+            "id_carrera": carrera.id_carrera,
+            "carrera": carrera.nombre,
+            "riesgo_bajo": r_bajo,
+            "riesgo_medio": r_medio,
+            "riesgo_alto": r_alto,
+            "total_estudiantes": len(estudiantes)
+        })
     return resultado
 
 

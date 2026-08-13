@@ -33,7 +33,10 @@ export default function ReportesInstitucionales() {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
-      .then(data => { if (Array.isArray(data)) setRiesgoPorCarrera(data); })
+      .then(data => { 
+        console.log('Datos riesgo por carrera:', JSON.stringify(data, null, 2));
+        if (Array.isArray(data)) setRiesgoPorCarrera(data); 
+      })
       .catch(err => console.error(err));
 
     fetch(`${API_BASE_URL}/api/v1/reportes/reprobacion-por-materia`, {
@@ -93,7 +96,10 @@ export default function ReportesInstitucionales() {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
-      .then(data => setResumenRiesgo(data))
+      .then(data => { 
+        console.log('Resumen de riesgo:', data);
+        setResumenRiesgo(data);
+      })
       .catch(err => console.error(err));
   }, [filtros.carrera, token]);
 
@@ -293,9 +299,9 @@ export default function ReportesInstitucionales() {
                 <YAxis type="category" dataKey="carrera" width={110} tick={{ fontSize: 11 }} />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="riesgo_bajo" stackId="a" fill="#4ade80" name="Bajo" />
-                <Bar dataKey="riesgo_medio" stackId="a" fill="#facc15" name="Medio" />
-                <Bar dataKey="riesgo_alto" stackId="a" fill="#dc2626" name="Alto" />
+                <Bar dataKey="riesgo_bajo" fill="#4ade80" name="Bajo" />
+                <Bar dataKey="riesgo_medio" fill="#facc15" name="Medio" />
+                <Bar dataKey="riesgo_alto" fill="#dc2626" name="Alto" />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -401,7 +407,7 @@ export default function ReportesInstitucionales() {
                         est.nivel_riesgo === 'Medio' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
                         'bg-green-50 text-green-700 border-green-200'
                       }`}>
-                        {est.nivel_riesgo} <span className="ml-1 opacity-50 font-normal text-[9px]">(Simulado)</span>
+                        {est.nivel_riesgo}
                       </span>
                     </td>
                   </tr>

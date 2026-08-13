@@ -10,6 +10,7 @@ export default function DashboardTutor() {
   const [resumen, setResumen] = useState({ bajo: 0, medio: 0, alto: 0, total_estudiantes: 0 });
   const [alumnosAtencion, setAlumnosAtencion] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [esSimulada, setEsSimulada] = useState(true);
 
   useEffect(() => {
     if (!token) return;
@@ -27,7 +28,26 @@ export default function DashboardTutor() {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
-      .then(data => { if (Array.isArray(data)) setAlumnosAtencion(data); })
+      .then(data => { 
+        if (Array.isArray(data)) {
+          setAlumnosAtencion(data);
+          // Verificar si alguno usa fallback para determinar estado del badge
+          if (data.length > 0) {
+            // Obtener estado de simulación del primer estudiante
+            fetch(`${API_BASE_URL}/api/v1/estudiantes/${data[0].id_estudiante}/riesgo`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(riesgoData => {
+              setEsSimulada(riesgoData.es_prediccion_simulada);
+            })
+            .catch(err => {
+              console.error(err);
+              setEsSimulada(true); // Por defecto simulado si falla
+            });
+          }
+        }
+      })
       .catch(err => console.error(err));
   }, [token]);
 
@@ -38,7 +58,7 @@ export default function DashboardTutor() {
 
   return (
     <div className="p-8 bg-gray-50/50 min-h-full">
-      <SimulationBadge />
+      <SimulationBadge esSimulada={esSimulada} />
 
       <div className="flex justify-between items-center mb-6">
         <div>

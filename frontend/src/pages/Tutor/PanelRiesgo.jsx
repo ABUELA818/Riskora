@@ -11,6 +11,7 @@ export default function PanelRiesgo() {
   const [estudiantes, setEstudiantes] = useState([]);
   const [riesgosMap, setRiesgosMap] = useState({});
   const [filtroRiesgo, setFiltroRiesgo] = useState('Todos');
+  const [esSimulada, setEsSimulada] = useState(true);
 
   useEffect(() => {
     if (!token) return;
@@ -36,6 +37,14 @@ export default function PanelRiesgo() {
           }
         }));
         setRiesgosMap(mapa);
+
+        // Determinar estado de simulacion basado en respuestas reales
+        const entries = Object.values(mapa);
+        if (entries.length > 0) {
+          // Si al menos uno usa IA real, mostramos IA real
+          const alguienUsaIA = entries.some(r => r.es_prediccion_simulada === false);
+          setEsSimulada(!alguienUsaIA);
+        }
       });
   }, [token]);
 
@@ -47,7 +56,7 @@ export default function PanelRiesgo() {
 
   return (
     <div className="p-8 bg-gray-50/50 min-h-full">
-      <SimulationBadge />
+      <SimulationBadge esSimulada={esSimulada} />
 
       <div className="flex justify-between items-center mb-6">
         <div>

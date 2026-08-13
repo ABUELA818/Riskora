@@ -22,9 +22,9 @@ class NotificacionCreate(BaseModel):
 class RiesgoPorCarreraOut(BaseModel):
     id_carrera: int
     carrera: str
-    riesgo_bajo: int
-    riesgo_medio: int
-    riesgo_alto: int
+    riesgo_bajo: Optional[int] = 0
+    riesgo_medio: Optional[int] = 0
+    riesgo_alto: Optional[int] = 0
     total_estudiantes: int
 
 class ReprobacionPorMateriaOut(BaseModel):

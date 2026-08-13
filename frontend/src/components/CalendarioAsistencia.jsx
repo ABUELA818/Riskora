@@ -18,7 +18,8 @@ export default function CalendarioAsistencia({ historial }) {
     const map = {};
     (historial || []).forEach(r => {
       const fechaStr = typeof r.fecha === 'string' ? r.fecha.split('T')[0] : r.fecha;
-      map[fechaStr] = r.estatus;
+      // Convertir asistio (boolean) a estatus compatible
+      map[fechaStr] = r.asistio === true ? 'Presente' : 'Ausente';
     });
     return map;
   }, [historial]);
@@ -51,10 +52,10 @@ export default function CalendarioAsistencia({ historial }) {
 
   const resumen = useMemo(() => {
     const total = (historial || []).length;
-    const presentes = (historial || []).filter(r => r.estatus === 'Presente').length;
-    const retardos = (historial || []).filter(r => r.estatus === 'Retardo').length;
-    const ausencias = (historial || []).filter(r => r.estatus === 'Ausente').length;
-    const porcentaje = total > 0 ? Math.round(((presentes + retardos) / total) * 100) : 0;
+    const presentes = (historial || []).filter(r => r.asistio === true).length;
+    const retardos = 0; // No hay retardos en el nuevo formato
+    const ausencias = (historial || []).filter(r => r.asistio === false).length;
+    const porcentaje = total > 0 ? Math.round((presentes / total) * 100) : 0;
     return { total, presentes, retardos, ausencias, porcentaje };
   }, [historial]);
 

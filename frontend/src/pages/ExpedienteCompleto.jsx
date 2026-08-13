@@ -6,6 +6,8 @@ import SimulationBadge from '../components/SimulationBadge';
 import HistorialAcademicoTab from '../components/HistorialAcademicoTab';
 import CalendarioAsistencia from '../components/CalendarioAsistencia';
 import ObservacionesTab from '../components/ObservacionesTab';
+import FormularioSocioeconomico from '../components/FormularioSocioeconomico';
+import SeccionCalificaciones from '../components/SeccionCalificaciones';
 import { API_BASE_URL } from '../config/api';
 
 export default function ExpedienteCompleto() {
@@ -37,12 +39,15 @@ export default function ExpedienteCompleto() {
   if (loading || !expediente) return <div className="p-8 text-gray-500">Cargando expediente...</div>;
 
   const promedioGeneral = expediente.historial_calificaciones?.length > 0
-    ? (expediente.historial_calificaciones.reduce((acc, c) => acc + c.valor, 0) / expediente.historial_calificaciones.length).toFixed(1)
+    ? (expediente.historial_calificaciones.reduce((acc, c) => {
+        const valor = c.promedio !== null && c.promedio !== undefined ? c.promedio : 0;
+        return acc + valor;
+      }, 0) / expediente.historial_calificaciones.length).toFixed(1)
     : 'N/A';
 
   const promedioAsistencia = expediente.historial_asistencia?.length > 0
     ? Math.round(
-        (expediente.historial_asistencia.filter(a => a.estatus === 'Presente' || a.estatus === 'Retardo').length
+        (expediente.historial_asistencia.filter(a => a.asistio === true).length
           / expediente.historial_asistencia.length) * 100
       )
     : null;
@@ -173,6 +178,14 @@ export default function ExpedienteCompleto() {
           <FileText className="w-4 h-4 mr-2" /> Observaciones y Conducta
         </button>
         
+        <button onClick={() => setActiveTab('socioeconomico')} className={`pb-3 text-sm font-bold flex items-center border-b-2 transition-colors whitespace-nowrap ${activeTab === 'socioeconomico' ? 'border-eduPurple text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
+          <FileCheck className="w-4 h-4 mr-2" /> Datos Socioeconómicos
+        </button>
+        
+        <button onClick={() => setActiveTab('calificaciones')} className={`pb-3 text-sm font-bold flex items-center border-b-2 transition-colors whitespace-nowrap ${activeTab === 'calificaciones' ? 'border-eduPurple text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
+          <Book className="w-4 h-4 mr-2" /> Calificaciones por Parcial
+        </button>
+        
         {isPsico && (
           <button onClick={() => setActiveTab('ia')} className={`pb-3 text-sm font-bold flex items-center border-b-2 transition-colors whitespace-nowrap ${activeTab === 'ia' ? 'border-eduPurple text-eduPurple' : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
             <Brain className="w-4 h-4 mr-2" /> Análisis IA
@@ -263,6 +276,18 @@ export default function ExpedienteCompleto() {
 
         {activeTab === 'observaciones' && (
           <ObservacionesTab observaciones={expediente.observaciones} idEstudiante={id} />
+        )}
+
+        {activeTab === 'socioeconomico' && (
+          <div className="lg:col-span-3">
+            <FormularioSocioeconomico estudianteId={id} token={token} />
+          </div>
+        )}
+
+        {activeTab === 'calificaciones' && (
+          <div className="lg:col-span-3">
+            <SeccionCalificaciones estudianteId={id} token={token} />
+          </div>
         )}
 
       </div>

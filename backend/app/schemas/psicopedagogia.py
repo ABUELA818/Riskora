@@ -14,18 +14,15 @@ class CasoPendienteOut(BaseModel):
     motivo_escalada: str
     tutor_nombre: str
 
-# Esquemas de apoyo para el expediente completo
+# Esquemas de apoyo para el expediente completo (adaptados para tablas nuevas)
 class CalificacionDetalle(BaseModel):
-    id_materia: int
-    nombre_materia: str
-    id_periodo: int
-    nombre_periodo: str
     parcial: int
-    valor: float
+    promedio: float
+    fecha_registro: Optional[str] = None
 
 class AsistenciaDetalle(BaseModel):
-    fecha: date
-    estatus: str
+    fecha: Optional[str] = None
+    asistio: bool
 
 class ObservacionDetalle(BaseModel):
     id_observacion: int
