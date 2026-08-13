@@ -8,7 +8,7 @@ from app.db.session import SessionLocal
 from app.models.models import (
     Usuario, Estudiante, Docente, Tutor, Grupo, Carrera, Materia, Periodo,
     HistorialCalificacion, HistorialAsistencia, DirectorCarrera, DocenteCarrera,
-    RolEnum
+    Administrador, PerfilRRHH, RolEnum
 )
 from app.core.security import get_password_hash
 from app.core.prediction_service import predecir_riesgo
@@ -281,6 +281,79 @@ def main():
                 grupo.id_tutor = tutores[i].id_tutor
         db.commit()
         print("Tutores asignados a grupos")
+        
+        # Paso 6.5: Crear usuarios administrativos (Admin, Director, RRHH, Psicopedagogia)
+        print("Creando usuarios administrativos...")
+        
+        # Admin
+        admin_usuario = Usuario(
+            nombre_completo="Administrador del Sistema",
+            correo_institucional="admin@edupredict.edu",
+            password_hash=get_password_hash("password123"),
+            rol=RolEnum.ADMINISTRADOR
+        )
+        db.add(admin_usuario)
+        db.flush()
+        
+        # Crear registro en tabla Administrador
+        admin_registro = Administrador(
+            id_usuario=admin_usuario.id_usuario,
+            puesto="Administrador General"
+        )
+        db.add(admin_registro)
+        db.flush()
+        
+        # Director
+        director_usuario = Usuario(
+            nombre_completo="Director de Carrera",
+            correo_institucional="director1@edupredict.edu",
+            password_hash=get_password_hash("password123"),
+            rol=RolEnum.DIRECTOR
+        )
+        db.add(director_usuario)
+        db.flush()
+        
+        # Relacionar director con primera carrera
+        if carreras:
+            director_carrera = DirectorCarrera(
+                id_usuario=director_usuario.id_usuario,
+                id_carrera=carreras[0].id_carrera
+            )
+            db.add(director_carrera)
+            db.flush()
+        
+        # RRHH
+        rrhh_usuario = Usuario(
+            nombre_completo="Recursos Humanos",
+            correo_institucional="rrhh1@edupredict.edu",
+            password_hash=get_password_hash("password123"),
+            rol=RolEnum.RRHH
+        )
+        db.add(rrhh_usuario)
+        db.flush()
+        
+        # Crear registro en tabla PerfilRRHH
+        rrhh_registro = PerfilRRHH(
+            id_usuario=rrhh_usuario.id_usuario,
+            departamento="Recursos Humanos"
+        )
+        db.add(rrhh_registro)
+        db.flush()
+        
+        # Psicopedagogia
+        psico_usuario = Usuario(
+            nombre_completo="Psicopedagogia",
+            correo_institucional="psico1@edupredict.edu",
+            password_hash=get_password_hash("password123"),
+            rol=RolEnum.PSICOPEDAGOGIA
+        )
+        db.add(psico_usuario)
+        db.flush()
+        
+        db.commit()
+        print("Usuarios administrativos creados")
+        
+        # Paso 7: Crear estudiantes
         
         # Paso 6: Crear estudiantes
         print("Creando estudiantes...")
