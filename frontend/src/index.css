@@ -12,10 +12,21 @@
   --risk-low: #4f9d6e;
   --risk-medium: #c78a2e;
   --risk-high: #c25a52;
+  /* Riskora is a light-themed app. Without this, browsers/OSs set to a dark
+     color-scheme preference apply dark-mode user-agent defaults (white text,
+     dark form controls, etc.) to any element without an explicit Tailwind
+     color class, making content render invisible (white-on-white) on our
+     light surfaces. Pinning to light keeps UA defaults consistent everywhere. */
+  color-scheme: light;
+}
+
+html {
+  color-scheme: light;
 }
 
 body {
   background-color: var(--canvas);
+  color: #1a1f2b;
   font-family: 'Inter', sans-serif;
 }
 
