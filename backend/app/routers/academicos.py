@@ -16,7 +16,8 @@ from app.schemas.academic import (
     EstudianteCreate, EstudianteOut, GrupoCreate, GrupoOut, 
     MateriaCreate, MateriaOut, MateriaUpdate, PeriodoCreate, PeriodoOut,
     ClaseDocenteOut, EstudianteBajaIn,
-    HistorialAcademicoPrevioCreate, HistorialAcademicoPrevioOut
+    HistorialAcademicoPrevioCreate, HistorialAcademicoPrevioOut,
+    EstudianteAltaCreate
 )
 from app.core.deps import get_db, RoleChecker, get_current_active_user
 from app.schemas.carrera import CarreraOut
@@ -79,12 +80,36 @@ def _generar_correo_institucional(db: Session, nombre_completo: str) -> str:
 
 # 1. ESTUDIANTES
 @router.post("/estudiantes", response_model=EstudianteOut, dependencies=[Depends(solo_admin)])
-def crear_estudiante(estudiante: EstudianteCreate, db: Session = Depends(get_db)):
+def crear_estudiante(estudiante: EstudianteAltaCreate, db: Session = Depends(get_db)):
+    grupos_carrera = db.query(Grupo).filter(Grupo.id_carrera == estudiante.id_carrera).all()
+    if not grupos_carrera:
+        raise HTTPException(
+            status_code=400,
+            detail="La carrera seleccionada no tiene grupos creados todavía. Crea un grupo primero en Gestión de Grupos."
+        )
+
+    conteos = {
+        g.id_grupo: db.query(Estudiante).filter(
+            Estudiante.id_grupo == g.id_grupo,
+            Estudiante.estado == True
+        ).count()
+        for g in grupos_carrera
+    }
+    grupo_elegido = min(grupos_carrera, key=lambda g: conteos[g.id_grupo])
+
     matricula = _generar_matricula(db)
     correo = _generar_correo_institucional(db, estudiante.nombre_completo)
 
     nuevo_estudiante = Estudiante(
-        **estudiante.model_dump(),
+        nombre_completo=estudiante.nombre_completo,
+        id_grupo=grupo_elegido.id_grupo,
+        datos_socioeconomicos=estudiante.datos_socioeconomicos,
+        fecha_ingreso=estudiante.fecha_ingreso,
+        contacto_emergencia_nombre=estudiante.contacto_emergencia_nombre,
+        contacto_emergencia_telefono=estudiante.contacto_emergencia_telefono,
+        edad=estudiante.edad,
+        celular=estudiante.celular,
+        fotografia_url=estudiante.fotografia_url,
         matricula=matricula,
         correo_institucional=correo
     )
@@ -97,13 +122,13 @@ def crear_estudiante(estudiante: EstudianteCreate, db: Session = Depends(get_db)
 def obtener_estudiantes(
     carrera: Optional[int] = Query(None),
     grupo: Optional[str] = Query(None),
-    id_grupo: Optional[int] = Query(None),       
+    id_grupo: Optional[int] = Query(None),
     nivel_riesgo: Optional[str] = Query(None),
-    skip: int = 0, limit: int = 1000,        
+    skip: int = 0, limit: int = 1000,
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_active_user) 
+    current_user = Depends(get_current_active_user)
 ):
-    user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol 
+    user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
 
     query = db.query(Estudiante).filter(Estudiante.estado == True)
 
@@ -124,7 +149,31 @@ def obtener_estudiantes(
     if nivel_riesgo and nivel_riesgo != "":
         query = query.filter(Estudiante.nivel_riesgo == nivel_riesgo)
 
-    return query.offset(skip).limit(limit).all()
+    estudiantes = query.offset(skip).limit(limit).all()
+
+    ids_grupo = {e.id_grupo for e in estudiantes if e.id_grupo}
+    grupos_map = {}
+    if ids_grupo:
+        grupos_db = db.query(Grupo).filter(Grupo.id_grupo.in_(ids_grupo)).all()
+        carreras_ids = {g.id_carrera for g in grupos_db if g.id_carrera}
+        carreras_map = {
+            c.id_carrera: c.nombre
+            for c in db.query(Carrera).filter(Carrera.id_carrera.in_(carreras_ids)).all()
+        } if carreras_ids else {}
+        grupos_map = {
+            g.id_grupo: (g.nombre_grupo, carreras_map.get(g.id_carrera))
+            for g in grupos_db
+        }
+
+    resultado = []
+    for est in estudiantes:
+        est_out = EstudianteOut.model_validate(est)
+        nombre_grupo, nombre_carrera = grupos_map.get(est.id_grupo, (None, None))
+        est_out.nombre_grupo = nombre_grupo
+        est_out.nombre_carrera = nombre_carrera
+        resultado.append(est_out)
+
+    return resultado
 
 @router.get("/carreras", response_model=List[CarreraOut], dependencies=[Depends(todos_los_roles)])
 def obtener_carreras(db: Session = Depends(get_db)):

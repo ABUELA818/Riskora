@@ -88,7 +88,7 @@ export default function App() {
             <Route path="panel-riesgo" element={<PanelRiesgo />} />
             <Route path="estudiantes/:id/analisis" element={<AnalisisPrediccion />} />
             <Route path="carreras/dashboard" element={<RoleRoute allowedRoles={['Administrador', 'Director']}><DashboardDirector /></RoleRoute>} />
-            <Route path="carreras/:id/riesgo-agregado" element={<RoleRoute allowedRoles={['Administrador', 'Director']}><RiesgoAgregado /></RoleRoute>} />
+            <Route path="carreras/:id/riesgo-agregado" element={<RoleRoute allowedRoles={['Administrador', 'Director', 'Psicopedagogia']}><RiesgoAgregado /></RoleRoute>} />
             <Route path="casos-escalados" element={<RoleRoute allowedRoles={['Administrador', 'Tutor', 'Director', 'Psicopedagogia']}><CasosEscalados /></RoleRoute>} />
             <Route path="institucional/dashboard" element={<RoleRoute allowedRoles={['Administrador', 'Director']}><DashboardInstitucional /></RoleRoute>} />
             <Route path="rrhh/dashboard" element={<RoleRoute allowedRoles={['Administrador', 'RRHH']}><DashboardRRHH /></RoleRoute>} />
