@@ -33,21 +33,21 @@ export default function DashboardInstitucional() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative">
-          <TrendingUp className="absolute top-6 right-6 w-5 h-5 text-green-500" />
+          <TrendingUp className="absolute top-6 right-6 w-5 h-5 text-risk-low" />
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Retención Institucional / Deserción</p>
           <h3 className="text-3xl font-black text-gray-400 mb-2 italic">Próximamente</h3>
-          <p className="text-xs text-green-600 font-medium">Requiere histórico de bajas (V2)</p>
+          <p className="text-xs text-risk-low font-medium">Requiere histórico de bajas (V2)</p>
         </div>
         
-        <div className="bg-white p-6 rounded-2xl border border-red-200 border-l-4 border-l-red-500 shadow-sm relative">
-          <AlertTriangle className="absolute top-6 right-6 w-5 h-5 text-red-500" />
+        <div className="bg-white p-6 rounded-2xl border border-risk-high-border border-l-4 border-l-red-500 shadow-sm relative">
+          <AlertTriangle className="absolute top-6 right-6 w-5 h-5 text-risk-high" />
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Riesgo Institucional Alto</p>
           <h3 className="text-4xl font-black text-gray-900 mb-2">{kpis.riesgo_alto}</h3>
-          <p className="text-xs text-red-600 font-medium">Requieren atención inmediata</p>
+          <p className="text-xs text-risk-high font-medium">Requieren atención inmediata</p>
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative">
-          <Eye className="absolute top-6 right-6 w-5 h-5 text-yellow-600" />
+          <Eye className="absolute top-6 right-6 w-5 h-5 text-risk-medium" />
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Alumnos en Seguimiento</p>
           <h3 className="text-4xl font-black text-gray-900 mb-2">{kpis.riesgo_medio}</h3>
           <p className="text-xs text-gray-500">Distribuidos en toda la institución</p>
@@ -78,18 +78,18 @@ export default function DashboardInstitucional() {
               </tr>
               <tr className="hover:bg-gray-50">
                 <td className="p-4 pl-6 font-semibold text-gray-900">Tasa de Reprobación Global (&lt;60)</td>
-                <td className="p-4 text-center text-lg font-bold text-red-600">{kpis.porcentaje_reprobacion}%</td>
+                <td className="p-4 text-center text-lg font-bold text-risk-high">{kpis.porcentaje_reprobacion}%</td>
               </tr>
               <tr className="hover:bg-gray-50">
                 <td className="p-4 pl-6 font-semibold text-gray-900">Estudiantes Sin Riesgo (Verde)</td>
-                <td className="p-4 text-center text-lg font-bold text-green-600">{kpis.riesgo_bajo}</td>
+                <td className="p-4 text-center text-lg font-bold text-risk-low">{kpis.riesgo_bajo}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         <div className="space-y-6">
-          <div className="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-2xl border border-indigo-100 shadow-sm text-center">
+          <div className="bg-gradient-to-br from-indigo-50 to-white p-6 rounded-2xl border border-brand-100 shadow-sm text-center">
             <h3 className="text-lg font-bold text-gray-900 mb-2">Generar Reporte Mensual</h3>
             <p className="text-sm text-gray-600 mb-4">Análisis predictivo institucional listo para descarga.</p>
             <button className="w-full bg-eduPurple text-white py-2.5 rounded-lg text-sm font-bold shadow-sm">Revisar y Descargar</button>

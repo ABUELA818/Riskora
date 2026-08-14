@@ -380,7 +380,7 @@ const eliminarHorarioExistente = async (idHorario) => {
       </div>
 
       {resultadoImport && (
-        <div className={`mb-4 p-3 rounded-lg text-sm border flex items-start ${resultadoImport.ok ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+        <div className={`mb-4 p-3 rounded-lg text-sm border flex items-start ${resultadoImport.ok ? 'bg-risk-low-bg border-risk-low-border text-risk-low-fg' : 'bg-risk-high-bg border-risk-high-border text-risk-high-fg'}`}>
           {resultadoImport.ok ? <CheckCircle className="w-4 h-4 mr-2 mt-0.5 shrink-0" /> : <AlertTriangle className="w-4 h-4 mr-2 mt-0.5 shrink-0" />}
           <div>
             <p>{resultadoImport.ok ? resultadoImport.message : resultadoImport.message}</p>
@@ -414,25 +414,25 @@ const eliminarHorarioExistente = async (idHorario) => {
               <tr
                 key={grupo.id_grupo}
                 onClick={() => abrirPanelGrupo(grupo)}
-                className={`hover:bg-gray-50 cursor-pointer ${grupoPanel?.id_grupo === grupo.id_grupo ? 'bg-indigo-50/60' : ''}`}
+                className={`hover:bg-gray-50 cursor-pointer ${grupoPanel?.id_grupo === grupo.id_grupo ? 'bg-brand-50/60' : ''}`}
               >
                 <td className="p-3 text-sm font-bold text-gray-900">{grupo.nombre_grupo}</td>
                 <td className="p-3 text-sm text-gray-600">{grupo.nombre_carrera || '-'}</td>
                 <td className="p-3 text-sm text-gray-600">{grupo.cuatrimestre}</td>
                 <td className="p-3 text-sm text-gray-600">
                   {grupo.id_tutor ? (
-                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                    <span className="bg-risk-low-bg text-risk-low-fg px-2 py-1 rounded-full text-xs">
                       {grupo.nombre_tutor || `ID ${grupo.id_tutor}`}
                     </span>
                   ) : (
-                    <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Sin Asignar</span>
+                    <span className="bg-risk-medium-bg text-risk-medium-fg px-2 py-1 rounded-full text-xs">Sin Asignar</span>
                   )}
                 </td>
                 <td className="p-3 text-sm">
                    <div className="flex justify-center items-center gap-3" onClick={e => e.stopPropagation()}>
                     <button
                       onClick={() => { setGrupoSeleccionado(grupo); setModalOpen(true); }}
-                      className="flex items-center text-eduPurple hover:text-indigo-800 bg-indigo-50 px-3 py-1 rounded-md text-xs font-semibold"
+                      className="flex items-center text-eduPurple hover:text-brand-700 bg-brand-50 px-3 py-1 rounded-md text-xs font-semibold"
                     >
                       <UserPlus className="w-3.5 h-3.5 mr-1" /> Reasignar
                     </button>
@@ -503,7 +503,7 @@ const eliminarHorarioExistente = async (idHorario) => {
             </div>
             <form onSubmit={handleCrearGrupo} className="p-6 space-y-4">
               {formGrupoError && (
-                <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+                <div className="p-3 text-sm text-risk-high bg-risk-high-bg border border-risk-high-border rounded-lg">
                   {formGrupoError}
                 </div>
               )}
@@ -598,7 +598,7 @@ const eliminarHorarioExistente = async (idHorario) => {
                         <span>
                           <strong className="text-gray-900">{h.nombre_materia}</strong> — {h.nombre_docente} · {h.dia_semana} {h.hora_inicio}-{h.hora_fin}
                         </span>
-                        <button onClick={() => eliminarHorarioExistente(h.id_horario)} className="text-gray-400 hover:text-red-600">
+                        <button onClick={() => eliminarHorarioExistente(h.id_horario)} className="text-gray-400 hover:text-risk-high">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -609,14 +609,14 @@ const eliminarHorarioExistente = async (idHorario) => {
 
               {/* Errores de validación */}
               {erroresHorario.length > 0 && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 space-y-1">
+                <div className="p-3 bg-risk-high-bg border border-risk-high-border rounded-lg text-sm text-risk-high-fg space-y-1">
                   {erroresHorario.map((e, i) => (
                     <p key={i}>Fila {e.fila}: {e.error}</p>
                   ))}
                 </div>
               )}
               {mensajeHorario && (
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+                <div className="p-3 bg-risk-low-bg border border-risk-low-border rounded-lg text-sm text-risk-low-fg">
                   {mensajeHorario}
                 </div>
               )}
@@ -675,7 +675,7 @@ const eliminarHorarioExistente = async (idHorario) => {
                       <button
                         onClick={() => quitarFila(idx)}
                         disabled={filasNuevas.length === 1}
-                        className="col-span-2 text-gray-400 hover:text-red-600 disabled:opacity-30 flex justify-center"
+                        className="col-span-2 text-gray-400 hover:text-risk-high disabled:opacity-30 flex justify-center"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -735,17 +735,17 @@ const eliminarHorarioExistente = async (idHorario) => {
                 return (
                   <>
                     <div className="w-full flex h-3 rounded-full overflow-hidden mb-2">
-                      <div className="bg-green-500" style={{ width: `${pBajo}%` }} />
-                      <div className="bg-yellow-400" style={{ width: `${pMedio}%` }} />
-                      <div className="bg-red-600" style={{ width: `${pAlto}%` }} />
+                      <div className="bg-risk-low" style={{ width: `${pBajo}%` }} />
+                      <div className="bg-risk-medium" style={{ width: `${pMedio}%` }} />
+                      <div className="bg-risk-high" style={{ width: `${pAlto}%` }} />
                     </div>
                     <div className="flex justify-between text-xs font-semibold text-gray-600">
-                      <span className="text-green-700">{r.riesgo_bajo} Bajo</span>
-                      <span className="text-yellow-700">{r.riesgo_medio} Medio</span>
-                      <span className="text-red-700">{r.riesgo_alto} Alto</span>
+                      <span className="text-risk-low-fg">{r.riesgo_bajo} Bajo</span>
+                      <span className="text-risk-medium-fg">{r.riesgo_medio} Medio</span>
+                      <span className="text-risk-high-fg">{r.riesgo_alto} Alto</span>
                     </div>
                     {pAlto > 20 && (
-                      <div className="mt-3 flex items-start text-xs text-red-700 bg-red-50 border border-red-100 rounded-lg p-2">
+                      <div className="mt-3 flex items-start text-xs text-risk-high-fg bg-risk-high-bg border border-risk-high-border rounded-lg p-2">
                         <AlertTriangle className="w-4 h-4 mr-1.5 shrink-0" />
                         Más del 20% del grupo está en riesgo alto.
                       </div>

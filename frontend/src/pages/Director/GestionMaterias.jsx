@@ -276,7 +276,7 @@ export default function GestionMaterias() {
 
             <form onSubmit={handleGuardar} className="p-6 space-y-4">
               {formError && (
-                <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+                <div className="p-3 text-sm text-risk-high bg-risk-high-bg border border-risk-high-border rounded-lg">
                   {formError}
                 </div>
               )}

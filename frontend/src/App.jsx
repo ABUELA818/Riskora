@@ -34,7 +34,7 @@ import SolicitudesPersonal from './pages/RRHH/SolicitudesPersonal';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoadingSession } = useAuth();
-  if (isLoadingSession) return <div className="p-10 text-center text-gray-400">Cargando sesión...</div>;
+  if (isLoadingSession) return <div className="p-10 text-center text-slate-400 font-sans">Cargando sesión...</div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return children;
 };
@@ -47,7 +47,14 @@ const RoleRoute = ({ children, allowedRoles }) => {
 
 const Dashboard = () => <div className="p-6"><h1 className="text-2xl font-bold mb-2">Dashboard</h1></div>;
 const Asistencias = () => <div className="p-6"><h1 className="text-2xl font-bold">Módulo de Asistencias</h1></div>;
-const Unauthorized = () => <div className="p-10 text-center text-red-600"><h1>403 - Acceso Denegado</h1></div>;
+const Unauthorized = () => (
+  <div className="min-h-screen flex items-center justify-center bg-canvas font-sans">
+    <div className="text-center">
+      <h1 className="font-display text-2xl font-bold text-risk-high-fg mb-1">403 - Acceso Denegado</h1>
+      <p className="text-sm text-slate-500">No cuentas con los permisos necesarios para ver esta página.</p>
+    </div>
+  </div>
+);
 
 const DashboardRouter = () => {
   const { role } = useAuth();

@@ -91,30 +91,30 @@ export default function GestionAccesos() {
             <p className="text-xs font-bold text-gray-400 mb-2">MÓDULOS HABILITADOS EN SIDEBAR:</p>
             
             <div className="flex items-center text-sm font-medium text-gray-700">
-              <CheckCircle className="w-4 h-4 mr-2 text-green-500" /> Directorio de Estudiantes
+              <CheckCircle className="w-4 h-4 mr-2 text-risk-low" /> Directorio de Estudiantes
             </div>
             
             {['Docente', 'Tutor', 'Director'].includes(selectedPreviewRole) && (
               <div className="flex items-center text-sm font-medium text-gray-700">
-                <CheckCircle className="w-4 h-4 mr-2 text-green-500" /> Calificaciones / Asistencia
+                <CheckCircle className="w-4 h-4 mr-2 text-risk-low" /> Calificaciones / Asistencia
               </div>
             )}
             
             {['Tutor', 'Psicopedagogia', 'Director'].includes(selectedPreviewRole) && (
               <div className="flex items-center text-sm font-medium text-gray-700">
-                <CheckCircle className="w-4 h-4 mr-2 text-green-500" /> Panel de Riesgo IA (Mock)
+                <CheckCircle className="w-4 h-4 mr-2 text-risk-low" /> Panel de Riesgo IA (Mock)
               </div>
             )}
 
             {selectedPreviewRole === 'Psicopedagogia' && (
               <div className="flex items-center text-sm font-medium text-gray-700">
-                <CheckCircle className="w-4 h-4 mr-2 text-green-500" /> Detalle Factores IA / Expediente
+                <CheckCircle className="w-4 h-4 mr-2 text-risk-low" /> Detalle Factores IA / Expediente
               </div>
             )}
             
             {selectedPreviewRole === 'RRHH' && (
               <div className="flex items-center text-sm font-medium text-gray-700">
-                <CheckCircle className="w-4 h-4 mr-2 text-green-500" /> Gestión de Accesos (Admin)
+                <CheckCircle className="w-4 h-4 mr-2 text-risk-low" /> Gestión de Accesos (Admin)
               </div>
             )}
           </div>
@@ -149,10 +149,10 @@ export default function GestionAccesos() {
                     </td>
                     <td className="p-4">
                       <span className={`px-2.5 py-1 text-xs font-bold rounded-md border ${
-                        u.rol === 'Director' ? 'bg-green-50 text-green-700 border-green-200' :
+                        u.rol === 'Director' ? 'bg-risk-low-bg text-risk-low-fg border-risk-low-border' :
                         u.rol === 'Psicopedagogia' ? 'bg-orange-50 text-orange-700 border-orange-200' :
                         u.rol === 'RRHH' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                        'bg-indigo-50 text-indigo-700 border-indigo-200'
+                        'bg-brand-50 text-brand-700 border-brand-200'
                       }`}>
                         {u.rol}
                       </span>
@@ -161,7 +161,7 @@ export default function GestionAccesos() {
                     <td className="p-4 text-center">
                       <button 
                         onClick={() => openConfirmation(u, u.rol)}
-                        className="p-1.5 text-gray-400 hover:text-eduPurple hover:bg-indigo-50 rounded transition-colors"
+                        className="p-1.5 text-gray-400 hover:text-eduPurple hover:bg-brand-50 rounded transition-colors"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -178,8 +178,8 @@ export default function GestionAccesos() {
       {confirmModal.open && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle className="w-8 h-8 text-red-600" />
+            <div className="w-16 h-16 bg-risk-high-bg rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-8 h-8 text-risk-high" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Cambio de Permisos</h3>
             <p className="text-sm text-gray-600 mb-6">
@@ -207,9 +207,9 @@ export default function GestionAccesos() {
               </div>
             </div>
 
-            <div className="bg-red-50 p-3 rounded-lg border border-red-100 text-left mb-6 flex items-start">
-              <ShieldAlert className="w-5 h-5 text-red-600 mr-2 shrink-0 mt-0.5" />
-              <p className="text-xs text-red-800 font-medium">
+            <div className="bg-risk-high-bg p-3 rounded-lg border border-risk-high-border text-left mb-6 flex items-start">
+              <ShieldAlert className="w-5 h-5 text-risk-high mr-2 shrink-0 mt-0.5" />
+              <p className="text-xs text-risk-high-fg font-medium">
                 <strong>Acción Inmediata:</strong> Al guardar, la sesión actual del usuario será invalidada automáticamente. Deberá iniciar sesión nuevamente para acceder con sus nuevos privilegios (RNF-06).
               </p>
             </div>
@@ -224,7 +224,7 @@ export default function GestionAccesos() {
               <button 
                 onClick={handleUpdateRole}
                 disabled={isUpdating}
-                className="flex-1 py-2.5 bg-red-600 text-white font-bold rounded-lg text-sm hover:bg-red-700 disabled:opacity-70"
+                className="flex-1 py-2.5 bg-risk-high text-white font-bold rounded-lg text-sm hover:bg-risk-high-fg disabled:opacity-70"
               >
                 {isUpdating ? 'Aplicando...' : 'Aplicar Cambio'}
               </button>

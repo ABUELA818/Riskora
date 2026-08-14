@@ -4,9 +4,9 @@ import { Clock, CheckCircle, XCircle, X, User, Phone, Briefcase } from 'lucide-r
 import { API_BASE_URL } from '../../config/api'; 
 
 const ESTADO_STYLES = {
-  Pendiente: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-  Aceptada: 'bg-green-50 text-green-700 border-green-200',
-  Rechazada: 'bg-red-50 text-red-700 border-red-200'
+  Pendiente: 'bg-risk-medium-bg text-risk-medium-fg border-risk-medium-border',
+  Aceptada: 'bg-risk-low-bg text-risk-low-fg border-risk-low-border',
+  Rechazada: 'bg-risk-high-bg text-risk-high-fg border-risk-high-border'
 };
 
 export default function SolicitudesPersonal() {
@@ -104,7 +104,7 @@ export default function SolicitudesPersonal() {
           <p className="text-sm text-gray-500">Altas de Docentes y Tutores solicitadas por Directores de carrera.</p>
         </div>
         {pendientesCount > 0 && (
-          <span className="px-3 py-1.5 bg-yellow-100 text-yellow-800 text-xs font-bold rounded-full flex items-center">
+          <span className="px-3 py-1.5 bg-risk-medium-bg text-risk-medium-fg text-xs font-bold rounded-full flex items-center">
             <Clock className="w-3.5 h-3.5 mr-1.5" /> {pendientesCount} pendiente{pendientesCount !== 1 ? 's' : ''}
           </span>
         )}
@@ -151,7 +151,7 @@ export default function SolicitudesPersonal() {
                       {s.imagen_url ? (
                         <img src={s.imagen_url} alt="" className="w-9 h-9 rounded-full object-cover mr-3 shrink-0" />
                       ) : (
-                        <div className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs mr-3 shrink-0">
+                        <div className="w-9 h-9 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-xs mr-3 shrink-0">
                           {s.nombre_completo.substring(0, 2).toUpperCase()}
                         </div>
                       )}
@@ -199,14 +199,14 @@ export default function SolicitudesPersonal() {
                         <button
                           onClick={() => abrirRechazo(s)}
                           disabled={procesandoId === s.id_solicitud}
-                          className="inline-flex items-center text-xs font-semibold bg-red-50 text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-100 disabled:opacity-50 transition-colors"
+                          className="inline-flex items-center text-xs font-semibold bg-risk-high-bg text-risk-high-fg px-3 py-1.5 rounded-lg hover:bg-risk-high-bg disabled:opacity-50 transition-colors"
                         >
                           <XCircle className="w-3.5 h-3.5 mr-1.5" /> Rechazar
                         </button>
                         <button
                           onClick={() => handleAceptar(s)}
                           disabled={procesandoId === s.id_solicitud}
-                          className="inline-flex items-center text-xs font-semibold bg-green-50 text-green-700 px-3 py-1.5 rounded-lg hover:bg-green-100 disabled:opacity-50 transition-colors"
+                          className="inline-flex items-center text-xs font-semibold bg-risk-low-bg text-risk-low-fg px-3 py-1.5 rounded-lg hover:bg-risk-low-bg disabled:opacity-50 transition-colors"
                         >
                           <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
                           {procesandoId === s.id_solicitud ? 'Procesando...' : 'Aceptar'}
@@ -259,7 +259,7 @@ export default function SolicitudesPersonal() {
                 <button
                   type="submit"
                   disabled={procesandoId === rechazoModal.solicitud?.id_solicitud}
-                  className="flex-1 py-2.5 bg-red-600 text-white font-bold rounded-lg text-sm hover:bg-red-700 disabled:opacity-70"
+                  className="flex-1 py-2.5 bg-risk-high text-white font-bold rounded-lg text-sm hover:bg-risk-high-fg disabled:opacity-70"
                 >
                   {procesandoId === rechazoModal.solicitud?.id_solicitud ? 'Procesando...' : 'Confirmar Rechazo'}
                 </button>

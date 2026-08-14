@@ -315,7 +315,7 @@ export default function CapturaCalificaciones() {
           </p>
           <div className="flex items-end">
             <h3 className="text-3xl font-bold text-gray-900">{stats.completados}%</h3>
-            <span className="ml-2 mb-1 text-sm text-green-600 font-medium">+12% esta semana</span>
+            <span className="ml-2 mb-1 text-sm text-risk-low font-medium">+12% esta semana</span>
           </div>
         </div>
 
@@ -379,7 +379,7 @@ export default function CapturaCalificaciones() {
             </div>
             
             <div className="flex items-center text-sm text-gray-500">
-              <span className="w-2 h-2 rounded-full border border-red-500 mr-2"></span> Entrada inválida
+              <span className="w-2 h-2 rounded-full border border-risk-high mr-2"></span> Entrada inválida
             </div>
           </div>
 
@@ -411,13 +411,13 @@ export default function CapturaCalificaciones() {
                   <tr key={est.id_estudiante} className="hover:bg-gray-50 transition-colors group">
                     <td className="p-4 pl-6">
                       <div className="flex items-center cursor-pointer" onClick={() => setModalObs({ isOpen: true, estudiante: est })}>
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold mr-3 ${isAtRisk ? 'bg-red-100 text-red-600' : 'bg-indigo-100 text-indigo-700'}`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold mr-3 ${isAtRisk ? 'bg-risk-high-bg text-risk-high' : 'bg-brand-100 text-brand-700'}`}>
                           {est.nombre_completo.split(' ').map(n => n[0]).join('').substring(0, 2)}
                         </div>
                         <div>
                           <p className="text-sm font-bold text-gray-900">{est.nombre_completo}</p>
                           {isAtRisk ? (
-                            <p className="text-xs text-red-600 flex items-center"><AlertTriangle className="w-3 h-3 mr-1"/> Academic Risk</p>
+                            <p className="text-xs text-risk-high flex items-center"><AlertTriangle className="w-3 h-3 mr-1"/> Academic Risk</p>
                           ) : (
                             <p className="text-xs text-gray-500">CS Major</p>
                           )}
@@ -435,14 +435,14 @@ export default function CapturaCalificaciones() {
                             type="text"
                             value={valor}
                             onChange={(e) => handleCalificacionChange(est.id_estudiante, campo, e.target.value)}
-                            className={`w-16 text-center border rounded-md py-1.5 text-sm focus:ring-2 focus:outline-none ${isInvalid(valor) ? 'border-red-500 bg-red-50 text-red-700 ring-red-200' : 'border-gray-300 focus:border-eduPurple focus:ring-indigo-100'}`}
+                            className={`w-16 text-center border rounded-md py-1.5 text-sm focus:ring-2 focus:outline-none ${isInvalid(valor) ? 'border-risk-high bg-risk-high-bg text-risk-high-fg ring-risk-high-border' : 'border-gray-300 focus:border-eduPurple focus:ring-brand-100'}`}
                             placeholder="-"
                           />
                         </td>
                       );
                     })}
 
-                    <td className={`p-4 text-right pr-6 font-bold ${isAtRisk ? 'text-red-600' : 'text-gray-700'}`}>
+                    <td className={`p-4 text-right pr-6 font-bold ${isAtRisk ? 'text-risk-high' : 'text-gray-700'}`}>
                       {califFinal}
                     </td>
                   </tr>
@@ -455,7 +455,7 @@ export default function CapturaCalificaciones() {
 
       {toast && (
         <div className="fixed bottom-6 right-6 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg flex items-center z-50">
-          <CheckCircle className="w-5 h-5 text-green-400 mr-3" />
+          <CheckCircle className="w-5 h-5 text-risk-low mr-3" />
           {toast.text}
         </div>
       )}

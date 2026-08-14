@@ -35,7 +35,7 @@ export default function HistorialAcademicoTab({ historial, idEstudiante, token }
             <BookOpen className="w-5 h-5 text-eduPurple mr-2" />
             <h4 className="font-bold text-gray-900">Historial de Calificaciones</h4>
           </div>
-          <span className={`px-3 py-1 rounded-full text-sm font-bold ${esRiesgo ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+          <span className={`px-3 py-1 rounded-full text-sm font-bold ${esRiesgo ? 'bg-risk-high-bg text-risk-high-fg' : 'bg-risk-low-bg text-risk-low-fg'}`}>
             Promedio General: {promedioGeneral}
           </span>
         </div>

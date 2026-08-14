@@ -140,9 +140,9 @@ export default function GestionEstudiantes() {
   };
 
   const estilosRiesgo = {
-    Alto: 'bg-red-100 text-red-800 border-red-200',
-    Medio: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    Bajo: 'bg-green-100 text-green-800 border-green-200'
+    Alto: 'bg-risk-high-bg text-risk-high-fg border-risk-high-border',
+    Medio: 'bg-risk-medium-bg text-risk-medium-fg border-risk-medium-border',
+    Bajo: 'bg-risk-low-bg text-risk-low-fg border-risk-low-border'
   };
 
   return (
@@ -150,7 +150,7 @@ export default function GestionEstudiantes() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Directorio de Estudiantes</h2>
-          {state?.message && <p className="text-sm text-green-600 mt-1">{state.message}</p>}
+          {state?.message && <p className="text-sm text-risk-low mt-1">{state.message}</p>}
         </div>
         <Link to="/estudiantes/nuevo" className="bg-eduPurple text-white px-4 py-2 rounded-md flex items-center text-sm hover:bg-opacity-90">
           <Plus className="w-4 h-4 mr-2" /> Nuevo Registro
@@ -158,11 +158,11 @@ export default function GestionEstudiantes() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white p-5 rounded-xl border border-red-200 border-l-4 border-l-red-600 shadow-sm">
+        <div className="bg-white p-5 rounded-xl border border-risk-high-border border-l-4 border-l-red-600 shadow-sm">
           <p className="text-xs font-bold text-gray-500 uppercase mb-1">Riesgo Crítico</p>
           <h3 className="text-3xl font-black text-gray-900">{resumenRiesgo.alto}</h3>
         </div>
-        <div className="bg-white p-5 rounded-xl border border-yellow-200 border-l-4 border-l-yellow-500 shadow-sm">
+        <div className="bg-white p-5 rounded-xl border border-risk-medium-border border-l-4 border-l-yellow-500 shadow-sm">
           <p className="text-xs font-bold text-gray-500 uppercase mb-1">Riesgo Moderado</p>
           <h3 className="text-3xl font-black text-gray-900">{resumenRiesgo.medio}</h3>
         </div>
@@ -255,7 +255,7 @@ export default function GestionEstudiantes() {
                       <Link
                         to="/estudiantes/baja"
                         title="Dar de baja"
-                        className="text-gray-400 hover:text-red-600"
+                        className="text-gray-400 hover:text-risk-high"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Link>
@@ -279,7 +279,7 @@ export default function GestionEstudiantes() {
             </div>
             <form onSubmit={guardarEdicion} className="p-6 space-y-4 overflow-y-auto">
               {editError && (
-                <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+                <div className="p-3 text-sm text-risk-high bg-risk-high-bg border border-risk-high-border rounded-lg">
                   {editError}
                 </div>
               )}

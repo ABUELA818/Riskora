@@ -85,7 +85,7 @@ export default function RiesgoAgregado() {
   };
 
   if (error) {
-    return <div className="p-8 text-center text-red-600">{error}</div>;
+    return <div className="p-8 text-center text-risk-high">{error}</div>;
   }
 
   if (!indicadores) return <div className="p-8 text-gray-500">Cargando gráficas...</div>;
@@ -110,18 +110,18 @@ export default function RiesgoAgregado() {
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-2xl border border-red-200 border-l-4 border-l-red-600 shadow-sm relative">
-          <AlertTriangle className="absolute top-6 right-6 w-5 h-5 text-red-500" />
+        <div className="bg-white p-6 rounded-2xl border border-risk-high-border border-l-4 border-l-red-600 shadow-sm relative">
+          <AlertTriangle className="absolute top-6 right-6 w-5 h-5 text-risk-high" />
           <p className="text-xs font-bold text-gray-500 uppercase mb-2">Riesgo Crítico</p>
           <div className="flex items-baseline"><h3 className="text-4xl font-black text-gray-900 mr-2">{indicadores.riesgo_alto}</h3><span className="text-sm text-gray-500">estudiantes</span></div>
         </div>
-        <div className="bg-white p-6 rounded-2xl border border-yellow-200 border-l-4 border-l-yellow-500 shadow-sm relative">
-          <Info className="absolute top-6 right-6 w-5 h-5 text-yellow-500" />
+        <div className="bg-white p-6 rounded-2xl border border-risk-medium-border border-l-4 border-l-yellow-500 shadow-sm relative">
+          <Info className="absolute top-6 right-6 w-5 h-5 text-risk-medium" />
           <p className="text-xs font-bold text-gray-500 uppercase mb-2">Riesgo Moderado</p>
           <div className="flex items-baseline"><h3 className="text-4xl font-black text-gray-900 mr-2">{indicadores.riesgo_medio}</h3><span className="text-sm text-gray-500">estudiantes</span></div>
         </div>
-        <div className="bg-white p-6 rounded-2xl border border-indigo-200 border-l-4 border-l-indigo-800 shadow-sm relative">
-          <Users className="absolute top-6 right-6 w-5 h-5 text-indigo-400" />
+        <div className="bg-white p-6 rounded-2xl border border-brand-200 border-l-4 border-l-indigo-800 shadow-sm relative">
+          <Users className="absolute top-6 right-6 w-5 h-5 text-brand-500" />
           <p className="text-xs font-bold text-gray-500 uppercase mb-2">Matrícula Total</p>
           <div className="flex items-baseline"><h3 className="text-4xl font-black text-gray-900 mr-2">{indicadores.total_estudiantes}</h3><span className="text-sm text-gray-500">activos</span></div>
         </div>
@@ -150,9 +150,9 @@ export default function RiesgoAgregado() {
                     return (
                       <div key={g.id_grupo} className="w-12 h-full flex flex-col justify-end shrink-0 group">
                         <div className="w-full flex flex-col h-[88%]">
-                          <div className="w-full bg-red-700 transition-all hover:opacity-80" style={{ height: `${pAlto}%` }}></div>
-                          <div className="w-full bg-yellow-400 transition-all hover:opacity-80" style={{ height: `${pMedio}%` }}></div>
-                          <div className="w-full bg-green-300 transition-all hover:opacity-80" style={{ height: `${pBajo}%` }}></div>
+                          <div className="w-full bg-risk-high-fg transition-all hover:opacity-80" style={{ height: `${pAlto}%` }}></div>
+                          <div className="w-full bg-risk-medium transition-all hover:opacity-80" style={{ height: `${pMedio}%` }}></div>
+                          <div className="w-full bg-risk-low transition-all hover:opacity-80" style={{ height: `${pBajo}%` }}></div>
                         </div>
                         <span className="text-[10px] text-center text-gray-500 font-medium mt-2 truncate w-full" title={g.nombre_grupo}>{g.nombre_grupo}</span>
                       </div>
@@ -162,9 +162,9 @@ export default function RiesgoAgregado() {
               </div>
 
               <div className="flex justify-center mt-6 space-x-6 text-xs font-semibold text-gray-600">
-                <span className="flex items-center"><span className="w-3 h-3 rounded-sm bg-red-700 mr-2"></span>Crítico</span>
-                <span className="flex items-center"><span className="w-3 h-3 rounded-sm bg-yellow-400 mr-2"></span>Moderado</span>
-                <span className="flex items-center"><span className="w-3 h-3 rounded-sm bg-green-300 mr-2"></span>Bajo</span>
+                <span className="flex items-center"><span className="w-3 h-3 rounded-sm bg-risk-high-fg mr-2"></span>Crítico</span>
+                <span className="flex items-center"><span className="w-3 h-3 rounded-sm bg-risk-medium mr-2"></span>Moderado</span>
+                <span className="flex items-center"><span className="w-3 h-3 rounded-sm bg-risk-low mr-2"></span>Bajo</span>
               </div>
             </>
           )}
@@ -174,19 +174,19 @@ export default function RiesgoAgregado() {
           <h3 className="text-base font-bold text-gray-900 mb-4">Áreas de Atención</h3>
           <div className="space-y-3 flex-1 overflow-y-auto max-h-72">
             {gruposCriticos.length === 0 ? (
-              <div className="bg-green-50 border border-green-100 p-4 rounded-xl">
-                <h4 className="text-sm font-bold text-green-800 flex items-center mb-1">
+              <div className="bg-risk-low-bg border border-risk-low-border p-4 rounded-xl">
+                <h4 className="text-sm font-bold text-risk-low-fg flex items-center mb-1">
                   <Info className="w-4 h-4 mr-2" /> Sin focos críticos
                 </h4>
-                <p className="text-xs text-green-700">Ningún grupo supera el 20% de matrícula en riesgo alto.</p>
+                <p className="text-xs text-risk-low-fg">Ningún grupo supera el 20% de matrícula en riesgo alto.</p>
               </div>
             ) : (
               gruposCriticos.map(g => (
-                <div key={g.id_grupo} className="bg-red-50 border border-red-100 p-4 rounded-xl">
-                  <h4 className="text-sm font-bold text-red-800 flex items-center mb-1">
+                <div key={g.id_grupo} className="bg-risk-high-bg border border-risk-high-border p-4 rounded-xl">
+                  <h4 className="text-sm font-bold text-risk-high-fg flex items-center mb-1">
                     <AlertTriangle className="w-4 h-4 mr-2" /> {g.nombre_grupo}
                   </h4>
-                  <p className="text-xs text-red-600">
+                  <p className="text-xs text-risk-high">
                     {g.riesgo_alto} de {g.total_estudiantes} estudiantes en riesgo alto ({Math.round(g.pAlto)}%).
                   </p>
                 </div>

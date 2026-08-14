@@ -88,7 +88,7 @@ export default function DashboardTutor() {
                 <span>{resumen.bajo} estudiantes</span>
               </div>
               <div className="w-full bg-gray-100 rounded-full h-3">
-                <div className="bg-green-600 h-3 rounded-full transition-all duration-500" style={{ width: `${pBajo}%` }}></div>
+                <div className="bg-risk-low h-3 rounded-full transition-all duration-500" style={{ width: `${pBajo}%` }}></div>
               </div>
             </div>
 
@@ -98,7 +98,7 @@ export default function DashboardTutor() {
                 <span>{resumen.medio} estudiantes</span>
               </div>
               <div className="w-full bg-gray-100 rounded-full h-3">
-                <div className="bg-yellow-500 h-3 rounded-full transition-all duration-500" style={{ width: `${pMedio}%` }}></div>
+                <div className="bg-risk-medium h-3 rounded-full transition-all duration-500" style={{ width: `${pMedio}%` }}></div>
               </div>
             </div>
 
@@ -108,7 +108,7 @@ export default function DashboardTutor() {
                 <span>{resumen.alto} estudiantes</span>
               </div>
               <div className="w-full bg-gray-100 rounded-full h-3">
-                <div className="bg-red-600 h-3 rounded-full transition-all duration-500" style={{ width: `${pAlto}%` }}></div>
+                <div className="bg-risk-high h-3 rounded-full transition-all duration-500" style={{ width: `${pAlto}%` }}></div>
               </div>
             </div>
           </div>
@@ -117,23 +117,23 @@ export default function DashboardTutor() {
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
           <h3 className="text-base font-bold text-gray-800 mb-4">Métricas Clave</h3>
           <div className="space-y-4">
-            <div className="flex items-center p-3 bg-red-50 rounded-xl border border-red-100">
-              <div className="p-2 bg-red-100 rounded-lg mr-3">
-                <AlertTriangle className="w-5 h-5 text-red-600" />
+            <div className="flex items-center p-3 bg-risk-high-bg rounded-xl border border-risk-high-border">
+              <div className="p-2 bg-risk-high-bg rounded-lg mr-3">
+                <AlertTriangle className="w-5 h-5 text-risk-high" />
               </div>
               <div>
                 <h4 className="text-xl font-bold text-gray-900">{resumen.alto}</h4>
-                <p className="text-xs text-red-700 font-medium">Alertas Críticas</p>
+                <p className="text-xs text-risk-high-fg font-medium">Alertas Críticas</p>
               </div>
             </div>
 
-            <div className="flex items-center p-3 bg-yellow-50 rounded-xl border border-yellow-100">
-              <div className="p-2 bg-yellow-100 rounded-lg mr-3">
-                <TrendingDown className="w-5 h-5 text-yellow-700" />
+            <div className="flex items-center p-3 bg-risk-medium-bg rounded-xl border border-risk-medium-border">
+              <div className="p-2 bg-risk-medium-bg rounded-lg mr-3">
+                <TrendingDown className="w-5 h-5 text-risk-medium-fg" />
               </div>
               <div>
                 <h4 className="text-xl font-bold text-gray-900">{resumen.medio}</h4>
-                <p className="text-xs text-yellow-800 font-medium">Rendimiento en Declive</p>
+                <p className="text-xs text-risk-medium-fg font-medium">Rendimiento en Declive</p>
               </div>
             </div>
           </div>
@@ -164,8 +164,8 @@ export default function DashboardTutor() {
             <tbody className="divide-y divide-gray-100">
               {alumnosAtencion.map(alumno => {
                 const badgeColor = alumno.nivel_riesgo === 'Alto'
-                  ? 'bg-red-100 text-red-800 border-red-200'
-                  : 'bg-yellow-100 text-yellow-800 border-yellow-200';
+                  ? 'bg-risk-high-bg text-risk-high-fg border-risk-high-border'
+                  : 'bg-risk-medium-bg text-risk-medium-fg border-risk-medium-border';
                 return (
                   <tr key={alumno.id_estudiante} className="hover:bg-gray-50 transition-colors">
                     <td className="p-4 pl-6 font-semibold text-gray-900">{alumno.nombre_completo}</td>
@@ -179,7 +179,7 @@ export default function DashboardTutor() {
                       {alumno.correo_institucional ? (
                         
                         <a  href={`mailto:${alumno.correo_institucional}`}
-                          className="inline-flex items-center text-xs font-semibold bg-indigo-50 text-eduPurple px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
+                          className="inline-flex items-center text-xs font-semibold bg-brand-50 text-eduPurple px-3 py-1.5 rounded-lg hover:bg-brand-100 transition-colors"
                         >
                           <Mail className="w-3.5 h-3.5 mr-1.5" /> Enviar correo
                         </a>

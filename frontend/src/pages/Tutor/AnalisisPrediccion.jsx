@@ -45,7 +45,7 @@ export default function AnalisisPrediccion() {
           <div>
             <div className="flex justify-between items-center mb-4">
               <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Overall Risk Score</span>
-              <span className={`px-3 py-1 rounded-full text-xs font-bold ${data.nivel_riesgo === 'Alto' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+              <span className={`px-3 py-1 rounded-full text-xs font-bold ${data.nivel_riesgo === 'Alto' ? 'bg-risk-high-bg text-risk-high-fg' : 'bg-risk-medium-bg text-risk-medium-fg'}`}>
                 {data.nivel_riesgo.toUpperCase()} RISK
               </span>
             </div>

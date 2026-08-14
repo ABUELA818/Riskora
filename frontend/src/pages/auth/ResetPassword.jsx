@@ -41,7 +41,7 @@ export default function ResetPassword() {
   if (!token) {
     return (
       <AuthLayout>
-        <div className="text-center text-red-600">Enlace inválido. Falta el token de seguridad.</div>
+        <div className="text-center text-risk-high-fg">Enlace inválido. Falta el token de seguridad.</div>
       </AuthLayout>
     );
   }
@@ -49,58 +49,58 @@ export default function ResetPassword() {
   return (
     <AuthLayout>
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Crear nueva contraseña</h2>
-        <p className="text-gray-500 text-sm">Asegúrate de que tu nueva contraseña tenga al menos 8 caracteres.</p>
+        <h2 className="font-display text-3xl font-bold text-ink-900 mb-2">Crear nueva contraseña</h2>
+        <p className="text-slate-500 text-sm">Asegúrate de que tu nueva contraseña tenga al menos 8 caracteres.</p>
       </div>
 
       {status.type === 'success' ? (
         <div className="text-center">
-          <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900">{status.message}</h3>
-          <p className="text-sm text-gray-500 mt-2">Redirigiendo al inicio de sesión...</p>
+          <CheckCircle className="mx-auto h-12 w-12 text-risk-low mb-4" />
+          <h3 className="font-display text-lg font-semibold text-ink-900">{status.message}</h3>
+          <p className="text-sm text-slate-500 mt-2">Redirigiendo al inicio de sesión...</p>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
-          {status.type === 'error' && <p className="text-sm text-red-600">{status.message}</p>}
+          {status.type === 'error' && <p className="text-sm text-risk-high-fg">{status.message}</p>}
           
           <div>
-            <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">Nueva Contraseña</label>
+            <label className="block text-xs font-semibold text-slate-600 uppercase mb-2">Nueva Contraseña</label>
             <div className="relative">
-              <Lock className="absolute inset-y-0 left-0 pl-3 h-full w-8 text-gray-400" />
+              <Lock className="absolute inset-y-0 left-0 pl-3 h-full w-8 text-slate-400" />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="block w-full pl-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eduPurple"
+                className="block w-full pl-10 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500"
                 required
               />
             </div>
             {!isStrong && password.length > 0 && (
-               <p className="text-xs text-red-500 mt-1">Mínimo 8 caracteres</p>
+               <p className="text-xs text-risk-high-fg mt-1">Mínimo 8 caracteres</p>
             )}
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">Confirmar Contraseña</label>
+            <label className="block text-xs font-semibold text-slate-600 uppercase mb-2">Confirmar Contraseña</label>
             <div className="relative">
-              <Lock className="absolute inset-y-0 left-0 pl-3 h-full w-8 text-gray-400" />
+              <Lock className="absolute inset-y-0 left-0 pl-3 h-full w-8 text-slate-400" />
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="block w-full pl-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eduPurple"
+                className="block w-full pl-10 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500"
                 required
               />
             </div>
             {!doMatch && confirmPassword.length > 0 && (
-               <p className="text-xs text-red-500 mt-1">Las contraseñas no coinciden</p>
+               <p className="text-xs text-risk-high-fg mt-1">Las contraseñas no coinciden</p>
             )}
           </div>
 
           <button
             type="submit"
             disabled={!isStrong || !doMatch || status.type === 'loading'}
-            className="w-full py-2.5 rounded-lg font-medium text-white bg-eduPurple hover:bg-opacity-90 disabled:bg-gray-400"
+            className="w-full py-2.5 rounded-lg font-semibold text-ink-950 bg-brand-500 hover:bg-brand-600 disabled:bg-slate-300 disabled:text-slate-500"
           >
             Actualizar Contraseña
           </button>

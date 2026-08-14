@@ -77,20 +77,20 @@ export default function BajaEstudiante() {
     <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="mb-6 border-b border-gray-200 pb-4">
         <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-          <UserX className="w-6 h-6 mr-2 text-red-500" /> Baja de Estudiante
+          <UserX className="w-6 h-6 mr-2 text-risk-high" /> Baja de Estudiante
         </h2>
         <p className="text-sm text-gray-500">Busca al estudiante por matrícula para dar de baja su registro.</p>
       </div>
 
       {exito && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center text-green-700">
+        <div className="mb-6 p-4 bg-risk-low-bg border border-risk-low-border rounded-lg flex items-center text-risk-low-fg">
           <CheckCircle className="w-5 h-5 mr-2 shrink-0" />
           <span className="text-sm">{exito}</span>
         </div>
       )}
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center text-red-700">
+        <div className="mb-6 p-4 bg-risk-high-bg border border-risk-high-border rounded-lg flex items-center text-risk-high-fg">
           <AlertCircle className="w-5 h-5 mr-2 shrink-0" />
           <span className="text-sm">{error}</span>
         </div>
@@ -148,7 +148,7 @@ export default function BajaEstudiante() {
             <button
               onClick={confirmarBaja}
               disabled={confirmando}
-              className="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-bold hover:bg-red-700 disabled:opacity-60"
+              className="px-4 py-2 bg-risk-high text-white rounded-md text-sm font-bold hover:bg-risk-high-fg disabled:opacity-60"
             >
               {confirmando ? 'Procesando...' : 'Confirmar Baja'}
             </button>
