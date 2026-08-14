@@ -44,9 +44,23 @@ const MENU_ITEMS = {
     { name: 'Gestión Accesos', path: '/rrhh/accesos', icon: Lock },
   ],
   Administrador: [
-    { name: 'Dashboard RRHH', path: '/rrhh/dashboard', icon: LayoutDashboard },
-    { name: 'Directorio Global', path: '/rrhh/directorio', icon: Users },
-    { name: 'Control Accesos', path: '/rrhh/accesos', icon: Lock },
+    { name: 'Dashboard General', path: '/rrhh/dashboard', icon: LayoutDashboard },
+    { name: 'Visión Institucional', path: '/psicopedagogia/dashboard', icon: LayoutDashboard },
+    { name: 'Directorio de Estudiantes', path: '/estudiantes', icon: Users },
+    { name: 'Alta de Estudiantes', path: '/estudiantes/nuevo', icon: UserPlus },
+    { name: 'Baja de Estudiantes', path: '/estudiantes/baja', icon: UserX },
+    { name: 'Gestión de Grupos', path: '/grupos', icon: Folder },
+    { name: 'Materias', path: '/materias', icon: BookOpen },
+    { name: 'Carreras', path: '/carreras/gestion', icon: GraduationCap },
+    { name: 'Calificaciones', path: '/calificaciones', icon: BarChart2 },
+    { name: 'Asistencias', path: '/asistencias', icon: ClipboardList },
+    { name: 'Panel de Riesgo', path: '/panel-riesgo', icon: ShieldAlert },
+    { name: 'Casos Escalados', path: '/casos-escalados', icon: ShieldAlert },
+    { name: 'Reportes Institucionales', path: '/reportes', icon: FileText },
+    { name: 'Directorio de Personal', path: '/rrhh/directorio', icon: Users },
+    { name: 'Solicitudes de Personal', path: '/rrhh/solicitudes', icon: Clock },
+    { name: 'Gestión de Accesos', path: '/rrhh/accesos', icon: Lock },
+    { name: 'Auditoría de Accesos', path: '/rrhh/auditoria', icon: FileText },
   ]
 };
 

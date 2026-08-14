@@ -10,15 +10,17 @@ import { useAuth } from '../../context/AuthContext';
 const FORM_GRUPO_INICIAL = {
   nombre_grupo: '',
   cuatrimestre: '',
-  id_tutor: ''
+  id_tutor: '',
+  id_carrera: ''
 };
 
 export default function GestionGrupos() {
-  const { token } = useAuth();
+  const { token, role } = useAuth();
   const location = useLocation();
   const [grupos, setGrupos] = useState([]);
   const [idCarrera, setIdCarrera] = useState(null);
   const [docentesTutores, setDocentesTutores] = useState([]);
+  const [carreras, setCarreras] = useState([]);
 
   // Modal reasignar tutor (ya existía)
   const [modalOpen, setModalOpen] = useState(false);
@@ -104,6 +106,15 @@ export default function GestionGrupos() {
     return matchCuatri && matchTutor;
   });
 
+  useEffect(() => {
+    if (!token || role === 'Director') return;
+    fetch(`${API_BASE_URL}/api/v1/carreras`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setCarreras(data); })
+      .catch(err => console.error(err));
+  }, [token, role]);
 
   useEffect(() => {
   if (!token) return;
@@ -245,8 +256,9 @@ const eliminarHorarioExistente = async (idHorario) => {
 
   const handleCrearGrupo = async (e) => {
     e.preventDefault();
-    if (!idCarrera) {
-      setFormGrupoError('No se pudo determinar tu carrera asignada.');
+    const idCarreraFinal = role === 'Director' ? idCarrera : formGrupo.id_carrera;
+    if (!idCarreraFinal) {
+      setFormGrupoError('Debes seleccionar una carrera.');
       return;
     }
     setIsSavingGrupo(true);
@@ -261,7 +273,7 @@ const eliminarHorarioExistente = async (idHorario) => {
         body: JSON.stringify({
           nombre_grupo: formGrupo.nombre_grupo,
           cuatrimestre: parseInt(formGrupo.cuatrimestre),
-          id_carrera: idCarrera,
+          id_carrera: parseInt(idCarreraFinal),
           id_tutor: formGrupo.id_tutor ? parseInt(formGrupo.id_tutor) : null
         })
       });
@@ -493,6 +505,23 @@ const eliminarHorarioExistente = async (idHorario) => {
               {formGrupoError && (
                 <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
                   {formGrupoError}
+                </div>
+              )}
+
+              {role !== 'Director' && (
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">Carrera</label>
+                  <select
+                    required
+                    value={formGrupo.id_carrera}
+                    onChange={e => setFormGrupo({ ...formGrupo, id_carrera: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-eduPurple outline-none bg-white"
+                  >
+                    <option value="">Selecciona una carrera...</option>
+                    {carreras.map(c => (
+                      <option key={c.id_carrera} value={c.id_carrera}>{c.nombre}</option>
+                    ))}
+                  </select>
                 </div>
               )}
 

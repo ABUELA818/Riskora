@@ -21,19 +21,21 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     """Upgrade schema."""
     # Agregar columnas faltantes a usuarios
-    op.add_column('usuarios', sa.Column('token_version', sa.Integer(), server_default='1', nullable=True))
-    op.add_column('usuarios', sa.Column('telefono', sa.String(length=20), nullable=True))
-    op.add_column('usuarios', sa.Column('telefono_familiar', sa.String(length=20), nullable=True))
-    op.add_column('usuarios', sa.Column('imagen_url', sa.String(length=255), nullable=True))
+    # op.add_column('usuarios', sa.Column('token_version', sa.Integer(), server_default='1', nullable=True))
+    # op.add_column('usuarios', sa.Column('telefono', sa.String(length=20), nullable=True))
+    # op.add_column('usuarios', sa.Column('telefono_familiar', sa.String(length=20), nullable=True))
+    # op.add_column('usuarios', sa.Column('imagen_url', sa.String(length=255), nullable=True))
     
     # Agregar columna faltante a intervenciones
-    op.add_column('intervenciones', sa.Column('escalado', sa.Boolean(), nullable=True))
+    # op.add_column('intervenciones', sa.Column('escalado', sa.Boolean(), nullable=True))
+    pass
 
 
 def downgrade() -> None:
     """Downgrade schema."""
-    op.drop_column('usuarios', 'imagen_url')
-    op.drop_column('usuarios', 'telefono_familiar')
-    op.drop_column('usuarios', 'telefono')
-    op.drop_column('usuarios', 'token_version')
-    op.drop_column('intervenciones', 'escalado')
+    # op.drop_column('usuarios', 'imagen_url')
+    # op.drop_column('usuarios', 'telefono_familiar')
+    # op.drop_column('usuarios', 'telefono')
+    # op.drop_column('usuarios', 'token_version')
+    # op.drop_column('intervenciones', 'escalado')
+    pass

@@ -1,17 +1,54 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { AlertTriangle, Info, Users } from 'lucide-react';
+import { AlertTriangle, Info, Users, Download, Loader2 } from 'lucide-react';
 import SimulationBadge from '../../components/SimulationBadge';
-import { API_BASE_URL } from '../../config/api'; 
+import { API_BASE_URL } from '../../config/api';
+
+function calcularPeriodoVigente(periodos) {
+  const hoy = new Date().toISOString().split('T')[0];
+  const vigente = periodos.find(p => p.fecha_inicio <= hoy && hoy <= p.fecha_fin);
+  return vigente ? vigente.nombre_periodo : null;
+}
 
 export default function RiesgoAgregado() {
   const { id: idFromUrl } = useParams();
   const { token } = useAuth();
   const [idCarrera, setIdCarrera] = useState(idFromUrl || null);
-  const [indicadores, setIndicadores] = useState(null);   
-  const [grupos, setGrupos] = useState([]);               
+  const [indicadores, setIndicadores] = useState(null);
+  const [grupos, setGrupos] = useState([]);
+  const [nombreCarrera, setNombreCarrera] = useState('');
+  const [periodoVigente, setPeriodoVigente] = useState(null);
   const [error, setError] = useState('');
+  const [exportando, setExportando] = useState(false);
+
+  // Nombre real de la carrera
+  useEffect(() => {
+    if (!token || !idCarrera) return;
+    fetch(`${API_BASE_URL}/api/v1/carreras`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (!Array.isArray(data)) return;
+        const carrera = data.find(c => String(c.id_carrera) === String(idCarrera));
+        if (carrera) setNombreCarrera(carrera.nombre);
+      })
+      .catch(err => console.error(err));
+  }, [idCarrera, token]);
+
+  // Periodo académico vigente real
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${API_BASE_URL}/api/v1/periodos`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setPeriodoVigente(calcularPeriodoVigente(data));
+      })
+      .catch(err => console.error(err));
+  }, [token]);
 
   useEffect(() => {
     if (!token || !idCarrera) return;
@@ -20,9 +57,32 @@ export default function RiesgoAgregado() {
       fetch(`${API_BASE_URL}/api/v1/carreras/${idCarrera}/riesgo-agregado-por-grupo`, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json())
     ]).then(([ind, grup]) => {
       setIndicadores(ind);
-      setGrupos(grup);
+      setGrupos(Array.isArray(grup) ? grup : []);
     }).catch(err => setError('No se pudo cargar la información de riesgo.'));
   }, [idCarrera, token]);
+
+  const handleExportarReporte = async () => {
+    setExportando(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/reportes/academico/export?formato=pdf&carrera=${idCarrera}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Error al generar el reporte');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Reporte_${nombreCarrera || 'Carrera'}_${new Date().getTime()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('No se pudo generar el reporte.');
+    } finally {
+      setExportando(false);
+    }
+  };
 
   if (error) {
     return <div className="p-8 text-center text-red-600">{error}</div>;
@@ -30,12 +90,24 @@ export default function RiesgoAgregado() {
 
   if (!indicadores) return <div className="p-8 text-gray-500">Cargando gráficas...</div>;
 
+  // Grupos con riesgo alto real por encima del 20% de su matrícula, calculado con datos reales
+  const gruposCriticos = grupos
+    .map(g => {
+      const total = g.total_estudiantes || 0;
+      const pAlto = total > 0 ? (g.riesgo_alto / total) * 100 : 0;
+      return { ...g, pAlto };
+    })
+    .filter(g => g.total_estudiantes > 0 && g.pAlto > 20)
+    .sort((a, b) => b.pAlto - a.pAlto);
+
   return (
     <div className="p-8 bg-gray-50/50 min-h-full">
       <SimulationBadge />
 
-      <h2 className="text-3xl font-bold text-gray-900 mb-1">Ingeniería de Software</h2>
-      <p className="text-sm text-gray-500 mb-8">Panel de Riesgo Agregado • Semestre 2024-1</p>
+      <h2 className="text-3xl font-bold text-gray-900 mb-1">{nombreCarrera || 'Cargando carrera...'}</h2>
+      <p className="text-sm text-gray-500 mb-8">
+        Panel de Riesgo Agregado {periodoVigente ? `• ${periodoVigente}` : ''}
+      </p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-2xl border border-red-200 border-l-4 border-l-red-600 shadow-sm relative">
@@ -58,50 +130,79 @@ export default function RiesgoAgregado() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
           <h3 className="text-base font-bold text-gray-900 mb-6">Distribución de Riesgo por Grupo</h3>
-          
-          <div className="flex items-end h-64 space-x-4 border-b border-gray-200 pb-2 relative">
-            <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2 pb-2">
-              <span>100%</span><span>50%</span><span>0%</span>
-            </div>
-            
-            <div className="flex-1 flex justify-around items-end h-full pl-8">
-              {grupos.map(g => {
-                const total = g.total_estudiantes || 1;
-                const pBajo = (g.riesgo_bajo / total) * 100;
-                const pMedio = (g.riesgo_medio / total) * 100;
-                const pAlto = (g.riesgo_alto / total) * 100;
 
-                return (
-                  <div key={g.id_grupo} className="w-16 h-full flex flex-col justify-end group">
-                    <div className="w-full flex flex-col h-[90%]"> {/* 90% para dejar margen */}
-                      <div className="w-full bg-red-700 transition-all hover:opacity-80" style={{ height: `${pAlto}%` }}></div>
-                      <div className="w-full bg-yellow-400 transition-all hover:opacity-80" style={{ height: `${pMedio}%` }}></div>
-                      <div className="w-full bg-green-300 transition-all hover:opacity-80" style={{ height: `${pBajo}%` }}></div>
-                    </div>
-                    <span className="text-xs text-center text-gray-500 font-medium mt-3">{g.nombre_grupo}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          
-          <div className="flex justify-center mt-6 space-x-6 text-xs font-semibold text-gray-600">
-            <span className="flex items-center"><span className="w-3 h-3 rounded-sm bg-red-700 mr-2"></span>Crítico</span>
-            <span className="flex items-center"><span className="w-3 h-3 rounded-sm bg-yellow-400 mr-2"></span>Moderado</span>
-            <span className="flex items-center"><span className="w-3 h-3 rounded-sm bg-green-300 mr-2"></span>Bajo</span>
-          </div>
+          {grupos.length === 0 ? (
+            <p className="text-sm text-gray-400 italic py-12 text-center">Esta carrera no tiene grupos registrados todavía.</p>
+          ) : (
+            <>
+              <div className="flex items-end h-48 space-x-3 border-b border-gray-200 pb-2 relative overflow-x-auto">
+                <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2 pb-2 bg-white">
+                  <span>100%</span><span>50%</span><span>0%</span>
+                </div>
+
+                <div className="flex-1 flex justify-around items-end h-full pl-8 min-w-max gap-4">
+                  {grupos.map(g => {
+                    const total = g.total_estudiantes || 1;
+                    const pBajo = (g.riesgo_bajo / total) * 100;
+                    const pMedio = (g.riesgo_medio / total) * 100;
+                    const pAlto = (g.riesgo_alto / total) * 100;
+
+                    return (
+                      <div key={g.id_grupo} className="w-12 h-full flex flex-col justify-end shrink-0 group">
+                        <div className="w-full flex flex-col h-[88%]">
+                          <div className="w-full bg-red-700 transition-all hover:opacity-80" style={{ height: `${pAlto}%` }}></div>
+                          <div className="w-full bg-yellow-400 transition-all hover:opacity-80" style={{ height: `${pMedio}%` }}></div>
+                          <div className="w-full bg-green-300 transition-all hover:opacity-80" style={{ height: `${pBajo}%` }}></div>
+                        </div>
+                        <span className="text-[10px] text-center text-gray-500 font-medium mt-2 truncate w-full" title={g.nombre_grupo}>{g.nombre_grupo}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex justify-center mt-6 space-x-6 text-xs font-semibold text-gray-600">
+                <span className="flex items-center"><span className="w-3 h-3 rounded-sm bg-red-700 mr-2"></span>Crítico</span>
+                <span className="flex items-center"><span className="w-3 h-3 rounded-sm bg-yellow-400 mr-2"></span>Moderado</span>
+                <span className="flex items-center"><span className="w-3 h-3 rounded-sm bg-green-300 mr-2"></span>Bajo</span>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col">
           <h3 className="text-base font-bold text-gray-900 mb-4">Áreas de Atención</h3>
-          <div className="space-y-4 flex-1">
-            <div className="bg-red-50 border border-red-100 p-4 rounded-xl">
-              <h4 className="text-sm font-bold text-red-800 flex items-center mb-1"><AlertTriangle className="w-4 h-4 mr-2"/> Foco Crítico</h4>
-              <p className="text-xs text-red-600">Revisar los grupos con más del 20% de matrícula en riesgo alto.</p>
-            </div>
+          <div className="space-y-3 flex-1 overflow-y-auto max-h-72">
+            {gruposCriticos.length === 0 ? (
+              <div className="bg-green-50 border border-green-100 p-4 rounded-xl">
+                <h4 className="text-sm font-bold text-green-800 flex items-center mb-1">
+                  <Info className="w-4 h-4 mr-2" /> Sin focos críticos
+                </h4>
+                <p className="text-xs text-green-700">Ningún grupo supera el 20% de matrícula en riesgo alto.</p>
+              </div>
+            ) : (
+              gruposCriticos.map(g => (
+                <div key={g.id_grupo} className="bg-red-50 border border-red-100 p-4 rounded-xl">
+                  <h4 className="text-sm font-bold text-red-800 flex items-center mb-1">
+                    <AlertTriangle className="w-4 h-4 mr-2" /> {g.nombre_grupo}
+                  </h4>
+                  <p className="text-xs text-red-600">
+                    {g.riesgo_alto} de {g.total_estudiantes} estudiantes en riesgo alto ({Math.round(g.pAlto)}%).
+                  </p>
+                </div>
+              ))
+            )}
           </div>
-          <button className="w-full bg-eduPurple text-white py-3 rounded-lg text-sm font-bold shadow-sm mt-4">
-            Generar Reporte Detallado
+          <button
+            onClick={handleExportarReporte}
+            disabled={exportando}
+            className="w-full bg-eduPurple text-white py-3 rounded-lg text-sm font-bold shadow-sm mt-4 flex items-center justify-center disabled:opacity-70"
+          >
+            {exportando ? (
+              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generando...</>
+            ) : (
+              <><Download className="w-4 h-4 mr-2" /> Generar Reporte Detallado</>
+            )}
           </button>
         </div>
       </div>

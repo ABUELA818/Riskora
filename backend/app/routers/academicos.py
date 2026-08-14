@@ -33,8 +33,9 @@ permitir_gestion_grupos = RoleChecker(["Administrador", "Director", "Psicopedago
 
 def _generar_matricula(db: Session) -> str:
     anio = datetime.now().year
+    prefijo = f"MAT-{anio}-"
     ultimo = db.query(Estudiante)\
-        .filter(Estudiante.matricula.like(f"MAT-{anio}%"))\
+        .filter(Estudiante.matricula.like(f"{prefijo}%"))\
         .order_by(Estudiante.matricula.desc())\
         .first()
     if ultimo:
@@ -44,7 +45,7 @@ def _generar_matricula(db: Session) -> str:
             consecutivo = 1
     else:
         consecutivo = 1
-    return f"MAT-{anio}{consecutivo:04d}"
+    return f"{prefijo}{consecutivo:04d}"
 
 def _armar_materia_salida(m: Materia, db: Session) -> MateriaOut:
     carrera = db.query(Carrera).filter(Carrera.id_carrera == m.id_carrera).first() if m.id_carrera else None
