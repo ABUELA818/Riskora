@@ -146,7 +146,12 @@ export default function DashboardDirector() {
                     </div>
                   </td>
                   <td className="p-4 text-right pr-6">
-                    <button className="text-gray-400 hover:text-gray-900"><ChevronRight className="w-5 h-5" /></button>
+                    <button
+                      onClick={() => navigate('/grupos', { state: { grupoAAbrir: g.id_grupo } })}
+                      className="text-gray-400 hover:text-gray-900"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
                   </td>
                 </tr>
               );

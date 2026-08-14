@@ -15,16 +15,19 @@ class PeriodoOut(PeriodoBase):
         from_attributes = True
 
 # --- MATERIAS ---
+# --- MATERIAS ---
 class MateriaBase(BaseModel):
     nombre_materia: str
     clave_materia: str
     creditos: int
     horas_semana: Optional[int] = None
+    id_carrera: Optional[int] = None
     estado: Optional[bool] = True
 
 class MateriaCreate(MateriaBase): pass
 class MateriaOut(MateriaBase):
     id_materia: int
+    nombre_carrera: Optional[str] = None
     class Config: 
         from_attributes = True
 
@@ -33,6 +36,7 @@ class MateriaUpdate(BaseModel):
     clave_materia: Optional[str] = None
     creditos: Optional[int] = None
     horas_semana: Optional[int] = None
+    id_carrera: Optional[int] = None
     estado: Optional[bool] = None
 
 # --- GRUPOS ---
@@ -47,6 +51,7 @@ class GrupoCreate(GrupoBase): pass
 class GrupoOut(GrupoBase):
     id_grupo: int
     nombre_carrera: Optional[str] = None
+    nombre_tutor: Optional[str] = None
     class Config: 
         from_attributes = True
 

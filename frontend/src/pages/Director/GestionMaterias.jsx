@@ -13,13 +13,18 @@ const FORM_INICIAL = {
   nombre_materia: '',
   clave_materia: '',
   creditos: '',
-  horas_semana: ''
+  horas_semana: '',
+  id_carrera: ''
 };
 
 export default function GestionMaterias() {
-  const { token } = useAuth();
+  const { token, role } = useAuth();
+  const esDirector = role === 'Director';
 
   const [materias, setMaterias] = useState([]);
+  const [carreras, setCarreras] = useState([]);
+  const [idCarreraDirector, setIdCarreraDirector] = useState(null);
+  const [filtroCarrera, setFiltroCarrera] = useState('');
   const [loading, setLoading] = useState(true);
   const [periodoVigente, setPeriodoVigente] = useState(null);
 
@@ -30,16 +35,30 @@ export default function GestionMaterias() {
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState('');
 
-  useEffect(() => {
+  const cargarMaterias = () => {
     if (!token) return;
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (!esDirector && filtroCarrera) params.append('carrera', filtroCarrera);
 
-    fetch(`${API_BASE_URL}/api/v1/materias`, {
+    fetch(`${API_BASE_URL}/api/v1/materias?${params.toString()}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => { if (Array.isArray(data)) setMaterias(data); })
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    if (!token) return;
+
+    fetch(`${API_BASE_URL}/api/v1/carreras`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => { if (Array.isArray(data)) setCarreras(data); })
+      .catch(err => console.error(err));
 
     fetch(`${API_BASE_URL}/api/v1/periodos`, {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -49,12 +68,28 @@ export default function GestionMaterias() {
         if (Array.isArray(data)) setPeriodoVigente(calcularPeriodoVigente(data));
       })
       .catch(err => console.error(err));
-  }, [token]);
+
+    if (esDirector) {
+      fetch(`${API_BASE_URL}/api/v1/director/mi-carrera`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => { if (data) setIdCarreraDirector(data.id_carrera); })
+        .catch(err => console.error(err));
+    }
+  }, [token, esDirector]);
+
+  useEffect(() => {
+    cargarMaterias();
+  }, [token, filtroCarrera]);
 
   const abrirModalCrear = () => {
     setModoEdicion(false);
     setMateriaSeleccionada(null);
-    setFormData(FORM_INICIAL);
+    setFormData({
+      ...FORM_INICIAL,
+      id_carrera: esDirector && idCarreraDirector ? String(idCarreraDirector) : ''
+    });
     setFormError('');
     setModalOpen(true);
   };
@@ -66,7 +101,8 @@ export default function GestionMaterias() {
       nombre_materia: materia.nombre_materia || '',
       clave_materia: materia.clave_materia || '',
       creditos: materia.creditos ?? '',
-      horas_semana: materia.horas_semana ?? ''
+      horas_semana: materia.horas_semana ?? '',
+      id_carrera: materia.id_carrera ? String(materia.id_carrera) : (esDirector && idCarreraDirector ? String(idCarreraDirector) : '')
     });
     setFormError('');
     setModalOpen(true);
@@ -79,25 +115,32 @@ export default function GestionMaterias() {
 
   const handleGuardar = async (e) => {
     e.preventDefault();
+
+    if (!formData.id_carrera) {
+      setFormError('Debes seleccionar una carrera.');
+      return;
+    }
+
     setIsSaving(true);
     setFormError('');
 
+    const payloadBase = {
+      nombre_materia: formData.nombre_materia,
+      clave_materia: formData.clave_materia,
+      creditos: formData.creditos === '' ? null : parseInt(formData.creditos),
+      horas_semana: formData.horas_semana === '' ? null : parseInt(formData.horas_semana),
+      id_carrera: parseInt(formData.id_carrera)
+    };
+
     try {
       if (modoEdicion) {
-        const payload = {
-          nombre_materia: formData.nombre_materia,
-          clave_materia: formData.clave_materia,
-          creditos: formData.creditos === '' ? null : parseInt(formData.creditos),
-          horas_semana: formData.horas_semana === '' ? null : parseInt(formData.horas_semana)
-        };
-
         const response = await fetch(`${API_BASE_URL}/api/v1/materias/${materiaSeleccionada.id_materia}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payloadBase)
         });
 
         if (!response.ok) {
@@ -108,21 +151,13 @@ export default function GestionMaterias() {
         const actualizada = await response.json();
         setMaterias(prev => prev.map(m => m.id_materia === actualizada.id_materia ? actualizada : m));
       } else {
-        const payload = {
-          nombre_materia: formData.nombre_materia,
-          clave_materia: formData.clave_materia,
-          creditos: formData.creditos === '' ? null : parseInt(formData.creditos),
-          horas_semana: formData.horas_semana === '' ? null : parseInt(formData.horas_semana),
-          estado: true
-        };
-
         const response = await fetch(`${API_BASE_URL}/api/v1/materias`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({ ...payloadBase, estado: true })
         });
 
         if (!response.ok) {
@@ -144,17 +179,34 @@ export default function GestionMaterias() {
 
   return (
     <div className="p-8 bg-gray-50/50 min-h-full">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Gestión de Materias</h2>
-          <p className="text-sm text-gray-500">Catálogo institucional de materias.</p>
+          <p className="text-sm text-gray-500">
+            {esDirector ? 'Catálogo de materias de tu carrera.' : 'Catálogo institucional de materias.'}
+          </p>
         </div>
-        <button
-          onClick={abrirModalCrear}
-          className="bg-eduPurple text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-opacity-90 flex items-center"
-        >
-          <Plus className="w-4 h-4 mr-2" /> Nueva Materia
-        </button>
+
+        <div className="flex items-center gap-3">
+          {!esDirector && (
+            <select
+              value={filtroCarrera}
+              onChange={e => setFiltroCarrera(e.target.value)}
+              className="border border-gray-300 rounded-lg text-sm px-3 py-2.5 outline-none focus:border-eduPurple bg-white"
+            >
+              <option value="">Todas las carreras</option>
+              {carreras.map(c => (
+                <option key={c.id_carrera} value={c.id_carrera}>{c.nombre}</option>
+              ))}
+            </select>
+          )}
+          <button
+            onClick={abrirModalCrear}
+            className="bg-eduPurple text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-opacity-90 flex items-center whitespace-nowrap"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Nueva Materia
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -164,6 +216,7 @@ export default function GestionMaterias() {
               <th className="p-3 pl-6">ID</th>
               <th className="p-3">Nombre</th>
               <th className="p-3">Clave</th>
+              <th className="p-3">Carrera</th>
               <th className="p-3">Créditos</th>
               <th className="p-3">Horas por semana</th>
               <th className="p-3">Ciclo escolar</th>
@@ -172,15 +225,18 @@ export default function GestionMaterias() {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {loading ? (
-              <tr><td colSpan="7" className="p-6 text-center text-gray-500">Cargando materias...</td></tr>
+              <tr><td colSpan="8" className="p-6 text-center text-gray-500">Cargando materias...</td></tr>
             ) : materias.length === 0 ? (
-              <tr><td colSpan="7" className="p-6 text-center text-gray-500">No hay materias registradas.</td></tr>
+              <tr><td colSpan="8" className="p-6 text-center text-gray-500">No hay materias registradas.</td></tr>
             ) : (
               materias.map(materia => (
                 <tr key={materia.id_materia} className="hover:bg-gray-50">
                   <td className="p-3 pl-6 text-sm text-gray-500">{materia.id_materia}</td>
                   <td className="p-3 text-sm font-bold text-gray-900">{materia.nombre_materia}</td>
                   <td className="p-3 text-sm text-gray-600">{materia.clave_materia}</td>
+                  <td className="p-3 text-sm text-gray-600">
+                    {materia.nombre_carrera || <span className="text-gray-400 italic">Sin carrera</span>}
+                  </td>
                   <td className="p-3 text-sm text-gray-600">{materia.creditos ?? '-'}</td>
                   <td className="p-3 text-sm text-gray-600">{materia.horas_semana ?? '-'}</td>
                   <td className="p-3 text-sm">
@@ -224,6 +280,30 @@ export default function GestionMaterias() {
                   {formError}
                 </div>
               )}
+
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1">Carrera</label>
+                {esDirector ? (
+                  <input
+                    type="text"
+                    disabled
+                    value={carreras.find(c => c.id_carrera === idCarreraDirector)?.nombre || 'Cargando...'}
+                    className="w-full border border-gray-200 rounded-lg p-2.5 text-sm bg-gray-50 text-gray-500"
+                  />
+                ) : (
+                  <select
+                    required
+                    value={formData.id_carrera}
+                    onChange={e => setFormData({ ...formData, id_carrera: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-eduPurple outline-none bg-white"
+                  >
+                    <option value="">Selecciona una carrera...</option>
+                    {carreras.map(c => (
+                      <option key={c.id_carrera} value={c.id_carrera}>{c.nombre}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
 
               <div>
                 <label className="block text-xs font-bold text-gray-600 mb-1">Nombre de la Materia</label>

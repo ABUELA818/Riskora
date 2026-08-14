@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Calendar, Users, CheckCircle, XCircle, BookOpen } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../config/api'; 
 
 export default function RegistroAsistencia() {
   const { token, role } = useAuth();
+  const location = useLocation();
 
   const [misClases, setMisClases] = useState([]);
   const [grupos, setGrupos] = useState([]);
@@ -24,6 +26,32 @@ export default function RegistroAsistencia() {
   const [mensaje, setMensaje] = useState({ text: '', type: '' });
 
   const esDocente = role === 'Docente';
+   const elegirClaseInicial = (clases) => {
+    const horarioPre = location.state?.horarioPreseleccionado;
+    const grupoPre = location.state?.grupoPreseleccionado;
+    const materiaPre = location.state?.materiaPreseleccionada;
+
+    if (horarioPre != null) {
+      const exacto = clases.find(c => c.id_horario === horarioPre);
+      if (exacto) return exacto;
+    }
+
+    if (grupoPre != null) {
+      const candidatos = clases.filter(c => c.id_grupo === grupoPre);
+      if (candidatos.length > 0) {
+        return materiaPre != null
+          ? (candidatos.find(c => c.id_materia === materiaPre) || candidatos[0])
+          : candidatos[0];
+      }
+    }
+
+    const idHorarioGuardado = sessionStorage.getItem('ultimoHorarioAsistencia');
+    if (idHorarioGuardado) {
+      const recordada = clases.find(c => String(c.id_horario) === idHorarioGuardado);
+      if (recordada) return recordada;
+    }
+    return clases[0];
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -40,8 +68,9 @@ export default function RegistroAsistencia() {
           if (Array.isArray(data)) {
             setMisClases(data);
             if (data.length > 0) {
-              setHorarioSeleccionado(String(data[0].id_horario));
-              setGrupoSeleccionado(String(data[0].id_grupo));
+              const claseInicial = elegirClaseInicial(data);
+              setHorarioSeleccionado(String(claseInicial.id_horario));
+              setGrupoSeleccionado(String(claseInicial.id_grupo));
             }
           }
         })
@@ -63,6 +92,12 @@ export default function RegistroAsistencia() {
         .catch(err => console.error("Error cargando grupos:", err));
     }
   }, [token, esDocente]);
+
+  useEffect(() => {
+    if (horarioSeleccionado) {
+      sessionStorage.setItem('ultimoHorarioAsistencia', horarioSeleccionado);
+    }
+  }, [horarioSeleccionado]);
 
   useEffect(() => {
     if (esDocente || !grupoSeleccionado || !token) return;

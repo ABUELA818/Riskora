@@ -174,8 +174,8 @@ def indicadores_institucionales(db: Session = Depends(get_db), current_user = De
 @router.get("/casos-escalados", response_model=List[CasoEscaladoOut], dependencies=[Depends(permitir_acceso)])
 def casos_escalados(db: Session = Depends(get_db)):
     intervenciones = db.query(Intervencion, Usuario.nombre_completo)\
-        .join(Tutor, Intervencion.id_tutor == Tutor.id_tutor)\
-        .join(Usuario, Tutor.id_usuario == Usuario.id_usuario)\
+        .outerjoin(Tutor, Intervencion.id_tutor == Tutor.id_tutor)\
+        .outerjoin(Usuario, Tutor.id_usuario == Usuario.id_usuario)\
         .filter(Intervencion.escalado == True)\
         .order_by(Intervencion.fecha.desc())\
         .all()
@@ -186,19 +186,22 @@ def casos_escalados(db: Session = Depends(get_db)):
     for inter, nombre_tutor in intervenciones:
         if inter.id_estudiante in vistos:
             continue
-        
+
+        estudiante = db.query(Estudiante).filter(Estudiante.id_estudiante == inter.id_estudiante).first()
+        if not estudiante:
+            continue
+
         p_asis, prom, _ = calcular_metricas_estudiante(db, inter.id_estudiante)
-        if p_asis < 70.0 or prom < 60.0:
-            estudiante = db.query(Estudiante).filter(Estudiante.id_estudiante == inter.id_estudiante).first()
-            if estudiante:
-                casos.append(CasoEscaladoOut(
-                    id_estudiante=estudiante.id_estudiante,
-                    nombre_completo=estudiante.nombre_completo,
-                    matricula=estudiante.matricula,
-                    riesgo_score=0.85,
-                    ultimo_acuerdo=inter.acuerdos,
-                    tutor_nombre=nombre_tutor
-                ))
-                vistos.add(inter.id_estudiante)
-                
+        _, score = clasificar_riesgo(p_asis, prom)
+
+        casos.append(CasoEscaladoOut(
+            id_estudiante=estudiante.id_estudiante,
+            nombre_completo=estudiante.nombre_completo,
+            matricula=estudiante.matricula,
+            riesgo_score=score,
+            ultimo_acuerdo=inter.acuerdos,
+            tutor_nombre=nombre_tutor or "Sin tutor asignado"
+        ))
+        vistos.add(inter.id_estudiante)
+
     return casos

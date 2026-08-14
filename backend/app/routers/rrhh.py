@@ -55,15 +55,24 @@ def obtener_directorio_personal(
     query = db.query(Usuario).filter(Usuario.rol.in_(roles_permitidos))
 
     if user_role == "Director":
-        mis_carreras = db.query(DirectorCarrera.id_carrera).filter(
+        mis_carreras = [c.id_carrera for c in db.query(DirectorCarrera).filter(
             DirectorCarrera.id_usuario == current_user.id_usuario
-        ).subquery()
-        docentes_de_mi_carrera = db.query(DocenteCarrera.id_docente).filter(
-            DocenteCarrera.id_carrera.in_(mis_carreras)
-        ).subquery()
-        query = query.join(Docente, Usuario.id_usuario == Docente.id_usuario).filter(
-            Docente.id_docente.in_(docentes_de_mi_carrera)
-        )
+        ).all()]
+
+        docentes_ids = {
+            d.id_usuario for d in db.query(Docente)
+            .join(DocenteCarrera, Docente.id_docente == DocenteCarrera.id_docente)
+            .filter(DocenteCarrera.id_carrera.in_(mis_carreras or [-1]))
+            .all()
+        }
+        tutores_ids = {
+            t.id_usuario for t in db.query(Tutor)
+            .join(Grupo, Grupo.id_tutor == Tutor.id_tutor)
+            .filter(Grupo.id_carrera.in_(mis_carreras or [-1]))
+            .all()
+        }
+        ids_permitidos = docentes_ids | tutores_ids
+        query = query.filter(Usuario.id_usuario.in_(ids_permitidos or [-1]))
 
     if rol and rol != "Todos los Roles":
         rol_enum = getattr(RolEnum, rol.upper().replace(" ", "_"), None)
