@@ -76,11 +76,24 @@ class EstudianteOut(EstudianteBase):
     fecha_baja: Optional[date] = None
     nivel_riesgo: Optional[str] = None
     probabilidad_riesgo: Optional[float] = None
+    nombre_grupo: Optional[str] = None
+    nombre_carrera: Optional[str] = None 
     class Config:
         from_attributes = True
 
 class EstudianteBajaIn(BaseModel):
     motivo_baja: str
+
+class EstudianteAltaCreate(BaseModel):
+    nombre_completo: str
+    id_carrera: int
+    datos_socioeconomicos: Optional[str] = None
+    fecha_ingreso: date
+    contacto_emergencia_nombre: Optional[str] = None
+    contacto_emergencia_telefono: Optional[str] = None
+    edad: Optional[int] = None
+    celular: Optional[str] = None
+    fotografia_url: Optional[str] = None
 
 class ClaseDocenteOut(BaseModel):
     id_horario: int

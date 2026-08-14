@@ -7,10 +7,10 @@ import { API_BASE_URL } from '../../config/api';
 export default function AltaEstudiantes() {
   const navigate = useNavigate();
   const { token } = useAuth();
-  const [grupos, setGrupos] = useState([]);
+  const [carreras, setCarreras] = useState([]);
   const [formData, setFormData] = useState({
     nombre_completo: '',
-    id_grupo: '',
+    id_carrera: '',
     fecha_ingreso: new Date().toISOString().split('T')[0],
     datos_socioeconomicos: '',
     edad: '',                     
@@ -24,16 +24,21 @@ export default function AltaEstudiantes() {
 
   useEffect(() => {
     if (!token) return;
-    fetch(`${API_BASE_URL}/api/v1/grupos`, {
+    fetch(`${API_BASE_URL}/api/v1/carreras`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
-      .then(data => setGrupos(data))
+      .then(data => { if (Array.isArray(data)) setCarreras(data); })
       .catch(err => console.error(err));
   }, [token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.id_carrera) {
+      setError('Debes seleccionar una carrera.');
+      return;
+    }
+
     setIsSubmitting(true);
     setError('');
 
@@ -46,7 +51,7 @@ export default function AltaEstudiantes() {
         },
         body: JSON.stringify({
           ...formData,
-          id_grupo: formData.id_grupo ? parseInt(formData.id_grupo) : null,
+          id_carrera: parseInt(formData.id_carrera),
           edad: formData.edad ? parseInt(formData.edad) : null
         })
       });
@@ -58,7 +63,7 @@ export default function AltaEstudiantes() {
 
       const nuevo = await response.json();
       navigate('/estudiantes', {
-        state: { message: `Estudiante dado de alta con matrícula ${nuevo.matricula} y correo ${nuevo.correo_institucional}` }
+        state: { message: `Estudiante dado de alta con matrícula ${nuevo.matricula} y correo ${nuevo.correo_institucional}. Asignado automáticamente al grupo con menor cantidad de alumnos de su carrera.` }
       });
     } catch (err) {
       setError(err.message);
@@ -71,7 +76,10 @@ export default function AltaEstudiantes() {
     <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="mb-6 border-b border-gray-200 pb-4">
         <h2 className="text-2xl font-bold text-gray-800">Registro de Estudiante</h2>
-        <p className="text-sm text-gray-500">La matrícula y el correo institucional se generan automáticamente.</p>
+        <p className="text-sm text-gray-500">
+          Elige la carrera; el sistema asignará automáticamente al grupo con menos alumnos para mantener un balance parejo.
+          La matrícula y el correo institucional se generan automáticamente.
+        </p>
       </div>
 
       {error && (
@@ -84,6 +92,22 @@ export default function AltaEstudiantes() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Carrera *</label>
+            <select
+              required
+              className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-eduPurple bg-white"
+              value={formData.id_carrera}
+              onChange={e => setFormData({ ...formData, id_carrera: e.target.value })}
+            >
+              <option value="">Selecciona una carrera...</option>
+              {carreras.map(c => (
+                <option key={c.id_carrera} value={c.id_carrera}>{c.nombre}</option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-400 mt-1">El grupo se asigna automáticamente para mantener grupos balanceados.</p>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo *</label>
             <input
               type="text" required
@@ -91,20 +115,6 @@ export default function AltaEstudiantes() {
               value={formData.nombre_completo}
               onChange={e => setFormData({ ...formData, nombre_completo: e.target.value })}
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Asignación de Grupo</label>
-            <select
-              className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-eduPurple"
-              value={formData.id_grupo}
-              onChange={e => setFormData({ ...formData, id_grupo: e.target.value })}
-            >
-              <option value="">Sin asignar</option>
-              {grupos.map(g => (
-                <option key={g.id_grupo} value={g.id_grupo}>{g.nombre_grupo} - {g.nombre_carrera}</option>
-              ))}
-            </select>
           </div>
 
           <div>
