@@ -53,7 +53,7 @@ export default function SolicitudesPersonal() {
       setSolicitudes(prev => prev.map(s =>
         s.id_solicitud === solicitud.id_solicitud ? { ...s, estado: 'Aceptada' } : s
       ));
-      alert('Solicitud aceptada. Revisa la consola del backend para ver la contraseña temporal generada.');
+      alert('Personal dado de alta correctamente. Se envió la contraseña temporal al correo registrado.');
     } catch (error) {
       alert(error.message);
     } finally {

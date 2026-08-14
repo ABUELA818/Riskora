@@ -129,7 +129,7 @@ export default function App() {
               } 
             />
             <Route path="reportes" element={
-              <RoleRoute allowedRoles={['Administrador', 'Director', 'RRHH', 'Psicopedagogia']}>
+              <RoleRoute allowedRoles={['Administrador', 'Director', 'Psicopedagogia']}>
                 <ReportesInstitucionales />
               </RoleRoute>
             } />

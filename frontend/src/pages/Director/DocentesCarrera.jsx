@@ -29,7 +29,7 @@ export default function DocentesCarrera() {
 
   useEffect(() => {
     if (!token) return;
-    fetch(`${API_BASE_URL}/api/v1/personal?rol=Docente`, {
+    fetch(`${API_BASE_URL}/api/v1/personal`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -114,7 +114,7 @@ export default function DocentesCarrera() {
         <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
         <input
           type="text"
-          placeholder="Buscar docente por nombre..."
+          placeholder="Buscar por nombre..."
           className="pl-9 w-full border border-gray-300 rounded-md p-2 text-sm"
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
@@ -127,6 +127,7 @@ export default function DocentesCarrera() {
             <tr className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-b border-gray-200">
               <th className="p-3">ID</th>
               <th className="p-3">Nombre del Docente</th>
+              <th className="p-3">Rol</th>
               <th className="p-3">Correo</th>
               <th className="p-3">Estado</th>
               <th className="p-3 text-center">Acciones</th>
@@ -138,8 +139,17 @@ export default function DocentesCarrera() {
             ) : (
               filtrados.map(docente => (
                 <tr key={docente.id_usuario} className="hover:bg-gray-50">
-                  <td className="p-3 text-sm text-gray-600">DOC-{docente.id_usuario}</td>
+                  <td className="p-3 text-sm text-gray-600">{docente.rol === 'Docente' ? 'DOC' : 'TUT'}-{docente.id_usuario}</td>
                   <td className="p-3 text-sm font-medium text-gray-900">{docente.nombre_completo}</td>
+                  <td className="p-3 text-sm">
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${
+                      docente.rol === 'Docente'
+                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                        : 'bg-purple-50 text-purple-700 border-purple-200'
+                    }`}>
+                      {docente.rol}
+                    </span>
+                  </td>
                   <td className="p-3 text-sm text-gray-600">{docente.correo}</td>
                   <td className="p-3 text-sm">
                     {docente.estado ? (

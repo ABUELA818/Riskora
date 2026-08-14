@@ -9,6 +9,7 @@ from app.models.models import Usuario, Docente, Tutor, Grupo, RolEnum, DirectorC
 from app.schemas.rrhh import PersonalCreate, PersonalOut, CambioRolIn, MetricasRRHHOut, MetricaCarrera, LogAuditoriaOut 
 from app.core.deps import get_db, RoleChecker, get_current_active_user
 from app.core.security import get_password_hash 
+from app.core.email import enviar_credenciales_temporales
 
 router = APIRouter(prefix="/api/v1", tags=["Recursos Humanos"])
 permitir_rrhh = RoleChecker(["RRHH", "Administrador", "Director"])
@@ -204,7 +205,12 @@ def registrar_personal(
         db.add(DirectorCarrera(id_usuario=nuevo_usuario.id_usuario, id_carrera=data.id_carrera))
         db.commit()
 
-    print(f"ALERTA TEMP: Contraseña generada para {data.correo}: {password_temporal}")
+    enviar_credenciales_temporales(
+        correo_destino=nuevo_usuario.correo_institucional,
+        nombre_completo=nuevo_usuario.nombre_completo,
+        password_temporal=password_temporal,
+        rol=nuevo_usuario.rol.value
+    )
 
     return PersonalOut(
         id_usuario=nuevo_usuario.id_usuario,
@@ -275,10 +281,9 @@ def metricas_rrhh(db: Session = Depends(get_db)):
     return MetricasRRHHOut(
         total_docentes=total_doc,
         total_tutores=total_tut,
-        total_dir=total_dir,
-        total_psi=total_psi,
+        total_directores=total_dir,
         total_rrhh=total_rrhh,
         total_psicopedagogia=total_psi,
         altas_mes=altas_mes,
         distribucion_carreras=dist_formateada
-    )
+     )

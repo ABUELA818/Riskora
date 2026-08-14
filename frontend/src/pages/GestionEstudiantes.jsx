@@ -8,10 +8,10 @@ export default function GestionEstudiantes() {
   const { state } = useLocation();
   const { token } = useAuth();
   const [estudiantes, setEstudiantes] = useState([]);
+  const [loadingEstudiantes, setLoadingEstudiantes] = useState(true);
   const [carreras, setCarreras] = useState([]);
   const [filtros, setFiltros] = useState({ carrera: '', grupo: '', nivel_riesgo: '' });
   const [resumenRiesgo, setResumenRiesgo] = useState({ bajo: 0, medio: 0, alto: 0, total_estudiantes: 0 });
-  const [riesgosMap, setRiesgosMap] = useState({});
 
   useEffect(() => {
     if (!token) return;
@@ -24,6 +24,7 @@ export default function GestionEstudiantes() {
 
   const fetchEstudiantes = () => {
     if (!token) return;
+    setLoadingEstudiantes(true); 
     const query = new URLSearchParams(
       Object.entries(filtros).filter(([_, v]) => v !== '')
     ).toString();
@@ -32,7 +33,9 @@ export default function GestionEstudiantes() {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.json())
-      .then(data => { if (Array.isArray(data)) setEstudiantes(data); });
+      .then(data => { if (Array.isArray(data)) setEstudiantes(data); })
+      .catch(err => console.error(err))
+      .finally(() => setLoadingEstudiantes(false));
   };
 
   useEffect(() => {
@@ -51,21 +54,6 @@ export default function GestionEstudiantes() {
       .then(data => setResumenRiesgo(data))
       .catch(err => console.error(err));
   }, [filtros.carrera, token]);
-
-  useEffect(() => {
-    if (!token || estudiantes.length === 0) return;
-    Promise.all(estudiantes.map(async est => {
-      try {
-        const r = await fetch(`${API_BASE_URL}/api/v1/estudiantes/${est.id_estudiante}/riesgo`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await r.json();
-        return [est.id_estudiante, data.nivel_riesgo];
-      } catch (e) {
-        return [est.id_estudiante, null];
-      }
-    })).then(entries => setRiesgosMap(Object.fromEntries(entries)));
-  }, [estudiantes, token]);
 
   const handleSoftDelete = async (id) => {
     if (!window.confirm('¿Estás seguro de dar de baja a este estudiante?')) return;
@@ -145,11 +133,13 @@ export default function GestionEstudiantes() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {estudiantes.length === 0 ? (
+            {loadingEstudiantes ? (
+              <tr><td colSpan="5" className="p-4 text-center text-gray-400">Cargando estudiantes...</td></tr>
+            ) : estudiantes.length === 0 ? (
               <tr><td colSpan="5" className="p-4 text-center text-gray-500">No se encontraron estudiantes.</td></tr>
             ) : (
               estudiantes.map(est => {
-                const nivel = riesgosMap[est.id_estudiante];
+                const nivel = est.nivel_riesgo;
                 return (
                   <tr key={est.id_estudiante} className="hover:bg-gray-50">
                     <td className="p-3 text-sm font-medium text-gray-900">{est.matricula}</td>
@@ -157,7 +147,7 @@ export default function GestionEstudiantes() {
                     <td className="p-3 text-sm text-gray-600">{est.id_grupo || 'Sin asignar'}</td>
                     <td className="p-3">
                       {!nivel ? (
-                        <span className="text-xs text-gray-400">Calculando...</span>
+                        <span className="text-xs text-gray-400">Sin datos</span>
                       ) : (
                         <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${estilosRiesgo[nivel]}`}>
                           {nivel}
