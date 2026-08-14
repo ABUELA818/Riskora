@@ -83,7 +83,7 @@ export default function SeccionCalificaciones({ estudianteId, token }) {
           
           {message && (
             <div className={`mb-4 p-3 rounded-lg flex items-center ${
-              message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+              message.type === 'success' ? 'bg-risk-low-bg text-risk-low-fg' : 'bg-risk-high-bg text-risk-high-fg'
             }`}>
               {message.type === 'success' ? (
                 <CheckCircle className="w-5 h-5 mr-2" />

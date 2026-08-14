@@ -3,8 +3,8 @@ import { Hand, AlertTriangle, Brain, Calendar, ExternalLink } from 'lucide-react
 
 const CONFIG_ETIQUETA = {
   'Participación': { icon: Hand, color: 'bg-blue-50 text-blue-700 border-blue-200' },
-  'Indisciplina': { icon: AlertTriangle, color: 'bg-red-50 text-red-700 border-red-200' },
-  'Dificultad de aprendizaje': { icon: Brain, color: 'bg-yellow-50 text-yellow-700 border-yellow-200' }
+  'Indisciplina': { icon: AlertTriangle, color: 'bg-risk-high-bg text-risk-high-fg border-risk-high-border' },
+  'Dificultad de aprendizaje': { icon: Brain, color: 'bg-risk-medium-bg text-risk-medium-fg border-risk-medium-border' }
 };
 
 export default function ObservacionesTab({ observaciones, idEstudiante }) {
@@ -17,7 +17,7 @@ export default function ObservacionesTab({ observaciones, idEstudiante }) {
         </div>
         <Link
           to={`/estudiantes/${idEstudiante}/intervenciones`}
-          className="inline-flex items-center text-sm font-semibold text-eduPurple bg-indigo-50 px-4 py-2 rounded-lg hover:bg-indigo-100 transition-colors whitespace-nowrap"
+          className="inline-flex items-center text-sm font-semibold text-eduPurple bg-brand-50 px-4 py-2 rounded-lg hover:bg-brand-100 transition-colors whitespace-nowrap"
         >
           Ir a Bitácora de Intervenciones <ExternalLink className="w-4 h-4 ml-2" />
         </Link>

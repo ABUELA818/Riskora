@@ -21,9 +21,9 @@ export default function GestionCarreras() {
   }, [token]);
 
   const colorRiesgo = (pct) => {
-    if (pct >= 15) return 'text-red-600 bg-red-50 border-red-200';
-    if (pct >= 8) return 'text-yellow-700 bg-yellow-50 border-yellow-200';
-    return 'text-green-700 bg-green-50 border-green-200';
+    if (pct >= 15) return 'text-risk-high bg-risk-high-bg border-risk-high-border';
+    if (pct >= 8) return 'text-risk-medium-fg bg-risk-medium-bg border-risk-medium-border';
+    return 'text-risk-low-fg bg-risk-low-bg border-risk-low-border';
   };
 
   return (
@@ -46,7 +46,7 @@ export default function GestionCarreras() {
               <div>
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex items-center">
-                    <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center mr-3">
+                    <div className="w-10 h-10 bg-brand-50 rounded-lg flex items-center justify-center mr-3">
                       <GraduationCap className="w-5 h-5 text-eduPurple" />
                     </div>
                     <h3 className="font-bold text-gray-900">{c.nombre}</h3>
@@ -76,7 +76,7 @@ export default function GestionCarreras() {
 
               <Link
                 to={`/carreras/${c.id_carrera}/riesgo-agregado`}
-                className="flex items-center justify-center gap-1 w-full py-2.5 bg-indigo-50 text-eduPurple rounded-lg text-sm font-bold hover:bg-indigo-100 transition-colors"
+                className="flex items-center justify-center gap-1 w-full py-2.5 bg-brand-50 text-eduPurple rounded-lg text-sm font-bold hover:bg-brand-100 transition-colors"
               >
                 Ver detalle de riesgo <ChevronRight className="w-4 h-4" />
               </Link>

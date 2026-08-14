@@ -97,9 +97,9 @@ export default function PanelRiesgo() {
                   const r = riesgosMap[est.id_estudiante];
                   const nivel = r?.nivel_riesgo || 'Calculando...';
                   
-                  let badgeColor = 'bg-green-100 text-green-800 border-green-200';
-                  if (nivel === 'Alto') badgeColor = 'bg-red-100 text-red-800 border-red-200';
-                  if (nivel === 'Medio') badgeColor = 'bg-yellow-100 text-yellow-800 border-yellow-200';
+                  let badgeColor = 'bg-risk-low-bg text-risk-low-fg border-risk-low-border';
+                  if (nivel === 'Alto') badgeColor = 'bg-risk-high-bg text-risk-high-fg border-risk-high-border';
+                  if (nivel === 'Medio') badgeColor = 'bg-risk-medium-bg text-risk-medium-fg border-risk-medium-border';
 
                   return (
                     <tr key={est.id_estudiante} className="hover:bg-gray-50 transition-colors">
@@ -118,7 +118,7 @@ export default function PanelRiesgo() {
                           <button
                             onClick={() => navigate(`/estudiantes/${est.id_estudiante}/analisis`)}
                             title="Ver análisis predictivo de IA"
-                            className="inline-flex items-center text-xs font-semibold bg-indigo-50 text-eduPurple px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
+                            className="inline-flex items-center text-xs font-semibold bg-brand-50 text-eduPurple px-3 py-1.5 rounded-lg hover:bg-brand-100 transition-colors"
                           >
                             <Eye className="w-3.5 h-3.5 mr-1.5" /> Analizar
                           </button>

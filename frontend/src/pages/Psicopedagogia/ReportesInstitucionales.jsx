@@ -251,7 +251,7 @@ export default function ReportesInstitucionales() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative">
-          <AlertTriangle className="absolute top-6 right-6 w-6 h-6 text-red-500" />
+          <AlertTriangle className="absolute top-6 right-6 w-6 h-6 text-risk-high" />
           <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Estudiantes en Riesgo Alto</p>
           <div className="flex items-center mb-2">
             <h3 className="text-5xl font-black text-gray-900 mr-3">{resumenRiesgo.alto}</h3>
@@ -260,7 +260,7 @@ export default function ReportesInstitucionales() {
         </div>
 
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative">
-          <CheckCircle className="absolute top-6 right-6 w-6 h-6 text-green-500" />
+          <CheckCircle className="absolute top-6 right-6 w-6 h-6 text-risk-low" />
           <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Asistencia Promedio</p>
           <div className="flex items-center mb-2">
             <h3 className="text-5xl font-black text-gray-900 mr-3">
@@ -274,11 +274,11 @@ export default function ReportesInstitucionales() {
           </p>
         </div>
         
-        <div className="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 shadow-sm flex flex-col justify-center">
-          <h3 className="text-sm font-bold text-indigo-900 mb-2 flex items-center">
-            <Info className="w-4 h-4 mr-2 text-indigo-600" /> Acerca de este reporte
+        <div className="bg-brand-50 p-6 rounded-2xl border border-brand-100 shadow-sm flex flex-col justify-center">
+          <h3 className="text-sm font-bold text-brand-700 mb-2 flex items-center">
+            <Info className="w-4 h-4 mr-2 text-brand-600" /> Acerca de este reporte
           </h3>
-          <p className="text-xs text-indigo-700 leading-relaxed">
+          <p className="text-xs text-brand-700 leading-relaxed">
             La tabla inferior muestra una vista previa en tiempo real de los datos filtrados. Los archivos exportados (PDF/Excel) reflejarán exactamente esta información, incluyendo los cálculos del modelo predictivo (IA).
           </p>
         </div>
@@ -299,9 +299,9 @@ export default function ReportesInstitucionales() {
                 <YAxis type="category" dataKey="carrera" width={110} tick={{ fontSize: 11 }} />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="riesgo_bajo" fill="#4ade80" name="Bajo" />
-                <Bar dataKey="riesgo_medio" fill="#facc15" name="Medio" />
-                <Bar dataKey="riesgo_alto" fill="#dc2626" name="Alto" />
+                <Bar dataKey="riesgo_bajo" fill="#4f9d6e" name="Bajo" />
+                <Bar dataKey="riesgo_medio" fill="#c78a2e" name="Medio" />
+                <Bar dataKey="riesgo_alto" fill="#c25a52" name="Alto" />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -319,7 +319,7 @@ export default function ReportesInstitucionales() {
                 <XAxis type="number" unit="%" />
                 <YAxis type="category" dataKey="materia" width={110} tick={{ fontSize: 11 }} />
                 <Tooltip formatter={(v) => `${v}%`} />
-                <Bar dataKey="porcentaje_reprobacion" fill="#dc2626" name="% Reprobación" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="porcentaje_reprobacion" fill="#c25a52" name="% Reprobación" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -353,9 +353,9 @@ export default function ReportesInstitucionales() {
                 <YAxis allowDecimals={false} />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="riesgo_alto" stroke="#dc2626" name="Alto" strokeWidth={2} />
-                <Line type="monotone" dataKey="riesgo_medio" stroke="#facc15" name="Medio" strokeWidth={2} />
-                <Line type="monotone" dataKey="riesgo_bajo" stroke="#4ade80" name="Bajo" strokeWidth={2} />
+                <Line type="monotone" dataKey="riesgo_alto" stroke="#c25a52" name="Alto" strokeWidth={2} />
+                <Line type="monotone" dataKey="riesgo_medio" stroke="#c78a2e" name="Medio" strokeWidth={2} />
+                <Line type="monotone" dataKey="riesgo_bajo" stroke="#4f9d6e" name="Bajo" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -403,9 +403,9 @@ export default function ReportesInstitucionales() {
                     <td className="p-4 text-center text-sm font-bold text-gray-700">{est.promedio_general}</td>
                     <td className="p-4">
                       <span className={`inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-md border ${
-                        est.nivel_riesgo === 'Alto' ? 'bg-red-50 text-red-700 border-red-200' :
-                        est.nivel_riesgo === 'Medio' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                        'bg-green-50 text-green-700 border-green-200'
+                        est.nivel_riesgo === 'Alto' ? 'bg-risk-high-bg text-risk-high-fg border-risk-high-border' :
+                        est.nivel_riesgo === 'Medio' ? 'bg-risk-medium-bg text-risk-medium-fg border-risk-medium-border' :
+                        'bg-risk-low-bg text-risk-low-fg border-risk-low-border'
                       }`}>
                         {est.nivel_riesgo}
                       </span>

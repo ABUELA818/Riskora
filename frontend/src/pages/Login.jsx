@@ -31,30 +31,30 @@ export default function Login() {
   return (
     <AuthLayout>
       <div className="text-left mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Bienvenido de nuevo</h2>
-        <p className="text-gray-500 text-sm">Ingresa tus credenciales institucionales para continuar.</p>
+        <h2 className="font-display text-3xl font-bold text-ink-900 mb-2">Bienvenido de nuevo</h2>
+        <p className="text-slate-500 text-sm">Ingresa tus credenciales institucionales para continuar.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
-          <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+          <div className="p-3 text-sm text-risk-high-fg bg-risk-high-bg border border-risk-high-border rounded-lg">
             {error}
           </div>
         )}
 
         <div>
-          <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">
+          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
             Correo Institucional
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Mail className="h-5 w-5 text-gray-400" />
+              <Mail className="h-5 w-5 text-slate-400" />
             </div>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eduPurple focus:border-eduPurple sm:text-sm transition-colors"
+              className="block w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 sm:text-sm transition-colors"
               placeholder="admin@institucion.edu"
               required
             />
@@ -63,22 +63,22 @@ export default function Login() {
 
         <div>
           <div className="flex justify-between items-center mb-2">
-            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider">
+            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider">
               Contraseña
             </label>
-            <Link to="/forgot-password" className="text-xs font-medium text-eduPurple hover:text-indigo-800">
+            <Link to="/forgot-password" className="text-xs font-medium text-brand-600 hover:text-brand-700">
               Recuperar contraseña
             </Link>
           </div>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Lock className="h-5 w-5 text-gray-400" />
+              <Lock className="h-5 w-5 text-slate-400" />
             </div>
             <input
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eduPurple focus:border-eduPurple sm:text-sm transition-colors"
+              className="block w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 sm:text-sm transition-colors"
               placeholder="••••••••"
               required
             />
@@ -88,9 +88,9 @@ export default function Login() {
               className="absolute inset-y-0 right-0 pr-3 flex items-center"
             >
               {showPassword ? (
-                <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                <EyeOff className="h-5 w-5 text-slate-400 hover:text-slate-600" />
               ) : (
-                <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                <Eye className="h-5 w-5 text-slate-400 hover:text-slate-600" />
               )}
             </button>
           </div>
@@ -99,7 +99,7 @@ export default function Login() {
         <button
           type="submit"
           disabled={!isFormValid || isLoading}
-          className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-eduPurple hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-eduPurple disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+          className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-ink-950 bg-brand-500 hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed transition-all"
         >
           {isLoading ? 'Cargando...' : 'Acceder'}
           {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}

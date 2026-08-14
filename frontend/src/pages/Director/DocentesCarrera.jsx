@@ -105,7 +105,7 @@ export default function DocentesCarrera() {
       </div>
 
       {successMsg && (
-        <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm flex items-center">
+        <div className="mb-4 p-3 bg-risk-low-bg border border-risk-low-border text-risk-low-fg rounded-lg text-sm flex items-center">
           <Clock className="w-4 h-4 mr-2" /> {successMsg}
         </div>
       )}
@@ -153,9 +153,9 @@ export default function DocentesCarrera() {
                   <td className="p-3 text-sm text-gray-600">{docente.correo}</td>
                   <td className="p-3 text-sm">
                     {docente.estado ? (
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Activo</span>
+                      <span className="bg-risk-low-bg text-risk-low-fg px-2 py-1 rounded-full text-xs">Activo</span>
                     ) : (
-                      <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">Inactivo</span>
+                      <span className="bg-risk-high-bg text-risk-high-fg px-2 py-1 rounded-full text-xs">Inactivo</span>
                     )}
                   </td>
                   <td className="p-3 text-center">
@@ -186,7 +186,7 @@ export default function DocentesCarrera() {
 
             <form onSubmit={handleSolicitar} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
               {formError && (
-                <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+                <div className="p-3 text-sm text-risk-high bg-risk-high-bg border border-risk-high-border rounded-lg">
                   {formError}
                 </div>
               )}

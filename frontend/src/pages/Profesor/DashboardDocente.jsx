@@ -114,7 +114,7 @@ export default function DashboardDocente() {
                 <div className="flex gap-2 pt-3 border-t border-gray-100">
                   <button
                     onClick={() => irAAsistencia(clase)}
-                    className="flex-1 flex items-center justify-center px-3 py-2 bg-indigo-50 text-eduPurple rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors"
+                    className="flex-1 flex items-center justify-center px-3 py-2 bg-brand-50 text-eduPurple rounded-lg text-xs font-bold hover:bg-brand-100 transition-colors"
                   >
                     <ClipboardList className="w-3.5 h-3.5 mr-1.5" /> Tomar asistencia
                   </button>

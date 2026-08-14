@@ -2,6 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --ink-950: #0b0e14;
+  --ink-900: #12161f;
+  --ink-800: #1a1f2b;
+  --canvas: #f6f5f2;
+  --brand-500: #d99a3f;
+  --brand-600: #b87b2c;
+  --risk-low: #4f9d6e;
+  --risk-medium: #c78a2e;
+  --risk-high: #c25a52;
+  /* Riskora is a light-themed app. Without this, browsers/OSs set to a dark
+     color-scheme preference apply dark-mode user-agent defaults (white text,
+     dark form controls, etc.) to any element without an explicit Tailwind
+     color class, making content render invisible (white-on-white) on our
+     light surfaces. Pinning to light keeps UA defaults consistent everywhere. */
+  color-scheme: light;
+}
+
+html {
+  color-scheme: light;
+}
+
 body {
-  background-color: #f8f9fa;
+  background-color: var(--canvas);
+  color: #1a1f2b;
+  font-family: 'Inter', sans-serif;
+}
+
+.card-surface {
+  background-color: #fff;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px rgba(15, 15, 15, 0.04), 0 8px 24px -8px rgba(15, 15, 15, 0.08);
 }

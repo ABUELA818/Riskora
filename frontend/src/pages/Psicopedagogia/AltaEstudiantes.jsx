@@ -83,7 +83,7 @@ export default function AltaEstudiantes() {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center text-red-700">
+        <div className="mb-6 p-4 bg-risk-high-bg border border-risk-high-border rounded-lg flex items-center text-risk-high-fg">
           <AlertCircle className="w-5 h-5 mr-2" />
           <span className="text-sm">{error}</span>
         </div>

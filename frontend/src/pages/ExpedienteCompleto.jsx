@@ -55,16 +55,16 @@ export default function ExpedienteCompleto() {
   return (
     <div className="p-8 bg-gray-50/50 min-h-full">
       {expediente.estado === false && (
-        <div className="bg-red-50 border border-red-200 text-red-800 px-5 py-4 rounded-2xl mb-6 flex items-start shadow-sm">
-          <UserX className="w-5 h-5 mr-3 text-red-600 shrink-0 mt-0.5" />
+        <div className="bg-risk-high-bg border border-risk-high-border text-risk-high-fg px-5 py-4 rounded-2xl mb-6 flex items-start shadow-sm">
+          <UserX className="w-5 h-5 mr-3 text-risk-high shrink-0 mt-0.5" />
           <div>
             <p className="font-bold text-sm mb-1">Este estudiante está dado de baja</p>
             {expediente.fecha_baja && (
-              <p className="text-xs text-red-700">
+              <p className="text-xs text-risk-high-fg">
                 Fecha de baja: {new Date(expediente.fecha_baja).toLocaleDateString()}
               </p>
             )}
-            <p className="text-sm text-red-700 mt-1">
+            <p className="text-sm text-risk-high-fg mt-1">
               Motivo: {expediente.motivo_baja || 'No se registró un motivo.'}
             </p>
           </div>
@@ -101,7 +101,7 @@ export default function ExpedienteCompleto() {
             <div className="flex space-x-3">
               <button
                 onClick={() => setActiveTab('observaciones')}
-                className="px-4 py-2 bg-indigo-50 text-eduPurple rounded-lg text-sm font-bold hover:bg-indigo-100 transition-colors flex items-center"
+                className="px-4 py-2 bg-brand-50 text-eduPurple rounded-lg text-sm font-bold hover:bg-brand-100 transition-colors flex items-center"
               >
                 <FileCheck className="w-4 h-4 mr-2" /> Ver historial de observaciones
               </button>
@@ -134,14 +134,14 @@ export default function ExpedienteCompleto() {
             </div>
           </div>
           <div className="bg-gray-50 border border-gray-100 p-3 rounded-xl flex items-center">
-            <Book className="w-6 h-6 text-indigo-400 mr-3 shrink-0" />
+            <Book className="w-6 h-6 text-brand-500 mr-3 shrink-0" />
             <div>
               <p className="text-[10px] font-bold text-gray-500 uppercase">Promedio General</p>
               <p className="text-sm font-bold text-gray-900">{promedioGeneral}</p>
             </div>
           </div>
           <div className="bg-gray-50 border border-gray-100 p-3 rounded-xl flex items-center">
-            <Activity className="w-6 h-6 text-indigo-400 mr-3 shrink-0" />
+            <Activity className="w-6 h-6 text-brand-500 mr-3 shrink-0" />
             <div>
               <p className="text-[10px] font-bold text-gray-500 uppercase">Promedio de Asistencia</p>
               <p className="text-sm font-bold text-gray-900">
@@ -150,7 +150,7 @@ export default function ExpedienteCompleto() {
             </div>
           </div>
           <div className="bg-gray-50 border border-gray-100 p-3 rounded-xl flex items-center">
-            <Phone className="w-6 h-6 text-indigo-400 mr-3 shrink-0" />
+            <Phone className="w-6 h-6 text-brand-500 mr-3 shrink-0" />
             <div>
               <p className="text-[10px] font-bold text-gray-500 uppercase">Contacto de emergencia</p>
               {expediente.contacto_emergencia_nombre ? (
@@ -208,11 +208,11 @@ export default function ExpedienteCompleto() {
                   El modelo detecta una caída reciente en el rendimiento académico altamente correlacionada con un bloque de inasistencias los días lunes. El patrón es similar a casos previos de "Burnout extracurricular". Mientras el rendimiento en ciencias exactas es estable, las observaciones cualitativas indican una baja participación en los periodos matutinos.
                 </p>
                 <div className="flex gap-2">
-                  <span className="px-2.5 py-1 bg-yellow-50 text-yellow-700 text-xs font-bold rounded-full border border-yellow-200 flex items-center">
-                    <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full mr-1.5"></span> Patrón de Asistencia Detectado
+                  <span className="px-2.5 py-1 bg-risk-medium-bg text-risk-medium-fg text-xs font-bold rounded-full border border-risk-medium-border flex items-center">
+                    <span className="w-1.5 h-1.5 bg-risk-medium rounded-full mr-1.5"></span> Patrón de Asistencia Detectado
                   </span>
-                  <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full border border-indigo-200 flex items-center">
-                    <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full mr-1.5"></span> Resiliencia STEM
+                  <span className="px-2.5 py-1 bg-brand-50 text-brand-700 text-xs font-bold rounded-full border border-brand-200 flex items-center">
+                    <span className="w-1.5 h-1.5 bg-brand-500 rounded-full mr-1.5"></span> Resiliencia STEM
                   </span>
                 </div>
               </div>
