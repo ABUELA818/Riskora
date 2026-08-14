@@ -244,9 +244,9 @@ export default function RegistroAsistencia() {
   const conteoPresentes = Object.values(asistencia).filter(s => s === 'Presente').length;
 
   const estilosRiesgo = {
-    Alto: 'bg-red-100 text-red-800 border-red-200',
-    Medio: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    Bajo: 'bg-green-100 text-green-800 border-green-200'
+    Alto: 'bg-risk-high-bg text-risk-high-fg border-risk-high-border',
+    Medio: 'bg-risk-medium-bg text-risk-medium-fg border-risk-medium-border',
+    Bajo: 'bg-risk-low-bg text-risk-low-fg border-risk-low-border'
   };
 
   return (
@@ -327,14 +327,14 @@ export default function RegistroAsistencia() {
       </div>
 
       {mensaje.text && (
-        <div className={`mx-6 mt-4 p-3 rounded-lg text-sm flex items-center ${mensaje.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+        <div className={`mx-6 mt-4 p-3 rounded-lg text-sm flex items-center ${mensaje.type === 'success' ? 'bg-risk-low-bg text-risk-low-fg border border-risk-low-border' : 'bg-risk-high-bg text-risk-high-fg border border-risk-high-border'}`}>
           {mensaje.type === 'success' ? <CheckCircle className="w-4 h-4 mr-2" /> : <XCircle className="w-4 h-4 mr-2" />}
           {mensaje.text}
         </div>
       )}
 
       {!horarioSeleccionado && !isLoading && (
-        <div className="mx-6 mt-4 p-3 rounded-lg text-sm bg-yellow-50 text-yellow-700 border border-yellow-200 flex items-center">
+        <div className="mx-6 mt-4 p-3 rounded-lg text-sm bg-risk-medium-bg text-risk-medium-fg border border-risk-medium-border flex items-center">
           <XCircle className="w-4 h-4 mr-2" />
           {esDocente
             ? 'No tienes clases asignadas todavía. Contacta a tu Director de carrera.'
@@ -386,19 +386,19 @@ export default function RegistroAsistencia() {
                       <div className="flex bg-gray-100 rounded-lg p-1 border border-gray-200">
                         <button
                           onClick={() => handleStatusChange(est.id_estudiante, 'Presente')}
-                          className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${estatus === 'Presente' ? 'bg-green-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                          className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${estatus === 'Presente' ? 'bg-risk-low text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                         >
                           Presente
                         </button>
                         <button
                           onClick={() => handleStatusChange(est.id_estudiante, 'Retardo')}
-                          className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${estatus === 'Retardo' ? 'bg-yellow-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                          className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${estatus === 'Retardo' ? 'bg-risk-medium text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                         >
                           Retardo
                         </button>
                         <button
                           onClick={() => handleStatusChange(est.id_estudiante, 'Ausente')}
-                          className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${estatus === 'Ausente' ? 'bg-red-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                          className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${estatus === 'Ausente' ? 'bg-risk-high text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                         >
                           Faltante
                         </button>

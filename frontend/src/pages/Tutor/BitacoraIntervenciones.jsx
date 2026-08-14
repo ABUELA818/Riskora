@@ -76,7 +76,7 @@ export default function BitacoraIntervenciones() {
 
   const getIconForType = (tipo) => {
     if (tipo.includes('Llamada')) return <Phone className="w-4 h-4 text-blue-600" />;
-    if (tipo.includes('Canalización') || tipo.includes('Psicopedagogía')) return <Activity className="w-4 h-4 text-green-600" />;
+    if (tipo.includes('Canalización') || tipo.includes('Psicopedagogía')) return <Activity className="w-4 h-4 text-risk-low" />;
     if (tipo.includes('Presencial')) return <Users className="w-4 h-4 text-purple-600" />;
     return <FileText className="w-4 h-4 text-gray-600" />;
   };
@@ -107,8 +107,8 @@ export default function BitacoraIntervenciones() {
         </div>
 
         <div className="flex items-center space-x-4">
-          <span className={`px-4 py-2 rounded-full text-sm font-bold flex items-center border ${isRiesgoAlto ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
-            <span className={`w-2 h-2 rounded-full mr-2 ${isRiesgoAlto ? 'bg-red-500' : 'bg-yellow-500'}`}></span>
+          <span className={`px-4 py-2 rounded-full text-sm font-bold flex items-center border ${isRiesgoAlto ? 'bg-risk-high-bg text-risk-high-fg border-risk-high-border' : 'bg-risk-medium-bg text-risk-medium-fg border-risk-medium-border'}`}>
+            <span className={`w-2 h-2 rounded-full mr-2 ${isRiesgoAlto ? 'bg-risk-high' : 'bg-risk-medium'}`}></span>
             {isRiesgoAlto ? 'Alto Riesgo Académico' : `Riesgo ${estudiante.riesgo.nivel_riesgo}`}
           </span>
         </div>
@@ -181,7 +181,7 @@ export default function BitacoraIntervenciones() {
             {activeTab === 'contexto' && (
               <div className="p-8 flex-1 bg-gray-50/30">
                 <h3 className="text-sm font-bold text-gray-800 mb-4 flex items-center">
-                  <AlertTriangle className="w-4 h-4 mr-2 text-yellow-600"/> Observaciones de Conducta (RF-14)
+                  <AlertTriangle className="w-4 h-4 mr-2 text-risk-medium"/> Observaciones de Conducta (RF-14)
                 </h3>
                 {estudiante.observaciones_recientes?.length === 0 ? (
                   <p className="text-sm text-gray-500 bg-white p-4 rounded-lg border border-gray-100">Sin reportes recientes.</p>
@@ -211,7 +211,7 @@ export default function BitacoraIntervenciones() {
               <div>
                 <p className="text-xs text-gray-500 mb-1">Asistencia Actual</p>
                 <div className="flex items-baseline">
-                  <span className={`text-3xl font-black ${estudiante.porcentaje_asistencia < 70 ? 'text-red-600' : 'text-gray-900'}`}>
+                  <span className={`text-3xl font-black ${estudiante.porcentaje_asistencia < 70 ? 'text-risk-high' : 'text-gray-900'}`}>
                     {estudiante.porcentaje_asistencia}%
                   </span>
                 </div>
@@ -219,7 +219,7 @@ export default function BitacoraIntervenciones() {
               <div>
                 <p className="text-xs text-gray-500 mb-1">Promedio General</p>
                 <div className="flex items-baseline">
-                  <span className={`text-3xl font-black ${estudiante.promedio_general < 70 ? 'text-red-600' : 'text-gray-900'}`}>
+                  <span className={`text-3xl font-black ${estudiante.promedio_general < 70 ? 'text-risk-high' : 'text-gray-900'}`}>
                     {estudiante.promedio_general}
                   </span>
                 </div>

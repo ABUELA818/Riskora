@@ -160,7 +160,7 @@ export default function DirectorioPersonal() {
                     {persona.imagen_url ? (
                       <img src={persona.imagen_url} alt="" className="w-8 h-8 rounded-full object-cover mr-3" />
                     ) : (
-                      <div className={`w-8 h-8 rounded-full flex justify-center items-center font-bold text-xs mr-3 text-white ${persona.rol === 'Director' ? 'bg-purple-600' : (persona.rol === 'Docente' ? 'bg-blue-500' : 'bg-green-600')}`}>
+                      <div className={`w-8 h-8 rounded-full flex justify-center items-center font-bold text-xs mr-3 text-white ${persona.rol === 'Director' ? 'bg-purple-600' : (persona.rol === 'Docente' ? 'bg-blue-500' : 'bg-risk-low')}`}>
                         {persona.nombre_completo.substring(0,2).toUpperCase()}
                       </div>
                     )}
@@ -170,9 +170,9 @@ export default function DirectorioPersonal() {
                   <td className="p-4 text-sm text-gray-500">{persona.correo}</td>
                   <td className="p-4">
                     {persona.estado ? (
-                      <span className="px-2 py-1 bg-green-50 text-green-700 border border-green-200 text-xs font-bold rounded">Activa</span>
+                      <span className="px-2 py-1 bg-risk-low-bg text-risk-low-fg border border-risk-low-border text-xs font-bold rounded">Activa</span>
                     ) : (
-                      <span className="px-2 py-1 bg-red-50 text-red-700 border border-red-200 text-xs font-bold rounded">Inactiva</span>
+                      <span className="px-2 py-1 bg-risk-high-bg text-risk-high-fg border border-risk-high-border text-xs font-bold rounded">Inactiva</span>
                     )}
                   </td>
                   <td className="p-4 text-right pr-6 space-x-2">

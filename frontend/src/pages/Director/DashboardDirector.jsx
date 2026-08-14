@@ -59,7 +59,7 @@ export default function DashboardDirector() {
   if (error) {
     return (
       <div className="p-8 text-center">
-        <p className="text-red-600 font-semibold mb-4">{error}</p>
+        <p className="text-risk-high font-semibold mb-4">{error}</p>
         <button onClick={() => navigate('/dashboard')} className="text-eduPurple underline text-sm">Volver al inicio</button>
       </div>
     );
@@ -83,10 +83,10 @@ export default function DashboardDirector() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative">
-          <Users className="absolute top-6 right-6 w-5 h-5 text-indigo-400" />
+          <Users className="absolute top-6 right-6 w-5 h-5 text-brand-500" />
           <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Total de Alumnos</p>
           <h3 className="text-4xl font-black text-gray-900 mb-2">{indicadores.total_estudiantes}</h3>
-          <p className="text-xs text-green-600 font-medium">↗ +2.4% vs ciclo anterior</p>
+          <p className="text-xs text-risk-low font-medium">↗ +2.4% vs ciclo anterior</p>
         </div>
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative">
           <BookOpen className="absolute top-6 right-6 w-5 h-5 text-gray-400" />
@@ -109,9 +109,9 @@ export default function DashboardDirector() {
             <p className="text-sm text-gray-500">Análisis predictivo de deserción o bajo rendimiento académico.</p>
           </div>
           <div className="flex space-x-3 text-xs font-semibold">
-            <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-red-600 mr-1"></span>Rojo (Alto)</span>
-            <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>Ámbar (Medio)</span>
-            <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>Verde (Bajo)</span>
+            <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-risk-high mr-1"></span>Rojo (Alto)</span>
+            <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-risk-medium mr-1"></span>Ámbar (Medio)</span>
+            <span className="flex items-center"><span className="w-2 h-2 rounded-full bg-risk-low mr-1"></span>Verde (Bajo)</span>
           </div>
         </div>
 
@@ -135,14 +135,14 @@ export default function DashboardDirector() {
                   <td className="p-4 pl-6 font-bold text-gray-900">{g.nombre_grupo}</td>
                   <td className="p-4">
                     <div className="w-full flex h-3 rounded-full overflow-hidden mb-1">
-                      <div className="bg-green-500" style={{ width: `${pBajo}%` }}></div>
-                      <div className="bg-yellow-400" style={{ width: `${pMedio}%` }}></div>
-                      <div className="bg-red-600" style={{ width: `${pAlto}%` }}></div>
+                      <div className="bg-risk-low" style={{ width: `${pBajo}%` }}></div>
+                      <div className="bg-risk-medium" style={{ width: `${pMedio}%` }}></div>
+                      <div className="bg-risk-high" style={{ width: `${pAlto}%` }}></div>
                     </div>
                     <div className="flex justify-between text-[10px] text-gray-500 font-semibold">
                       <span>{g.riesgo_bajo} Bajo</span>
                       <span className="text-center">{g.riesgo_medio} Medio</span>
-                      <span className="text-right text-red-600">{g.riesgo_alto} Alto</span>
+                      <span className="text-right text-risk-high">{g.riesgo_alto} Alto</span>
                     </div>
                   </td>
                   <td className="p-4 text-right pr-6">

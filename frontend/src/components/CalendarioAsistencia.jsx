@@ -8,9 +8,9 @@ const NOMBRES_MES = [
 const DIAS_SEMANA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
 const ESTILOS_ESTATUS = {
-  Presente: 'bg-green-100 text-green-800 border-green-200',
-  Ausente: 'bg-red-100 text-red-800 border-red-200',
-  Retardo: 'bg-yellow-100 text-yellow-800 border-yellow-200'
+  Presente: 'bg-risk-low-bg text-risk-low-fg border-risk-low-border',
+  Ausente: 'bg-risk-high-bg text-risk-high-fg border-risk-high-border',
+  Retardo: 'bg-risk-medium-bg text-risk-medium-fg border-risk-medium-border'
 };
 
 export default function CalendarioAsistencia({ historial }) {
@@ -72,19 +72,19 @@ export default function CalendarioAsistencia({ historial }) {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
           <p className="text-xs font-bold text-gray-500 uppercase mb-1">Asistencia</p>
-          <p className={`text-2xl font-black ${resumen.porcentaje < 70 ? 'text-red-600' : 'text-gray-900'}`}>{resumen.porcentaje}%</p>
+          <p className={`text-2xl font-black ${resumen.porcentaje < 70 ? 'text-risk-high' : 'text-gray-900'}`}>{resumen.porcentaje}%</p>
         </div>
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
           <p className="text-xs font-bold text-gray-500 uppercase mb-1">Presentes</p>
-          <p className="text-2xl font-black text-green-600">{resumen.presentes}</p>
+          <p className="text-2xl font-black text-risk-low">{resumen.presentes}</p>
         </div>
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
           <p className="text-xs font-bold text-gray-500 uppercase mb-1">Retardos</p>
-          <p className="text-2xl font-black text-yellow-600">{resumen.retardos}</p>
+          <p className="text-2xl font-black text-risk-medium">{resumen.retardos}</p>
         </div>
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
           <p className="text-xs font-bold text-gray-500 uppercase mb-1">Faltas</p>
-          <p className="text-2xl font-black text-red-600">{resumen.ausencias}</p>
+          <p className="text-2xl font-black text-risk-high">{resumen.ausencias}</p>
         </div>
       </div>
 
@@ -124,9 +124,9 @@ export default function CalendarioAsistencia({ historial }) {
         </div>
 
         <div className="flex gap-4 mt-4 pt-4 border-t border-gray-100 text-xs font-semibold text-gray-600">
-          <span className="flex items-center"><CheckCircle className="w-3.5 h-3.5 text-green-600 mr-1" /> Presente</span>
-          <span className="flex items-center"><Clock className="w-3.5 h-3.5 text-yellow-600 mr-1" /> Retardo</span>
-          <span className="flex items-center"><XCircle className="w-3.5 h-3.5 text-red-600 mr-1" /> Falta</span>
+          <span className="flex items-center"><CheckCircle className="w-3.5 h-3.5 text-risk-low mr-1" /> Presente</span>
+          <span className="flex items-center"><Clock className="w-3.5 h-3.5 text-risk-medium mr-1" /> Retardo</span>
+          <span className="flex items-center"><XCircle className="w-3.5 h-3.5 text-risk-high mr-1" /> Falta</span>
         </div>
       </div>
     </div>

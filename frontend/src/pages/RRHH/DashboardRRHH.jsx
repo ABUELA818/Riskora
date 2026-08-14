@@ -49,7 +49,7 @@ export default function DashboardRRHH() {
           </p>
           <div className="flex items-baseline mb-1">
             <h3 className="text-5xl font-black text-gray-900 mr-3">{totalActivo}</h3>
-            <span className="text-sm text-green-600 font-bold">↗ +2.4%</span>
+            <span className="text-sm text-risk-low font-bold">↗ +2.4%</span>
           </div>
           <p className="text-xs text-gray-500 relative z-10">Profesores y administrativos habilitados</p>
         </div>
@@ -86,7 +86,7 @@ export default function DashboardRRHH() {
               {personalReciente.map((persona) => (
                 <tr key={persona.id_usuario} className="hover:bg-gray-50">
                   <td className="p-4 pl-6 flex items-center">
-                    <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex justify-center items-center font-bold text-sm mr-3 shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-brand-100 text-brand-700 flex justify-center items-center font-bold text-sm mr-3 shrink-0">
                       {persona.nombre_completo.substring(0,2).toUpperCase()}
                     </div>
                     <div>
@@ -97,9 +97,9 @@ export default function DashboardRRHH() {
                   <td className="p-4 text-sm text-gray-700 font-medium">{persona.rol}</td>
                   <td className="p-4">
                     {persona.estado ? (
-                      <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">Activo</span>
+                      <span className="px-3 py-1 bg-risk-low-bg text-risk-low-fg text-xs font-bold rounded-full">Activo</span>
                     ) : (
-                      <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">Inactivo</span>
+                      <span className="px-3 py-1 bg-risk-high-bg text-risk-high-fg text-xs font-bold rounded-full">Inactivo</span>
                     )}
                   </td>
                 </tr>

@@ -61,14 +61,14 @@ export default function DashboardPsicopedagogia() {
 
   // P3: helper de color según % de riesgo alto (mismo criterio usado en GestionCarreras.jsx)
   const colorPunto = (pct) => {
-    if (pct >= 15) return 'bg-red-500';
-    if (pct >= 8) return 'bg-yellow-500';
-    return 'bg-green-500';
+    if (pct >= 15) return 'bg-risk-high';
+    if (pct >= 8) return 'bg-risk-medium';
+    return 'bg-risk-low';
   };
   const colorTexto = (pct) => {
-    if (pct >= 15) return 'text-red-600';
-    if (pct >= 8) return 'text-yellow-600';
-    return 'text-green-600';
+    if (pct >= 15) return 'text-risk-high';
+    if (pct >= 8) return 'text-risk-medium';
+    return 'text-risk-low';
   };
 
   if (loading) return <div className="p-8 text-gray-500">Cargando visión institucional...</div>;
@@ -90,10 +90,10 @@ export default function DashboardPsicopedagogia() {
 
       <div className="mb-10">
         <div className="flex items-center mb-4">
-          <AlertCircle className="w-6 h-6 text-red-500 mr-2" />
+          <AlertCircle className="w-6 h-6 text-risk-high mr-2" />
           <h3 className="text-xl font-bold text-gray-900">Casos Escalados Pendientes (Urge Intervención)</h3>
           {casosPendientes.length > 0 && (
-            <span className="ml-3 px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">
+            <span className="ml-3 px-3 py-1 bg-risk-high-bg text-risk-high-fg text-xs font-bold rounded-full">
               {casosPendientes.length} Nuevos
             </span>
           )}
@@ -111,7 +111,7 @@ export default function DashboardPsicopedagogia() {
                       <h4 className="font-bold text-gray-900">{caso.nombre_completo}</h4>
                       <p className="text-xs text-gray-500">Escalado por {caso.tutor_nombre}</p>
                     </div>
-                    <span className="px-2 py-1 bg-red-50 text-red-700 text-[10px] font-bold uppercase tracking-wider rounded border border-red-100">
+                    <span className="px-2 py-1 bg-risk-high-bg text-risk-high-fg text-[10px] font-bold uppercase tracking-wider rounded border border-risk-high-border">
                       Riesgo {caso.nivel_riesgo}
                     </span>
                   </div>
@@ -129,7 +129,7 @@ export default function DashboardPsicopedagogia() {
                       onClick={() => marcarComoVisto(caso.id_intervencion)}
                       disabled={marcandoVisto === caso.id_intervencion}
                       title="Marcar como visto"
-                      className="inline-flex items-center text-xs font-semibold text-gray-500 hover:text-green-700 disabled:opacity-50"
+                      className="inline-flex items-center text-xs font-semibold text-gray-500 hover:text-risk-low-fg disabled:opacity-50"
                     >
                       <Eye className="w-3.5 h-3.5 mr-1" />
                       {marcandoVisto === caso.id_intervencion ? 'Marcando...' : 'Marcar visto'}
@@ -147,7 +147,7 @@ export default function DashboardPsicopedagogia() {
           )}
 
           <div className="min-w-[160px] bg-white border border-gray-200 rounded-2xl p-5 shadow-sm flex flex-col items-center justify-center text-center">
-            <AlertTriangle className="w-8 h-8 text-yellow-500 mb-2" />
+            <AlertTriangle className="w-8 h-8 text-risk-medium mb-2" />
             <h3 className="text-4xl font-black text-gray-900">{kpis ? kpis.riesgo_medio : '—'}</h3>
             <p className="text-xs text-gray-500 mt-1">Alumnos en Riesgo Medio</p>
           </div>

@@ -157,7 +157,7 @@ export default function CasosEscalados() {
                       <tr 
                         key={caso.id_estudiante} 
                         onClick={() => setSeleccionado(caso)}
-                        className={`cursor-pointer transition-colors ${seleccionado?.id_estudiante === caso.id_estudiante ? 'bg-indigo-50/50' : 'hover:bg-gray-50'}`}
+                        className={`cursor-pointer transition-colors ${seleccionado?.id_estudiante === caso.id_estudiante ? 'bg-brand-50/50' : 'hover:bg-gray-50'}`}
                       >
                         <td className="p-4">
                           <p className="font-bold text-gray-900">{caso.nombre_completo}</p>
@@ -165,7 +165,7 @@ export default function CasosEscalados() {
                         </td>
                         <td className="p-4 text-sm text-gray-600">{caso.tutor_nombre}</td>
                         <td className="p-4">
-                          <span className="px-2.5 py-1 text-xs font-bold text-red-700 bg-red-100 border border-red-200 rounded text-center">Urgente</span>
+                          <span className="px-2.5 py-1 text-xs font-bold text-risk-high-fg bg-risk-high-bg border border-risk-high-border rounded text-center">Urgente</span>
                         </td>
                       </tr>
                     ))
@@ -199,7 +199,7 @@ export default function CasosEscalados() {
                               setFormData({ ...formData, id_estudiante: String(est.id_estudiante) });
                               setModalOpen(true);
                             }}
-                            className="inline-flex items-center text-xs font-semibold bg-indigo-50 text-eduPurple px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
+                            className="inline-flex items-center text-xs font-semibold bg-brand-50 text-eduPurple px-3 py-1.5 rounded-lg hover:bg-brand-100 transition-colors"
                           >
                             <Plus className="w-3.5 h-3.5 mr-1" /> Registrar Intervención
                           </button>
@@ -221,7 +221,7 @@ export default function CasosEscalados() {
                   <h3 className="text-xl font-bold text-gray-900">{seleccionado.nombre_completo}</h3>
                   <p className="text-xs text-gray-500">ID: {seleccionado.matricula}</p>
                 </div>
-                <span className="px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-full text-xs font-bold flex items-center">
+                <span className="px-3 py-1 bg-risk-high-bg text-risk-high border border-risk-high-border rounded-full text-xs font-bold flex items-center">
                   <AlertTriangle className="w-3 h-3 mr-1" /> Riesgo Alto
                 </span>
               </div>

@@ -214,13 +214,13 @@ export default function ExpedienteLaboral() {
           <div>
             <div className="flex items-center gap-3 mb-1 flex-wrap">
               <h2 className="text-2xl font-bold text-gray-900">{expediente.nombre_completo}</h2>
-              <span className="px-3 py-1 bg-indigo-50 text-eduPurple text-xs font-bold rounded-full border border-indigo-100">
+              <span className="px-3 py-1 bg-brand-50 text-eduPurple text-xs font-bold rounded-full border border-brand-100">
                 {expediente.rol}
               </span>
               {expediente.estado ? (
-                <span className="px-2.5 py-1 bg-green-50 text-green-700 border border-green-200 text-xs font-bold rounded">Activo</span>
+                <span className="px-2.5 py-1 bg-risk-low-bg text-risk-low-fg border border-risk-low-border text-xs font-bold rounded">Activo</span>
               ) : (
-                <span className="px-2.5 py-1 bg-red-50 text-red-700 border border-red-200 text-xs font-bold rounded">Inactivo</span>
+                <span className="px-2.5 py-1 bg-risk-high-bg text-risk-high-fg border border-risk-high-border text-xs font-bold rounded">Inactivo</span>
               )}
             </div>
             <p className="text-sm text-gray-500 mb-3">Antigüedad: {expediente.antiguedad_texto}</p>
@@ -253,7 +253,7 @@ export default function ExpedienteLaboral() {
           <div className="flex flex-col gap-2 shrink-0">
             <button
               onClick={() => { setFormError(''); setModalEditarOpen(true); }}
-              className="px-4 py-2 bg-indigo-50 text-eduPurple rounded-lg text-sm font-bold hover:bg-indigo-100 flex items-center justify-center"
+              className="px-4 py-2 bg-brand-50 text-eduPurple rounded-lg text-sm font-bold hover:bg-brand-100 flex items-center justify-center"
             >
               <Edit2 className="w-4 h-4 mr-2" /> Editar datos
             </button>
@@ -269,8 +269,8 @@ export default function ExpedienteLaboral() {
               onClick={handleCambiarEstado}
               className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center border ${
                 expediente.estado
-                  ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
-                  : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                  ? 'bg-risk-high-bg text-risk-high-fg border-risk-high-border hover:bg-risk-high-bg'
+                  : 'bg-risk-low-bg text-risk-low-fg border-risk-low-border hover:bg-risk-low-bg'
               }`}
             >
               {expediente.estado ? <UserX className="w-4 h-4 mr-2" /> : <UserCheck className="w-4 h-4 mr-2" />}
@@ -300,7 +300,7 @@ export default function ExpedienteLaboral() {
                     {m.nombre_materia}
                     <button
                       onClick={() => handleQuitarMateria(m.id_materia, m.nombre_materia)}
-                      className="ml-2 text-gray-400 hover:text-red-600"
+                      className="ml-2 text-gray-400 hover:text-risk-high"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -371,7 +371,7 @@ export default function ExpedienteLaboral() {
             </div>
             <form onSubmit={handleGuardarEdicion} className="p-6 space-y-4">
               {formError && (
-                <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+                <div className="p-3 text-sm text-risk-high bg-risk-high-bg border border-risk-high-border rounded-lg">
                   {formError}
                 </div>
               )}
@@ -445,7 +445,7 @@ export default function ExpedienteLaboral() {
             </div>
             <form onSubmit={handleCambiarRol} className="p-6 space-y-4">
               {rolError && (
-                <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+                <div className="p-3 text-sm text-risk-high bg-risk-high-bg border border-risk-high-border rounded-lg">
                   {rolError}
                 </div>
               )}
@@ -470,9 +470,9 @@ export default function ExpedienteLaboral() {
                 </select>
               </div>
 
-              <div className="bg-red-50 p-3 rounded-lg border border-red-100 flex items-start">
-                <AlertTriangle className="w-5 h-5 text-red-600 mr-2 shrink-0 mt-0.5" />
-                <p className="text-xs text-red-800 font-medium">
+              <div className="bg-risk-high-bg p-3 rounded-lg border border-risk-high-border flex items-start">
+                <AlertTriangle className="w-5 h-5 text-risk-high mr-2 shrink-0 mt-0.5" />
+                <p className="text-xs text-risk-high-fg font-medium">
                   Al guardar, la sesión actual de este usuario será invalidada automáticamente. Deberá iniciar sesión de nuevo para acceder con sus nuevos privilegios.
                 </p>
               </div>
@@ -488,7 +488,7 @@ export default function ExpedienteLaboral() {
                 <button
                   type="submit"
                   disabled={isChangingRole}
-                  className="flex-1 py-2.5 bg-red-600 text-white font-bold rounded-lg text-sm hover:bg-red-700 disabled:opacity-70"
+                  className="flex-1 py-2.5 bg-risk-high text-white font-bold rounded-lg text-sm hover:bg-risk-high-fg disabled:opacity-70"
                 >
                   {isChangingRole ? 'Aplicando...' : 'Confirmar Cambio'}
                 </button>
