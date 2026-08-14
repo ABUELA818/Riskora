@@ -46,6 +46,18 @@ def _generar_matricula(db: Session) -> str:
         consecutivo = 1
     return f"MAT-{anio}{consecutivo:04d}"
 
+def _armar_materia_salida(m: Materia, db: Session) -> MateriaOut:
+    carrera = db.query(Carrera).filter(Carrera.id_carrera == m.id_carrera).first() if m.id_carrera else None
+    return MateriaOut(
+        id_materia=m.id_materia,
+        nombre_materia=m.nombre_materia,
+        clave_materia=m.clave_materia,
+        creditos=m.creditos,
+        horas_semana=m.horas_semana,
+        id_carrera=m.id_carrera,
+        nombre_carrera=carrera.nombre if carrera else None,
+        estado=m.estado
+    )
 
 def _generar_correo_institucional(db: Session, nombre_completo: str) -> str:
     partes = unicodedata.normalize('NFKD', nombre_completo.lower())\
@@ -207,11 +219,20 @@ def crear_grupo(
     db.refresh(nuevo_grupo)
 
     carrera = db.query(Carrera).filter(Carrera.id_carrera == nuevo_grupo.id_carrera).first()
+    nombre_tutor = None
+    if nuevo_grupo.id_tutor:
+        tutor_obj = db.query(Tutor).filter(Tutor.id_tutor == nuevo_grupo.id_tutor).first()
+        if tutor_obj:
+            usuario_tutor = db.query(Usuario).filter(Usuario.id_usuario == tutor_obj.id_usuario).first()
+            if usuario_tutor:
+                nombre_tutor = usuario_tutor.nombre_completo
+
     return GrupoOut(
         id_grupo=nuevo_grupo.id_grupo,
         nombre_grupo=nuevo_grupo.nombre_grupo,
         id_carrera=nuevo_grupo.id_carrera,
         nombre_carrera=carrera.nombre if carrera else None,
+        nombre_tutor=nombre_tutor,
         cuatrimestre=nuevo_grupo.cuatrimestre,
         id_plan_estudio=nuevo_grupo.id_plan_estudio,
         id_tutor=nuevo_grupo.id_tutor
@@ -229,11 +250,19 @@ def obtener_grupos(skip: int = 0, limit: int = 100, db: Session = Depends(get_db
     resultado = []
     for g in grupos:
         carrera = db.query(Carrera).filter(Carrera.id_carrera == g.id_carrera).first()
+        nombre_tutor = None
+        if g.id_tutor:
+            tutor_obj = db.query(Tutor).filter(Tutor.id_tutor == g.id_tutor).first()
+            if tutor_obj:
+                usuario_tutor = db.query(Usuario).filter(Usuario.id_usuario == tutor_obj.id_usuario).first()
+                if usuario_tutor:
+                    nombre_tutor = usuario_tutor.nombre_completo
         resultado.append(GrupoOut(
             id_grupo=g.id_grupo,
             nombre_grupo=g.nombre_grupo,
             id_carrera=g.id_carrera,
             nombre_carrera=carrera.nombre if carrera else None,
+            nombre_tutor=nombre_tutor,
             cuatrimestre=g.cuatrimestre,
             id_plan_estudio=g.id_plan_estudio,
             id_tutor=g.id_tutor
@@ -252,19 +281,27 @@ def asignar_docente_a_grupo(id: int, id_docente: int, db: Session = Depends(get_
 
 # 3. MATERIAS
 @router.post("/materias", response_model=MateriaOut, dependencies=[Depends(permitir_gestion_materias)])
-def crear_materia(materia: MateriaCreate, db: Session = Depends(get_db)):
+def crear_materia(materia: MateriaCreate, db: Session = Depends(get_db), current_user = Depends(get_current_active_user)):
     existe = db.query(Materia).filter(Materia.clave_materia == materia.clave_materia).first()
     if existe:
         raise HTTPException(status_code=400, detail="La clave de materia ya está en uso")
+
+    user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
+    if user_role == "Director":
+        mis_carreras = [c.id_carrera for c in db.query(DirectorCarrera).filter(
+            DirectorCarrera.id_usuario == current_user.id_usuario
+        ).all()]
+        if materia.id_carrera not in mis_carreras:
+            raise HTTPException(status_code=403, detail="No puedes crear materias para una carrera que no diriges.")
 
     nueva_materia = Materia(**materia.model_dump())
     db.add(nueva_materia)
     db.commit()
     db.refresh(nueva_materia)
-    return nueva_materia
+    return _armar_materia_salida(nueva_materia, db)
 
 @router.put("/materias/{id}", response_model=MateriaOut, dependencies=[Depends(permitir_gestion_materias)])
-def actualizar_materia(id: int, data: MateriaUpdate, db: Session = Depends(get_db)):
+def actualizar_materia(id: int, data: MateriaUpdate, db: Session = Depends(get_db), current_user = Depends(get_current_active_user)):
     materia = db.query(Materia).filter(Materia.id_materia == id).first()
     if not materia:
         raise HTTPException(status_code=404, detail="Materia no encontrada")
@@ -274,17 +311,43 @@ def actualizar_materia(id: int, data: MateriaUpdate, db: Session = Depends(get_d
         if existe:
             raise HTTPException(status_code=400, detail="La clave de materia ya está en uso")
 
+    user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
+    if user_role == "Director":
+        mis_carreras = [c.id_carrera for c in db.query(DirectorCarrera).filter(
+            DirectorCarrera.id_usuario == current_user.id_usuario
+        ).all()]
+        id_carrera_objetivo = data.id_carrera if data.id_carrera is not None else materia.id_carrera
+        if id_carrera_objetivo not in mis_carreras:
+            raise HTTPException(status_code=403, detail="No puedes modificar materias fuera de tu carrera.")
+
     update_data = data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(materia, key, value)
 
     db.commit()
     db.refresh(materia)
-    return materia
+    return _armar_materia_salida(materia, db)
 
 @router.get("/materias", response_model=List[MateriaOut], dependencies=[Depends(todos_los_roles)])
-def obtener_materias(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return db.query(Materia).filter(Materia.estado == True).offset(skip).limit(limit).all()
+def obtener_materias(
+    carrera: Optional[int] = Query(None),
+    skip: int = 0, limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_active_user)
+):
+    user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
+    query = db.query(Materia).filter(Materia.estado == True)
+
+    if user_role == "Director":
+        mis_carreras = [c.id_carrera for c in db.query(DirectorCarrera).filter(
+            DirectorCarrera.id_usuario == current_user.id_usuario
+        ).all()]
+        query = query.filter(Materia.id_carrera.in_(mis_carreras or [-1]))
+    elif carrera:
+        query = query.filter(Materia.id_carrera == carrera)
+
+    materias = query.offset(skip).limit(limit).all()
+    return [_armar_materia_salida(m, db) for m in materias]
 
 @router.get("/grupos/{id_grupo}/mis-materias", response_model=List[MateriaOut])
 def materias_del_docente_en_grupo(

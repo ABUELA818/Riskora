@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { API_BASE_URL } from '../../config/api'; 
 import {
   UserPlus, X, Plus, Download, Upload, Loader2, CheckCircle,
@@ -15,6 +15,7 @@ const FORM_GRUPO_INICIAL = {
 
 export default function GestionGrupos() {
   const { token } = useAuth();
+  const location = useLocation();
   const [grupos, setGrupos] = useState([]);
   const [idCarrera, setIdCarrera] = useState(null);
   const [docentesTutores, setDocentesTutores] = useState([]);
@@ -85,6 +86,12 @@ export default function GestionGrupos() {
       .then(data => { if (Array.isArray(data)) setHorariosPanel(data); })
       .catch(err => console.error(err));
   };
+
+  useEffect(() => {
+    if (!location.state?.grupoAAbrir || grupos.length === 0) return;
+    const grupo = grupos.find(g => g.id_grupo === location.state.grupoAAbrir);
+    if (grupo) abrirPanelGrupo(grupo);
+  }, [grupos, location.state]);
 
   const cerrarPanelGrupo = () => setGrupoPanel(null);
 
@@ -402,7 +409,9 @@ const eliminarHorarioExistente = async (idHorario) => {
                 <td className="p-3 text-sm text-gray-600">{grupo.cuatrimestre}</td>
                 <td className="p-3 text-sm text-gray-600">
                   {grupo.id_tutor ? (
-                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Asignado: {grupo.id_tutor}</span>
+                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                      {grupo.nombre_tutor || `ID ${grupo.id_tutor}`}
+                    </span>
                   ) : (
                     <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Sin Asignar</span>
                   )}
@@ -676,9 +685,7 @@ const eliminarHorarioExistente = async (idHorario) => {
             <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 space-y-2">
               <div className="flex items-center text-sm text-gray-600">
                 <Info className="w-4 h-4 mr-2 text-gray-400" />
-                Tutor: {grupoPanel.id_tutor
-                  ? (docentesTutores.find(t => t.id_usuario === grupoPanel.id_tutor)?.nombre_completo || `ID ${grupoPanel.id_tutor}`)
-                  : 'Sin asignar'}
+                Tutor: {grupoPanel.nombre_tutor || 'Sin asignar'}
               </div>
               <div className="flex items-center text-sm text-gray-600">
                 <Users className="w-4 h-4 mr-2 text-gray-400" />
@@ -740,16 +747,10 @@ const eliminarHorarioExistente = async (idHorario) => {
           <div className="p-4 border-t border-gray-100 flex gap-2 bg-gray-50/50">
             <button
               onClick={() => { abrirModalHorario(grupoPanel); }}
-              className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-50"
+              className="w-full py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-50"
             >
               Materias / Horario
             </button>
-            <Link
-              to="/carreras/riesgo-agregado"
-              className="flex-1 py-2 bg-eduPurple text-white rounded-lg text-sm font-bold text-center hover:bg-opacity-90"
-            >
-              Ver riesgo agregado
-            </Link>
           </div>
         </aside>
       )}

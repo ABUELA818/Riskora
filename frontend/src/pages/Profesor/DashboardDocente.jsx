@@ -52,7 +52,12 @@ export default function DashboardDocente() {
   }, [token]);
 
   const irAAsistencia = (clase) => {
-    navigate('/asistencias', { state: { grupoPreseleccionado: clase.id_grupo } });
+    navigate('/asistencias', {
+      state: {
+        horarioPreseleccionado: clase.id_horario,
+        grupoPreseleccionado: clase.id_grupo
+      }
+    });
   };
 
   const irACalificaciones = (clase) => {

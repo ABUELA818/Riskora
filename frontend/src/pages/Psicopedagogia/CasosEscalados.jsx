@@ -67,10 +67,11 @@ export default function CasosEscalados() {
       });
       
       if (!response.ok) throw new Error('Error al crear el caso');
-      
+
       setModalOpen(false);
       setFormData({ id_estudiante: '', nivel_resolucion: 'Llamada Telefónica', motivo: '' });
       cargarCasos();
+      alert('Intervención registrada correctamente.');
     } catch (error) {
       alert('No se pudo crear el caso manual.');
     } finally {

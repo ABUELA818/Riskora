@@ -113,13 +113,11 @@ class Estudiante(Base):
     celular = Column(String(20), nullable=True)          
     motivo_baja = Column(Text, nullable=True)            
     fecha_baja = Column(DateTime, nullable=True)           
-    # Nuevas columnas para IA
     dificultad_economica = Column(Integer, default=0)
     trabaja_actualmente = Column(Integer, default=0)
     reporte_emocional = Column(Integer, default=0)
     solicitud_baja = Column(Integer, default=0)
     acceso_tecnologico = Column(String(20), default='Parcial')
-    # Columnas calculadas por el modelo XGBoost
     nivel_riesgo = Column(String(10), default='Bajo')
     probabilidad_riesgo = Column(Numeric(5, 4), default=0.0)
 
@@ -131,6 +129,7 @@ class Materia(Base):
     creditos = Column(Integer)
     horas_semana = Column(Integer, nullable=True)
     estado = Column(Boolean, default=True)
+    id_carrera = Column(Integer, ForeignKey('carreras.id_carrera'), nullable=True)
 
 class PlanMateria(Base):
     __tablename__ = 'plan_materia'
