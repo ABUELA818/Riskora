@@ -3,6 +3,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
+from app.core.email import enviar_credenciales_temporales
 
 from app.db.session import SessionLocal
 from app.models.models import (
@@ -139,7 +140,13 @@ def aceptar_solicitud(id_solicitud: int, db: Session = Depends(get_db), current_
     solicitud.id_usuario_resolutor = current_user.id_usuario
     db.commit()
 
-    print(f"ALERTA TEMP: Contraseña generada para {solicitud.correo}: {password_temporal}")
+    enviar_credenciales_temporales(
+        correo_destino=nuevo_usuario.correo_institucional,
+        nombre_completo=nuevo_usuario.nombre_completo,
+        password_temporal=password_temporal,
+        rol=nuevo_usuario.rol.value
+    )
+
     return {"message": "Solicitud aceptada. Usuario creado correctamente.", "id_usuario": nuevo_usuario.id_usuario}
 
 

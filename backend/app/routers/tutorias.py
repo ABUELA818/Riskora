@@ -155,7 +155,7 @@ def crear_caso_manual(
     current_user = Depends(get_current_active_user)
 ):
     user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
-    if user_role not in ("Tutor", "Psicopedagogia", "Administrador"):
+    if user_role not in ("Tutor", "Psicopedagogia", "Administrador", "Director"):
         raise HTTPException(status_code=403, detail="No tienes permiso para crear casos escalados.")
 
     estudiante = db.query(Estudiante).filter(Estudiante.id_estudiante == data.id_estudiante).first()

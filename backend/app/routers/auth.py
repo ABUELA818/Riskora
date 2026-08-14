@@ -1,4 +1,6 @@
 import uuid
+import secrets
+import os
 from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from sqlalchemy.orm import Session
@@ -7,9 +9,12 @@ from app.models.models import Usuario
 from app.schemas.auth import LoginSchema, Token, ForgotPasswordSchema, ResetPasswordSchema
 from app.core.security import verify_password, create_access_token, create_refresh_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_password_hash, SECRET_KEY, ALGORITHM
 from app.core.deps import get_db
+from app.core.email import enviar_link_recuperacion
 from jose import jwt, JWTError
 
 router = APIRouter(prefix="/api/v1/auth", tags=["Auth"])
+
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 @router.post("/login", response_model=Token)
 def login(data: LoginSchema, response: Response, db: Session = Depends(get_db)):
@@ -72,6 +77,28 @@ def refresh(request: Request, db: Session = Depends(get_db)):
 def logout(response: Response):
     response.delete_cookie(key="refresh_token", path="/api/v1/auth")
     return {"message": "Sesión cerrada"}
+
+@router.post("/forgot-password")
+def forgot_password(data: ForgotPasswordSchema, db: Session = Depends(get_db)):
+    usuario = db.query(Usuario).filter(
+        Usuario.correo_institucional == data.correo_institucional
+    ).first()
+
+    # Solo generamos y enviamos el token si el usuario existe y está activo.
+    # La respuesta es siempre la misma para no revelar si el correo está registrado.
+    if usuario and usuario.estado:
+        token = secrets.token_urlsafe(32)
+        usuario.token_recuperacion = token
+        db.commit()
+
+        link = f"{FRONTEND_URL}/reset-password?token={token}"
+        enviar_link_recuperacion(
+            correo_destino=usuario.correo_institucional,
+            nombre_completo=usuario.nombre_completo,
+            link=link
+        )
+
+    return {"message": "Si el correo existe en nuestro sistema, se enviará un enlace de recuperación."}
 
 @router.post("/reset-password")
 def reset_password(data: ResetPasswordSchema, db: Session = Depends(get_db)):

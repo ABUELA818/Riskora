@@ -35,6 +35,8 @@ class MetricasRRHHOut(BaseModel):
     total_docentes: int
     total_tutores: int
     total_psicopedagogia: int
+    total_directores: int
+    total_rrhh: int
     altas_mes: int
     distribucion_carreras: List[MetricaCarrera]
 

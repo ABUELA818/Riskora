@@ -75,7 +75,7 @@ export default function DirectorioPersonal() {
         nombres: '', apellidos: '', correo: '', rol: 'Docente',
         id_carrera: '', telefono: '', telefono_familiar: '', imagen_url: ''
       });
-      alert('Personal dado de alta correctamente. Revisa la consola del backend para ver la contraseña temporal generada.');
+      alert('Personal dado de alta correctamente. Se envió la contraseña temporal al correo registrado.');
     } catch (error) {
       alert(error.message);
     } finally {

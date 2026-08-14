@@ -20,7 +20,6 @@ from app.schemas.academic import (
 )
 from app.core.deps import get_db, RoleChecker, get_current_active_user
 from app.schemas.carrera import CarreraOut
-from app.routers.riesgo import calcular_metricas_estudiante
 from fastapi.responses import StreamingResponse
 from app.schemas.horario import HorarioBulkCreate, HorarioOut, DocenteCatalogoOut
 
@@ -122,34 +121,10 @@ def obtener_estudiantes(
         if grupo:
             query = query.filter(Grupo.nombre_grupo.ilike(f"%{grupo}%"))
 
-    resultado = query.offset(skip).limit(limit).all()
-
-    # CORRECCIÓN 1: Usar lógica determinista para calcular nivel_riesgo en el listado
-    resultado_modificado = []
-    for est in resultado:
-        est_dict = est.__dict__.copy()
-        p_asis, prom, _ = calcular_metricas_estudiante(db, est.id_estudiante)
-        if p_asis < 70.0 or prom < 60.0:
-            nivel = "Alto"
-            prob = 0.85
-        elif p_asis < 85.0 or prom < 75.0:
-            nivel = "Medio"
-            prob = 0.60
-        else:
-            nivel = "Bajo"
-            prob = 0.95
-        est_dict['nivel_riesgo'] = nivel
-        est_dict['probabilidad_riesgo'] = prob
-        resultado_modificado.append(est)
-
     if nivel_riesgo and nivel_riesgo != "":
-        filtrados = []
-        for est in resultado_modificado:
-            if est.nivel_riesgo == nivel_riesgo:
-                filtrados.append(est)
-        return filtrados
+        query = query.filter(Estudiante.nivel_riesgo == nivel_riesgo)
 
-    return resultado_modificado
+    return query.offset(skip).limit(limit).all()
 
 @router.get("/carreras", response_model=List[CarreraOut], dependencies=[Depends(todos_los_roles)])
 def obtener_carreras(db: Session = Depends(get_db)):

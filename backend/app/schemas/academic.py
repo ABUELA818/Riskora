@@ -15,7 +15,6 @@ class PeriodoOut(PeriodoBase):
         from_attributes = True
 
 # --- MATERIAS ---
-# --- MATERIAS ---
 class MateriaBase(BaseModel):
     nombre_materia: str
     clave_materia: str
@@ -75,6 +74,8 @@ class EstudianteOut(EstudianteBase):
     estado: bool
     motivo_baja: Optional[str] = None
     fecha_baja: Optional[date] = None
+    nivel_riesgo: Optional[str] = None
+    probabilidad_riesgo: Optional[float] = None
     class Config:
         from_attributes = True
 

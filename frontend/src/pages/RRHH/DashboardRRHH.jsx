@@ -27,7 +27,7 @@ export default function DashboardRRHH() {
 
   if (loading || !metricas) return <div className="p-8 text-gray-500">Cargando dashboard de RRHH...</div>;
 
-  const totalActivo = metricas.total_docentes + metricas.total_tutores + metricas.total_psicopedagogia;
+  const totalActivo = metricas.total_docentes + metricas.total_tutores + metricas.total_psicopedagogia + metricas.total_directores + metricas.total_rrhh;
 
   return (
     <div className="p-8 bg-gray-50/50 min-h-full">
