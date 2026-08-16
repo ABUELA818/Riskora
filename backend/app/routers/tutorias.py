@@ -12,7 +12,7 @@ from app.core.deps import get_db, RoleChecker, get_current_active_user
 from app.routers.riesgo import calcular_metricas_estudiante, clasificar_riesgo
 
 router = APIRouter(prefix="/api/v1", tags=["Tutorías e Intervenciones"])
-permitir_acceso = RoleChecker(["Tutor", "Administrador", "Director", "Psicopedagogia"])
+permitir_acceso = RoleChecker(["Tutor", "Administrador", "Director", "Psicopedagogia", "Mixto"])
 
 def verificar_permiso_tutor(db: Session, current_user, id_estudiante: int):
     estudiante = db.query(Estudiante).filter(Estudiante.id_estudiante == id_estudiante).first()

@@ -480,11 +480,17 @@ const eliminarHorarioExistente = async (idHorario) => {
             <form onSubmit={handleAsignarDocente}>
               <p className="text-sm text-gray-600 mb-4">Grupo seleccionado: <strong>{grupoSeleccionado?.nombre_grupo}</strong></p>
               <label className="block text-sm font-medium mb-1">ID del Docente / Tutor</label>
-              <input
-                type="number" required
-                className="w-full border border-gray-300 rounded-md p-2 mb-4"
-                value={nuevoDocenteId} onChange={e => setNuevoDocenteId(e.target.value)}
-              />
+              <select
+                required
+                className="w-full border border-gray-300 rounded-md p-2 mb-4 bg-white"
+                value={nuevoDocenteId}
+                onChange={e => setNuevoDocenteId(e.target.value)}
+              >
+                <option value="">Selecciona un docente...</option>
+                {docentesCatalogo.map(d => (
+                  <option key={d.id} value={d.id}>{d.nombre} {d.apellidos}</option>
+                ))}
+              </select>
               <button type="submit" className="w-full bg-eduPurple text-white py-2 rounded-md">Guardar Asignación</button>
             </form>
           </div>

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 export default function SeccionCalificaciones({ estudianteId, token }) {
   const { user } = useAuth();
-  const isDocente = user?.rol === 'Docente' || user?.rol === 'Administrador';
+  const isDocente = user?.rol === 'Docente' || user?.rol === 'Mixto' || user?.rol === 'Administrador';
   
   const [formData, setFormData] = useState({
     parcial: 1,

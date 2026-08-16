@@ -10,7 +10,7 @@ from app.schemas.evaluacion import (
 from app.core.deps import get_db, RoleChecker, get_current_active_user
 
 router = APIRouter(prefix="/api/v1", tags=["Evaluaciones"])
-permitir_acceso = RoleChecker(["Docente", "Tutor", "Administrador"])
+permitir_acceso = RoleChecker(["Docente", "Tutor", "Administrador", "Mixto"])
 
 @router.post("/estudiantes/{id_estudiante}/calificaciones", response_model=CalificacionOut, dependencies=[Depends(permitir_acceso)])
 def registrar_calificacion(

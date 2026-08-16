@@ -10,7 +10,7 @@ permitir_admin = RoleChecker(["Administrador"])
 from app.core.prediction_service import predecir_riesgo, recalcular_y_guardar_riesgo
 
 router = APIRouter(prefix="/api/v1", tags=["IA - Riesgo"])
-permitir_acceso = RoleChecker(["Docente", "Tutor", "Administrador", "Psicopedagogia", "Director", "RRHH"])
+permitir_acceso = RoleChecker(["Docente", "Tutor", "Administrador", "Psicopedagogia", "Director", "RRHH", "Mixto"])
 
 def calcular_metricas_estudiante(db: Session, id_estudiante: int):
     # Usar tablas nuevas
@@ -189,7 +189,7 @@ def obtener_alumnos_requieren_atencion(
     current_user = Depends(get_current_active_user)
 ):
     user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
-    if user_role != "Tutor":
+    if user_role not in ("Tutor", "Mixto"):
         raise HTTPException(status_code=403, detail="Solo disponible para el rol Tutor")
 
     tutor = db.query(Tutor).filter(Tutor.id_usuario == current_user.id_usuario).first()

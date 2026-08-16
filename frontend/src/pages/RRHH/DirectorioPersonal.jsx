@@ -278,7 +278,6 @@ export default function DirectorioPersonal() {
                   className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-eduPurple outline-none bg-white"
                 >
                   <option value="Docente">Docente</option>
-                  <option value="Tutor">Tutor</option>
                   <option value="Director">Director de Carrera</option>
                   <option value="Psicopedagogia">Psicopedagogía</option>
                   <option value="RRHH">Recursos Humanos</option>

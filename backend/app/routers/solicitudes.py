@@ -49,8 +49,8 @@ def crear_solicitud_personal(
 ):
     user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
 
-    if data.rol_solicitado not in ("Docente", "Tutor"):
-        raise HTTPException(status_code=400, detail="Solo puedes solicitar altas de Docente o Tutor.")
+    if data.rol_solicitado != "Docente":
+        raise HTTPException(status_code=400, detail="Solo puedes solicitar altas de Docente. Los Tutores se asignan promoviendo a un Docente desde Gestión de Grupos.")
 
     if user_role == "Director":
         mis_carreras = [c.id_carrera for c in db.query(DirectorCarrera).filter(

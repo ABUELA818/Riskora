@@ -15,7 +15,7 @@ from app.core.prediction_service import predecir_riesgo
 router = APIRouter(prefix="/api/v1/psicopedagogia", tags=["Módulo Psicopedagogía"])
 
 permitir_psico_admin = RoleChecker(["Psicopedagogia", "Administrador"])
-permitir_expediente = RoleChecker(["Psicopedagogia", "Administrador", "Tutor", "Docente"])
+permitir_expediente = RoleChecker(["Psicopedagogia", "Administrador", "Tutor", "Docente", "Mixto"])
 
 @router.get("/casos-pendientes", response_model=List[CasoPendienteOut], dependencies=[Depends(permitir_psico_admin)])
 def obtener_casos_pendientes(db: Session = Depends(get_db)):

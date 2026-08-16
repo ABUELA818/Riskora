@@ -23,7 +23,7 @@ from app.routers.riesgo import calcular_metricas_estudiante, clasificar_riesgo
 from app.core.audit import registrar_auditoria
 
 router = APIRouter(prefix="/api/v1", tags=["Reportes y Notificaciones"])
-permitir_acceso = RoleChecker(["Administrador", "Director", "Tutor", "Psicopedagogia"])
+permitir_acceso = RoleChecker(["Administrador", "Director", "Tutor", "Psicopedagogia", "Mixto"])
 
 def _carreras_permitidas(db: Session, current_user):
     user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol

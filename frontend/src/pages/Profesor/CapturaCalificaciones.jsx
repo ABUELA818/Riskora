@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../config/api'; 
 import { 
   Search, Download, Save, AlertCircle, X, Plus,
-  Hand, AlertTriangle, Brain, CheckCircle 
+  Hand, AlertTriangle, Brain, CheckCircle, Trash2
 } from 'lucide-react';
 
 export default function CapturaCalificaciones() {
@@ -45,7 +45,7 @@ export default function CapturaCalificaciones() {
   useEffect(() => {
     if (!token || !role) return;
 
-    const url = role === 'Docente' ? '/api/v1/mis-clases' : '/api/v1/grupos';
+    const url = (role === 'Docente' || role === 'Mixto') ? '/api/v1/mis-clases' : '/api/v1/grupos';
     fetch(`${API_BASE_URL}${url}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -53,7 +53,7 @@ export default function CapturaCalificaciones() {
       .then(data => {
         if (!Array.isArray(data)) return;
 
-        if (role === 'Docente') {
+        if (role === 'Docente' || role === 'Mixto') {
           const gruposUnicos = [...new Map(
             data.map(c => [c.id_grupo, { id_grupo: c.id_grupo, nombre_grupo: c.nombre_grupo }])
           ).values()];
@@ -154,6 +154,29 @@ export default function CapturaCalificaciones() {
       }
     }));
   };
+
+  const eliminarParcial = (numeroParcial) => {
+  const confirmado = window.confirm(
+    `¿Seguro que quieres eliminar el Parcial ${numeroParcial}? Los parciales siguientes se renumerarán y esta acción no se puede deshacer.`
+  );
+  if (!confirmado) return;
+
+  setCalificaciones(prev => {
+    const nuevoEstado = {};
+    Object.entries(prev).forEach(([idEst, notas]) => {
+      const notasNuevas = {};
+      Object.entries(notas).forEach(([campo, valor]) => {
+        const num = parseInt(campo.replace('p', ''), 10);
+        if (num === numeroParcial) return;
+        notasNuevas[num > numeroParcial ? `p${num - 1}` : campo] = valor; 
+      });
+      nuevoEstado[idEst] = notasNuevas;
+    });
+    return nuevoEstado;
+  });
+
+  setNumParciales(prev => Math.max(1, prev - 1));
+};
 
   const calcularEstadisticas = () => {
     let sumaTotal = 0;
@@ -378,8 +401,15 @@ export default function CapturaCalificaciones() {
               </button>
             </div>
             
-            <div className="flex items-center text-sm text-gray-500">
-              <span className="w-2 h-2 rounded-full border border-risk-high mr-2"></span> Entrada inválida
+            <div className="flex items-center gap-x-4 text-sm text-gray-500">
+              <div className="flex items-center">
+                <span className="w-2 h-2 rounded-full border border-risk-high mr-2"></span>
+                Entrada inválida
+              </div>
+              <div className="flex items-center">
+                <span className="w-2 h-2 rounded-full border border-risk-high mr-2"></span>
+                Calificación en 0 a 100
+              </div>
             </div>
           </div>
 
@@ -388,9 +418,26 @@ export default function CapturaCalificaciones() {
               <tr className="bg-gray-50 text-gray-500 text-xs font-bold uppercase tracking-wider border-b border-gray-200">
                 <th className="p-4 pl-6 w-1/4">Nombre</th>
                 <th className="p-4">Matricula</th>
-                {Array.from({ length: numParciales }, (_, i) => (
-                  <th key={i} className="p-4 text-center">P{i + 1}</th>
-                ))}
+                {Array.from({ length: numParciales }, (_, i) => {
+                  const num = i + 1;
+                  return (
+                    <th key={i} className="p-4 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <span title="Las calificaciones se capturan en escala de 0 a 100">P{num}</span>
+                        {numParciales > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => eliminarParcial(num)}
+                            title={`Eliminar Parcial ${num}`}
+                            className="text-gray-300 hover:text-risk-high transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </th>
+                  );
+                })}
                 <th className="p-4 text-right pr-6">Calificación Final</th>
               </tr>
             </thead>
@@ -435,6 +482,7 @@ export default function CapturaCalificaciones() {
                             type="text"
                             value={valor}
                             onChange={(e) => handleCalificacionChange(est.id_estudiante, campo, e.target.value)}
+                            title="Calificación en escala de 0 a 100"
                             className={`w-16 text-center border rounded-md py-1.5 text-sm focus:ring-2 focus:outline-none ${isInvalid(valor) ? 'border-risk-high bg-risk-high-bg text-risk-high-fg ring-risk-high-border' : 'border-gray-300 focus:border-eduPurple focus:ring-brand-100'}`}
                             placeholder="-"
                           />
