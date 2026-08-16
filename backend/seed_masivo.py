@@ -6,8 +6,8 @@ Genera una población grande y realista para pruebas funcionales:
   - N carreras, cada una con:
       * 1 Director
       * >= 15 Docentes
-      * >= 10 Tutores
-      * >= 5  Materias
+      * Un subconjunto de esos Docentes promovido a Mixto (Docente + Tutor)
+      * >= 5  Materias (cada una amarrada a su carrera vía id_carrera)
       * 1 Plan de Estudio (con sus materias asignadas por cuatrimestre)
       * >= 10 Grupos (ligados a su plan de estudio), cada uno con 20-25 alumnos
   - 1 Administrador
@@ -25,6 +25,15 @@ Genera una población grande y realista para pruebas funcionales:
     (no requiere modelo.pkl / XGBoost para poblarse).
   - Observaciones de conducta y avisos de ejemplo, para que las pantallas de
     Docente/Director/Tutor no se vean vacías.
+
+ROL MIXTO
+----------------
+Ya no se crean cuentas de Tutor sueltas. Un usuario siempre nace como Docente
+y una parte de ellos se promueve a Mixto (Docente + Tutor) reutilizando la
+misma lógica que app/routers/academicos.py::asignar_docente_a_grupo:
+  1) cambiar Usuario.rol a RolEnum.MIXTO
+  2) crear su fila en Tutor con db.flush() para obtener su id_tutor
+  3) recién entonces usar ese id_tutor para enlazar grupos
 
 CÓMO EJECUTARLO
 ----------------
@@ -68,7 +77,7 @@ CARRERAS = [
 ]
 
 DOCENTES_POR_CARRERA = 15
-TUTORES_POR_CARRERA = 10
+TUTORES_POR_CARRERA = 10          # cuántos de esos docentes se promueven a Mixto
 GRUPOS_POR_CARRERA = 10
 ALUMNOS_MIN_POR_GRUPO = 20
 ALUMNOS_MAX_POR_GRUPO = 25
@@ -139,7 +148,7 @@ BLOQUES_HORARIO = [
 ]
 
 # contadores globales para garantizar unicidad de correos / números de empleado
-_contador_empleado = {"docente": 0, "tutor": 0}
+_contador_empleado = {"docente": 0}
 _contador_matricula = 0
 
 
@@ -242,7 +251,7 @@ def crear_carreras(db):
 
 
 # ============================================================
-# DIRECTOR / DOCENTES / TUTORES / MATERIAS POR CARRERA
+# DIRECTOR / DOCENTES / MATERIAS POR CARRERA
 # ============================================================
 def crear_director(db, carrera, sigla, idx_global):
     u = Usuario(
@@ -278,27 +287,32 @@ def crear_docentes(db, carrera, sigla, cantidad):
     return docentes
 
 
-def crear_tutores(db, sigla, cantidad):
+def promover_docentes_a_mixto(db, docentes_carrera, cantidad):
+    """Promueve un subconjunto de los Docentes ya creados a Mixto (Docente + Tutor).
+
+    Replica exactamente la misma lógica que
+    app/routers/academicos.py::asignar_docente_a_grupo cuando el usuario es
+    Docente puro: 1) cambia el rol a Mixto, 2) crea su fila en Tutor con
+    db.flush() para obtener su id_tutor, y solo entonces queda disponible
+    para enlazarse a un grupo. Ya no se crean cuentas de Tutor sueltas.
+    """
+    elegidos = random.sample(docentes_carrera, min(cantidad, len(docentes_carrera)))
     tutores = []
-    for _ in range(cantidad):
-        _contador_empleado["tutor"] += 1
-        n = _contador_empleado["tutor"]
-        u = Usuario(
-            nombre_completo=nombre_aleatorio(),
-            correo_institucional=f"tutor.{sigla.lower()}{n}@edupredict.edu",
-            password_hash=get_password_hash(PASSWORD_DEFAULT),
-            rol=RolEnum.TUTOR, estado=True, token_version=1,
-        )
-        db.add(u)
+    for docente in elegidos:
+        usuario = db.query(Usuario).filter(Usuario.id_usuario == docente.id_usuario).first()
+        usuario.rol = RolEnum.MIXTO
+        usuario.token_version = (usuario.token_version or 1) + 1
+
+        nuevo_tutor = Tutor(id_usuario=docente.id_usuario, numero_empleado=f"TUT-{docente.id_usuario}")
+        db.add(nuevo_tutor)
         db.flush()
-        t = Tutor(id_usuario=u.id_usuario, numero_empleado=f"TUT-{1000 + n}")
-        db.add(t)
-        db.flush()
-        tutores.append(t)
+        tutores.append(nuevo_tutor)
     return tutores
 
 
-def crear_materias(db, sigla):
+def crear_materias(db, carrera, sigla):
+    """Crea las materias de la carrera, cada una amarrada de forma permanente
+    a esa carrera vía id_carrera (una materia pertenece a una única carrera)."""
     nombres = random.sample(MATERIAS_BASE, MATERIAS_POR_CARRERA)
     materias = []
     for i, nombre in enumerate(nombres, start=1):
@@ -308,6 +322,7 @@ def crear_materias(db, sigla):
             creditos=random.choice([4, 6, 8]),
             horas_semana=random.choice([3, 4, 5]),
             estado=True,
+            id_carrera=carrera.id_carrera,
         )
         db.add(m)
         db.flush()
@@ -460,7 +475,7 @@ def crear_observaciones_grupo(db, estudiantes, docentes_carrera):
             id_docente=docente.id_docente,
             etiqueta=random.choice(ETIQUETAS_CONDUCTA),
             nota=random.choice(NOTAS_CONDUCTA),
-            fecha_registro=datetime.now() - timedelta(days=random.randint(0, 60)),
+            fecha_registro=datetime.now() - timedelta(days=random.randint(1, 15)),
         ))
 
 
@@ -583,7 +598,7 @@ def main():
             crear_director(db, carrera, sigla, idx_carrera)
             db.commit()
 
-            materias = crear_materias(db, sigla)
+            materias = crear_materias(db, carrera, sigla)
             db.commit()
             total_materias += len(materias)
 
@@ -594,11 +609,12 @@ def main():
             db.commit()
             total_docentes += len(docentes)
 
-            tutores = crear_tutores(db, sigla, TUTORES_POR_CARRERA)
+            # Promoción Docente -> Mixto (reemplaza la antigua creación de Tutores sueltos)
+            tutores = promover_docentes_a_mixto(db, docentes, TUTORES_POR_CARRERA)
             db.commit()
             total_tutores += len(tutores)
 
-            print(f"   Director: 1 | Docentes: {len(docentes)} | Tutores: {len(tutores)} | "
+            print(f"   Director: 1 | Docentes: {len(docentes)} (de los cuales {len(tutores)} promovidos a Mixto) | "
                   f"Materias: {len(materias)} | Plan de Estudio: {plan_estudio.nombre_plan}")
 
             horarios_carrera = []
@@ -644,9 +660,9 @@ def main():
         print(f"Carreras:              {len(carreras)}")
         print(f"Directores:            {len(carreras)}")
         print(f"Docentes:              {total_docentes}")
-        print(f"Tutores:               {total_tutores}")
+        print(f"  de los cuales Mixto: {total_tutores}")
         print(f"Grupos:                {total_grupos}")
-        print(f"Materias:              {total_materias}")
+        print(f"Materias:              {total_materias} (cada una con id_carrera fijo)")
         print(f"Planes de Estudio:     {len(carreras)}")
         print(f"Estudiantes:           {total_alumnos}")
         print(f"Docente-Materia:       poblada para {total_docente_materia} docentes")
@@ -657,8 +673,7 @@ def main():
         print("Ejemplos de acceso:")
         print("  admin@edupredict.edu")
         print("  director.<sigla><n>@edupredict.edu   (ej. director.isc1@edupredict.edu)")
-        print("  docente.<sigla><n>@edupredict.edu")
-        print("  tutor.<sigla><n>@edupredict.edu")
+        print("  docente.<sigla><n>@edupredict.edu   (algunos son Mixto: Docente + Tutor)")
         print("  rrhh<n>@edupredict.edu")
         print("  psicopedagogia<n>@edupredict.edu")
         print("=" * 70)

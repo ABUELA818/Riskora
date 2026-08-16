@@ -13,6 +13,7 @@ class RolEnum(enum.Enum):
     DIRECTOR = "Director"
     RRHH = "RRHH"
     PSICOPEDAGOGIA = "Psicopedagogia"
+    MIXTO = "Mixto"
 
 class DiaSemanaEnum(enum.Enum):
     LUNES = "Lunes"

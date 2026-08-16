@@ -9,7 +9,7 @@ from typing import List, Optional
 from app.db.session import SessionLocal
 from app.models.models import (
     Estudiante, Grupo, Materia, Periodo, Horario, Docente, Carrera,
-    Usuario, DirectorCarrera, DiaSemanaEnum, HistorialAcademicoPrevio, Tutor 
+    Usuario, DirectorCarrera, DiaSemanaEnum, HistorialAcademicoPrevio, Tutor, RolEnum
 )
 from app.core.deps import get_db, RoleChecker, get_current_active_user
 from app.schemas.academic import (
@@ -28,7 +28,7 @@ router = APIRouter(prefix="/api/v1", tags=["Académico"])
 
 solo_admin = RoleChecker(["Administrador", "Psicopedagogia"])
 permitir_gestion_materias = RoleChecker(["Administrador", "Director", "Psicopedagogia"])
-todos_los_roles = RoleChecker(["Administrador", "Tutor", "Docente", "Director", "Psicopedagogia", "RRHH"])
+todos_los_roles = RoleChecker(["Administrador", "Tutor", "Docente", "Director", "Psicopedagogia", "RRHH", "Mixto"])
 permitir_gestion_grupos = RoleChecker(["Administrador", "Director", "Psicopedagogia"])
 
 def _generar_matricula(db: Session) -> str:
@@ -136,7 +136,7 @@ def obtener_estudiantes(
     if id_grupo:
         query = query.filter(Estudiante.id_grupo == id_grupo)
 
-    if user_role == "Tutor" and not (carrera or grupo or id_grupo):
+    if user_role in ("Tutor", "Mixto") and not (carrera or grupo or id_grupo):
         tutor = db.query(Tutor).filter(Tutor.id_usuario == current_user.id_usuario).first()
         grupos_ids = [g.id_grupo for g in db.query(Grupo).filter(Grupo.id_tutor == (tutor.id_tutor if tutor else -1)).all()]
         query = query.filter(Estudiante.id_grupo.in_(grupos_ids or [-1]))
@@ -299,10 +299,27 @@ def asignar_docente_a_grupo(id: int, id_docente: int, db: Session = Depends(get_
     grupo = db.query(Grupo).filter(Grupo.id_grupo == id).first()
     if not grupo:
         raise HTTPException(status_code=404, detail="Grupo no encontrado")
-    
-    grupo.id_tutor = id_docente 
+
+    docente = db.query(Docente).filter(Docente.id_docente == id_docente).first()
+    if not docente:
+        raise HTTPException(status_code=404, detail="Docente no encontrado")
+
+    usuario = db.query(Usuario).filter(Usuario.id_usuario == docente.id_usuario).first()
+    user_role = usuario.rol.value if hasattr(usuario.rol, 'value') else usuario.rol
+
+    tutor = db.query(Tutor).filter(Tutor.id_usuario == docente.id_usuario).first()
+
+    if not tutor:
+        usuario.rol = RolEnum.MIXTO
+        usuario.token_version = (usuario.token_version or 1) + 1
+        nuevo_tutor = Tutor(id_usuario=docente.id_usuario, numero_empleado=f"TUT-{docente.id_usuario}")
+        db.add(nuevo_tutor)
+        db.flush()
+        tutor = nuevo_tutor
+
+    grupo.id_tutor = tutor.id_tutor
     db.commit()
-    return {"message": f"Docente/Tutor {id_docente} asignado al grupo {id}"}
+    return {"message": f"{usuario.nombre_completo} asignado como tutor del grupo {id}"}
 
 # 3. MATERIAS
 @router.post("/materias", response_model=MateriaOut, dependencies=[Depends(permitir_gestion_materias)])
@@ -703,7 +720,7 @@ def eliminar_horario(
     db.commit()
     return {"message": "Horario eliminado correctamente."}
 
-permitir_historial = RoleChecker(["Administrador", "Psicopedagogia", "Tutor", "Director"])
+permitir_historial = RoleChecker(["Administrador", "Psicopedagogia", "Tutor", "Director", "Mixto"])
 
 @router.get("/estudiantes/{id_estudiante}/historial-previo", response_model=List[HistorialAcademicoPrevioOut], dependencies=[Depends(permitir_historial)])
 def obtener_historial_previo(id_estudiante: int, db: Session = Depends(get_db)):

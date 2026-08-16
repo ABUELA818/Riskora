@@ -70,6 +70,8 @@ const DashboardRouter = () => {
     case 'RRHH':
     case 'Administrador':
       return <Navigate to="/rrhh/dashboard" replace />;
+    case 'Mixto':
+      return <DashboardDocente />;
     default:
       return <Dashboard />;
   }
@@ -96,7 +98,7 @@ export default function App() {
             <Route path="estudiantes/:id/analisis" element={<AnalisisPrediccion />} />
             <Route path="carreras/dashboard" element={<RoleRoute allowedRoles={['Administrador', 'Director']}><DashboardDirector /></RoleRoute>} />
             <Route path="carreras/:id/riesgo-agregado" element={<RoleRoute allowedRoles={['Administrador', 'Director', 'Psicopedagogia']}><RiesgoAgregado /></RoleRoute>} />
-            <Route path="casos-escalados" element={<RoleRoute allowedRoles={['Administrador', 'Tutor', 'Director', 'Psicopedagogia']}><CasosEscalados /></RoleRoute>} />
+            <Route path="casos-escalados" element={<RoleRoute allowedRoles={['Administrador', 'Tutor', 'Director', 'Psicopedagogia', 'Mixto']}><CasosEscalados /></RoleRoute>} />
             <Route path="institucional/dashboard" element={<RoleRoute allowedRoles={['Administrador', 'Director']}><DashboardInstitucional /></RoleRoute>} />
             <Route path="rrhh/dashboard" element={<RoleRoute allowedRoles={['Administrador', 'RRHH']}><DashboardRRHH /></RoleRoute>} />
             <Route path="rrhh/directorio" element={<RoleRoute allowedRoles={['Administrador', 'RRHH']}><DirectorioPersonal /></RoleRoute>} />
@@ -105,17 +107,17 @@ export default function App() {
             <Route path="rrhh/solicitudes" element={<RoleRoute allowedRoles={['Administrador', 'RRHH']}><SolicitudesPersonal /></RoleRoute>} />
             <Route path="estudiantes" element={<GestionEstudiantes />} />
             <Route path="estudiantes/:id/intervenciones" element={
-              <RoleRoute allowedRoles={['Tutor', 'Administrador', 'Director', 'Psicopedagogia']}>
+              <RoleRoute allowedRoles={['Tutor', 'Administrador', 'Director', 'Psicopedagogia', 'Mixto']}>
                 <BitacoraIntervenciones />
               </RoleRoute>
             } />
             <Route path="calificaciones" element={
-              <RoleRoute allowedRoles={['Docente', 'Administrador',]}>
+              <RoleRoute allowedRoles={['Docente', 'Administrador', 'Mixto']}>
                 <CapturaCalificaciones />
               </RoleRoute>
             } />
             <Route path="asistencias" element={
-              <RoleRoute allowedRoles={['Docente', 'Administrador']}>
+              <RoleRoute allowedRoles={['Docente', 'Administrador', 'Mixto']}>
                 <RegistroAsistencia />
               </RoleRoute>
             } />
@@ -130,7 +132,7 @@ export default function App() {
             <Route 
               path="estudiantes/:id/expediente" 
               element={
-                <RoleRoute allowedRoles={['Administrador', 'Psicopedagogia', 'Tutor', 'Docente']}>
+                <RoleRoute allowedRoles={['Administrador', 'Psicopedagogia', 'Tutor', 'Docente', 'Mixto']}>
                   <ExpedienteCompleto />
                 </RoleRoute>
               } 

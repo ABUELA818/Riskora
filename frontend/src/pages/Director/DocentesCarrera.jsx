@@ -269,7 +269,6 @@ export default function DocentesCarrera() {
                     className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-eduPurple outline-none bg-white"
                   >
                     <option value="Docente">Docente</option>
-                    <option value="Tutor">Tutor</option>
                   </select>
                 </div>
               </div>

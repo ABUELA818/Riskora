@@ -25,7 +25,8 @@ export default function RegistroAsistencia() {
   const [isLoading, setIsLoading] = useState(false);
   const [mensaje, setMensaje] = useState({ text: '', type: '' });
 
-  const esDocente = role === 'Docente';
+  const esDocente = role === 'Docente' || role === 'Mixto';
+  
    const elegirClaseInicial = (clases) => {
     const horarioPre = location.state?.horarioPreseleccionado;
     const grupoPre = location.state?.grupoPreseleccionado;

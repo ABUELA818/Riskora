@@ -62,7 +62,15 @@ const MENU_ITEMS = {
     { name: 'Solicitudes de Personal', path: '/rrhh/solicitudes', icon: Clock },
     { name: 'Gestión de Accesos', path: '/rrhh/accesos', icon: Lock },
     { name: 'Auditoría de Accesos', path: '/rrhh/auditoria', icon: FileText },
-  ]
+  ],
+  Mixto: [
+    { name: 'Inicio', path: '/dashboard', icon: LayoutDashboard },
+    { name: 'Asistencias', path: '/asistencias', icon: ClipboardList },
+    { name: 'Calificaciones', path: '/calificaciones', icon: BarChart2 },
+    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+    { name: 'Panel de Riesgo', path: '/panel-riesgo', icon: ShieldAlert },
+    { name: 'Casos Escalados', path: '/casos-escalados', icon: FileText },
+  ],
 };
 
 export default function MainLayout() {

@@ -52,7 +52,7 @@ def obtener_directorio_personal(
     current_user = Depends(get_current_active_user)
 ):
     user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
-    roles_permitidos = [RolEnum.DOCENTE, RolEnum.TUTOR, RolEnum.PSICOPEDAGOGIA, RolEnum.DIRECTOR, RolEnum.RRHH]
+    roles_permitidos = [RolEnum.DOCENTE, RolEnum.TUTOR, RolEnum.PSICOPEDAGOGIA, RolEnum.DIRECTOR, RolEnum.RRHH, RolEnum.MIXTO]
     query = db.query(Usuario).filter(Usuario.rol.in_(roles_permitidos))
 
     if user_role == "Director":
@@ -76,9 +76,12 @@ def obtener_directorio_personal(
         query = query.filter(Usuario.id_usuario.in_(ids_permitidos or [-1]))
 
     if rol and rol != "Todos los Roles":
-        rol_enum = getattr(RolEnum, rol.upper().replace(" ", "_"), None)
-        if rol_enum:
-            query = query.filter(Usuario.rol == rol_enum)
+        if rol == "Tutor":
+            query = query.filter(Usuario.rol.in_([RolEnum.TUTOR, RolEnum.MIXTO]))
+        else:
+            rol_enum = getattr(RolEnum, rol.upper().replace(" ", "_"), None)
+            if rol_enum:
+                query = query.filter(Usuario.rol == rol_enum)
             
     if nombre:
         query = query.filter(Usuario.nombre_completo.ilike(f"%{nombre}%") | Usuario.correo_institucional.ilike(f"%{nombre}%"))
@@ -139,7 +142,10 @@ def registrar_personal(
 ):
     user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
 
-    if user_role == "Director" and data.rol not in ("Docente", "Tutor"):
+    if data.rol == "Tutor":
+        raise HTTPException(status_code=400, detail="No se puede dar de alta directamente como Tutor. Asigna al Docente como tutor de un grupo para promoverlo a Mixto.")
+
+    if user_role == "Director" and data.rol not in ("Docente"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Como Director solo puedes dar de alta Docentes o Tutores."

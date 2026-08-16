@@ -10,7 +10,7 @@ from app.schemas.carrera import CarreraResumenOut
 
 router = APIRouter(prefix="/api/v1", tags=["Módulo Director / Institucional"])
 
-permitir_acceso = RoleChecker(["Administrador", "Tutor", "Director", "Psicopedagogia"])
+permitir_acceso = RoleChecker(["Administrador", "Tutor", "Director", "Psicopedagogia", "Mixto"])
 
 def verificar_carrera_director(db: Session, current_user, id_carrera: int):
     user_role = current_user.rol.value if hasattr(current_user.rol, 'value') else current_user.rol
